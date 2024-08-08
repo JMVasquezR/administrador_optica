@@ -16,9 +16,10 @@ class PatientAdmin(admin.ModelAdmin):
             'fields': [
                 'first_name',
                 ('surname', 'second_surname'),
-                'date_of_birth',
-                ('type_document', 'document_number'),
                 'gender',
+                'date_of_birth',
+                ('type_document',),
+                'document_number',
                 'direction',
                 ('phone_or_cellular', 'email'),
             ]
@@ -44,7 +45,6 @@ class TypeDocumentAdmin(admin.ModelAdmin):
 class SalesLinesInline(TabularInline):
     model = SalesLines
     readonly_fields = ('amount',)
-    autocomplete_fields = ['product']
     extra = 1
 
 
@@ -57,12 +57,12 @@ class SalesTicketAdmin(admin.ModelAdmin):
     ]
     inlines = [SalesLinesInline]
     readonly_fields = ('total_bill',)
-    autocomplete_fields = ['patient', ]
     fieldsets = [
         (None, {
             'fields': [
-                ('date_of_issue',),
-                ('ballot_number', 'patient',),
+                'date_of_issue',
+                'ballot_number',
+                'patient',
                 'total_bill',
                 'observation',
             ]
@@ -98,8 +98,6 @@ class SalesTicketAdmin(admin.ModelAdmin):
 class ProductAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'brand', 'unit_price', 'category')
     search_fields = ('name', 'unit_price', 'category__name', 'brand__name')
-    autocomplete_fields = ['brand', 'category']
-    list_editable = ('name', 'brand')
     fieldsets = [
         (None, {
             'fields': [
