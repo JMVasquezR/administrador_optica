@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.admin import TabularInline
 
+from app_backend.forms import SalesTicketForm
 from app_backend.models.patients import Patient
 from app_backend.models.products import Product, Brand, Category
 from app_backend.models.sales_ticket import SalesTicket, SalesLines
@@ -50,6 +51,7 @@ class SalesLinesInline(TabularInline):
 
 @admin.register(SalesTicket)
 class SalesTicketAdmin(admin.ModelAdmin):
+    form = SalesTicketForm
     list_display = ('ballot_number', 'patient', 'date_of_issue', 'total_bill', 'is_disabled')
     search_fields = [
         'ballot_number', 'patient__first_name', 'patient__surname', 'patient__second_surname',
@@ -60,14 +62,19 @@ class SalesTicketAdmin(admin.ModelAdmin):
     fieldsets = [
         (None, {
             'fields': [
-                'date_of_issue',
-                'ballot_number',
+                ('ballot_number', 'date_of_issue'),
                 'patient',
-                'total_bill',
                 'observation',
+                'total_bill',
+                'is_disabled',
             ]
         }),
     ]
+
+    def total_bill(self, obj):
+        return f"{obj.total_bill}"
+
+    total_bill.short_description = 'Total'
 
     def save_formset(self, request, form, formset, change):
         instances = formset.save()

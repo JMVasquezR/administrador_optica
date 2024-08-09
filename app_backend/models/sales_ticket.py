@@ -1,5 +1,6 @@
 from django.db.models import (
-    CharField, ForeignKey, FloatField, ManyToManyField, TextField, BooleanField, DateField, PROTECT, IntegerField
+    CharField, ForeignKey, FloatField, ManyToManyField, TextField, BooleanField, DateField, PROTECT, IntegerField,
+    CASCADE
 )
 from model_utils.models import TimeStampedModel
 
@@ -14,7 +15,7 @@ class SalesTicket(TimeStampedModel):
         ordering = ['-ballot_number']
         db_table = 'TB_BACKEND_SALES_TICKET'
 
-    ballot_number = CharField(max_length=10, verbose_name='Número de boleta')
+    ballot_number = CharField(max_length=10, unique=True, verbose_name='Número de boleta')
     date_of_issue = DateField(verbose_name='Fecha de emisión')
     patient = ForeignKey(Patient, on_delete=PROTECT, verbose_name='Paciente')
     sales_total = FloatField(null=True, blank=True, verbose_name='Total de ventas')
@@ -27,11 +28,28 @@ class SalesTicket(TimeStampedModel):
 
     @property
     def total_bill(self):
-        return f"S/.{self.sales_total if self.sales_total else ''}"
+        return f"S/.{self.sales_total if self.sales_total else '0.0'}"
 
     @property
     def name_patient(self):
         return self.patient.full_name
+
+    def save(self, *args, **kwargs):
+        if not self.ballot_number:
+            # Obtener la última instancia guardada
+            last_ticket = SalesTicket.objects.all().order_by('id').last()
+            if last_ticket:
+                last_ballot_number = last_ticket.ballot_number
+                prefix, number = last_ballot_number.split('-')
+                number = int(number) + 1
+                new_number = str(number).zfill(6)  # Asegurar que el número tenga 6 dígitos
+            else:
+                prefix = "001"
+                new_number = "000001"
+
+            self.ballot_number = f"{prefix}-{new_number}"
+
+        super(SalesTicket, self).save(*args, **kwargs)
 
 
 class SalesLines(TimeStampedModel):
@@ -41,8 +59,8 @@ class SalesLines(TimeStampedModel):
         db_table = 'TB_BACKEND_SALES_LINES'
 
     quantity = IntegerField(verbose_name='Cantidad', default=1)
-    sales_ticket = ForeignKey(SalesTicket, on_delete=PROTECT, verbose_name='Boleta')
-    product = ForeignKey(Product, on_delete=PROTECT, verbose_name='Producto')
+    sales_ticket = ForeignKey(SalesTicket, on_delete=CASCADE, verbose_name='Boleta')
+    product = ForeignKey(Product, on_delete=CASCADE, verbose_name='Producto')
     unit_price = FloatField(verbose_name='Precio unitario', null=True, blank=True)
     amount = FloatField(verbose_name='Importe', null=True, blank=True)
 
