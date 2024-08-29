@@ -1,7 +1,11 @@
 from django.contrib import admin
 from django.contrib.admin import TabularInline
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from weasyprint import HTML
 
 from app_backend.forms import SalesTicketForm
+from app_backend.models.configurations import Configuration
 from app_backend.models.patients import Patient
 from app_backend.models.products import Product, Brand, Category
 from app_backend.models.sales_ticket import SalesTicket, SalesLines
@@ -43,10 +47,53 @@ class TypeDocumentAdmin(admin.ModelAdmin):
     ]
 
 
+@admin.action(description='Exportar a PDF')
+def export_to_pdf(modeladmin, request, queryset):
+    if queryset.count() == 1:  # Verifica que solo un registro esté seleccionado
+        instance = queryset.first()
+        sales_lines = SalesLines.objects.filter(sales_ticket=instance.id)
+        configurations = Configuration.objects.all()
+        html_string = render_to_string(
+            'admin/pdf_template.html',
+            {
+                'ticket': instance,
+                'sales_lines': sales_lines,
+                'ruc': configurations.filter(key='empresa.ruc').values_list('value', flat=True)[0],
+                'name_company': configurations.filter(key='empresa.nombre').values_list('value', flat=True)[0],
+                'addres': configurations.filter(key='empresa.direccion').values_list('value', flat=True)[0],
+                'phone': configurations.filter(key='empresa.telefono').values_list('value', flat=True)[0],
+                'email': configurations.filter(key='empresa.email').values_list('value', flat=True)[0],
+                'patient': instance.name_patient,
+            }
+        )
+        html = HTML(string=html_string)
+        response = HttpResponse(content_type='application/pdf')
+        number = instance.ballot_number
+        name = instance.name_patient.capitalize().replace(' ', '')
+        response['Content-Disposition'] = f'attachment; filename={number}{name}.pdf'
+        html.write_pdf(response)
+        return response
+    else:
+        modeladmin.message_user(request, "Selecciona solo un registro para exportar a PDF", level='error')
+
+
+# from .models import SalesLines
+
+
 class SalesLinesInline(TabularInline):
     model = SalesLines
-    readonly_fields = ('amount',)
+    fields = ['quantity', 'product_code', 'product', 'product_unit_measure', 'unit_price', 'amount']
+    readonly_fields = ('amount', 'product_code', 'product_unit_measure')
     extra = 1
+
+    def product_code(self, obj):
+        return f"{obj.product_code}"
+
+    def product_unit_measure(self, obj):
+        return f"{obj.product_unit_measure}"
+
+    product_code.short_description = 'Codigo'
+    product_unit_measure.short_description = 'Unidad de medidad'
 
 
 @admin.register(SalesTicket)
@@ -59,6 +106,7 @@ class SalesTicketAdmin(admin.ModelAdmin):
     ]
     inlines = [SalesLinesInline]
     readonly_fields = ('total_bill',)
+    actions = [export_to_pdf]
     fieldsets = [
         (None, {
             'fields': [
@@ -103,14 +151,17 @@ class SalesTicketAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'brand', 'unit_price', 'category')
+    list_display = ('name', 'code', 'unit_measure', 'brand', 'unit_price', 'category')
     search_fields = ('name', 'unit_price', 'category__name', 'brand__name')
+    readonly_fields = ('name',)
     fieldsets = [
         (None, {
             'fields': [
                 'name',
+                'code',
                 'brand',
                 'category',
+                'unit_measure',
                 'description',
                 'unit_price',
             ]
@@ -126,5 +177,17 @@ class BrandAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('name',)
+    list_display = ('code', 'name')
     search_fields = ['name']
+
+
+@admin.register(Configuration)
+class ConfigurationAdmin(admin.ModelAdmin):
+    list_display = ('key', 'value',)
+    list_editable = ('value',)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

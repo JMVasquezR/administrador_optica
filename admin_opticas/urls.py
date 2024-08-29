@@ -16,11 +16,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.utils.translation import gettext as _
+
+admin.site.site_header = 'Opticas'
+admin.site.site_title = _("Opticas")
+admin.site.index_title = _("Bienvenido al Panel de Control")
 
 urlpatterns = [
     path('jet/', include('jet.urls', 'jet')),  # Django JET URLS
     path('jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),
     path('admin/', admin.site.urls),
+    path("", include("app_backend.urls", namespace="backend"))
 ]
-
-admin.site.site_header = 'Opticas'

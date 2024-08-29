@@ -1,0 +1,137 @@
+<html>
+<head>
+    <style>
+        body {
+            font-family: 'Helvetica', sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .header, .footer {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .header div {
+            width: 48%;
+        }
+
+        .details {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .details p {
+            margin: 5px 0;
+        }
+
+        .details h2 {
+            margin-top: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        .total {
+            margin-top: 20px;
+            text-align: right;
+        }
+        
+        .observations {
+            text-align: left;
+            margin-top: auto; 
+            padding-top: 10px;
+            border-top: 1px solid #ccc; 
+        }
+    </style>
+</head>
+<body>
+<!-- Header -->
+<div class="header">
+    <div style="margin: 0; text-align: center; display: flex; justify-content: center;">
+        <div style="width: 100%">
+            <h1 style="margin: 0"><strong>{{ name_company }}</strong></h1>
+            <p style="margin: 0">{{ addres }}</p>
+            <p style="margin: 0">Telefono: {{ phone }}</p>
+            <p style="margin: 0">E-mail: {{ email }}</p>
+            {#        <p><strong>Fecha de emisión:</strong> {{ ticket.date_of_issue }}</p>#}
+            {#        <p><strong>Paciente:</strong> {{ ticket.name_patient }}</p>#}
+        </div>
+    </div>
+    <div style="text-align: center; display: flex; justify-content: center;">
+        <!-- Div izquierdo que no debe aparecer -->
+        <div style="border: 2px solid black; width: 30%; visibility: hidden;">
+        </div>
+
+        <!-- Div derecho visible -->
+        <div style="border: 2px solid black; width: 70%; border-radius: 10px;">
+            <h3 style="margin: 5px">R.U.C {{ ruc }}</h3>
+            <h3 style="background-color: gray; margin: 0; padding: 5px 0;"><strong>BOLETA DE VENTA</strong></h3>
+            <h3 style="margin: 5px">{{ ticket.ballot_number }}</h3>
+        </div>
+    </div>
+</div>
+
+<br>
+
+<div class="header" style="margin: 0; text-align: center; display: flex; justify-content: center;">
+    <div style="text-align: left">
+        <p><strong>Señor:</strong> {{ patient }}</p>
+    </div>
+    <div style="text-align: right">
+        <p><strong>Fecha:</strong> {{ ticket.date_of_issue }}</p>
+    </div>
+</div>
+
+<table>
+    <thead>
+    <tr>
+        <th>CANT.</th>
+        <th>Codigo</th>
+        <th>Descripcion</th>
+        <th>P. Unit.</th>
+        <th>Importe</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for line in sales_lines %}
+        <tr>
+            <td>{{ line.quantity }}</td>
+            <td>{{ line.product.code }}</td>
+            <td>{{ line.product.name }}</td>
+            <td>S/.{{ line.unit_price |stringformat:"s" }}</td>
+            <td>{{ line.set_money_amount }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<!-- Total and Observations -->
+<div class="total">
+    <p><strong>Total:</strong> {{ ticket.total_bill }}</p>
+</div>
+<div class="observations">
+    <p><strong>Observaciones:</strong> {{ ticket.observation }}</p>
+</div>
+</body>
+</html>

@@ -76,3 +76,15 @@ class SalesLines(TimeStampedModel):
         if self.product.brand:
             return f'{self.product.brand.name}'
         return ''
+
+    @property
+    def product_code(self):
+        if self.product.code:
+            return f'{self.product.code}'
+        return ''
+
+    @property
+    def product_unit_measure(self):
+        if self.product.unit_measure:
+            return f'{self.product.unit_measure}'
+        return ''
