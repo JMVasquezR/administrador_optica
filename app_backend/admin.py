@@ -1,3 +1,6 @@
+from tempfile import NamedTemporaryFile
+
+import requests
 from django.contrib import admin
 from django.contrib.admin import TabularInline
 from django.http import HttpResponse
@@ -71,13 +74,33 @@ def export_to_pdf(modeladmin, request, queryset):
         number = instance.ballot_number
         name = instance.name_patient.capitalize().replace(' ', '')
         response['Content-Disposition'] = f'attachment; filename={number}{name}.pdf'
+
+        with NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_pdf:
+            html.write_pdf(tmp_pdf.name)
+            tmp_pdf_path = tmp_pdf.name
+
+        send_simple_message(tmp_pdf_path, title=f'{number}{name}')
         html.write_pdf(response)
         return response
     else:
         modeladmin.message_user(request, "Selecciona solo un registro para exportar a PDF", level='error')
 
 
-# from .models import SalesLines
+def send_simple_message(pdf_path, title):
+    # TODO FALTA SEPARAR CREDENCIALES Y CONFIGURAR EL ENVIO DEL CORREO DEL USUARIO SELECCIONADO
+    with open(pdf_path, 'rb') as pdf_file:
+        response = requests.post(
+            "https://api.mailgun.net/v3/sandbox05eef47a5c1b45818a8efb42cd3e3267.mailgun.org/messages",
+            auth=("api", "47612584ba60889ac19fbc0120098d26-777a617d-6aaadc4b"),
+            files={"attachment": (f"{title}.pdf", pdf_file)},  # Adjunta el archivo PDF
+            data={
+                "from": "Excited User <mailgun@sandbox05eef47a5c1b45818a8efb42cd3e3267.mailgun.org>",
+                "to": ["josemartivr@gmail.com"],
+                "subject": f"{title}",
+                "text": "Buenas tardes, se adjunta boleta"
+            }
+        )
+        return response
 
 
 class SalesLinesInline(TabularInline):
