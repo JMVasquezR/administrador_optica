@@ -86,12 +86,21 @@ BD_DEFAULT = os.getenv('BD_DEFAULT', 'True') == str(True)
 if BD_DEFAULT:
     DATABASES = {
         'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', 'your_db_name'),
+            'USER': os.getenv('DB_USER', 'your_db_user'),
+            'PASSWORD': os.getenv('DB_PASSWORD', 'your_db_password'),
+            'HOST': os.getenv('DB_HOST', 'db'),
+            'PORT': os.getenv('DB_PORT', default='5432'),
+        }
+    }
+else:
+    DATABASES = {
+        'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
-else:
-    pass
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -128,8 +137,9 @@ USE_TZ = True
 STATIC_URL = 'static/'
 MEDIA_URL = '/media/'
 
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
-MEDIA_ROOT = os.getenv('MEDIA_ROOT', None)
+# STATIC_ROOT = os.path.join(BASE_DIR, "static")
+STATIC_ROOT = '/app/static'
+MEDIA_ROOT = os.getenv('MEDIA_ROOT', 'app/static')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -172,3 +182,31 @@ JET_THEMES = [
 
 JET_SIDE_MENU_COMPACT = True
 X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+# JET_SIDE_MENU_CUSTOM_APPS = [
+#     ('app_backend', [  # Each list element is a tuple with application name (app_label) and list of models
+#         'patients',
+#     ]),
+# ]
+
+JET_SIDE_MENU_ITEMS = [
+    {'label': 'Eventos', 'app_label': 'app_notification', 'items': [
+        {'name': 'patientproxy'},
+    ]},
+    {'label': 'Administrador', 'app_label': 'app_backend', 'items': [
+        {'name': 'salesticket'},
+        {'name': 'recipe'},
+    ]},
+    {'label': 'Control', 'app_label': 'app_backend', 'items': [
+        {'name': 'category'},
+        {'name': 'configuration'},
+        {'name': 'brand'},
+        {'name': 'patient'},
+        {'name': 'product'},
+        {'name': 'typedocument'},
+    ]},
+    {'app_label': 'auth', 'items': [
+        {'name': 'group'},
+        {'name': 'user'},
+    ]},
+]

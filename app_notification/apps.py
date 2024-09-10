@@ -4,5 +4,5 @@ from django.apps import AppConfig
 class AppNotificationConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'app_notification'
-    verbose_name = "Eventos de notificaciones"
+    verbose_name = "1. Eventos de notificaciones"
 

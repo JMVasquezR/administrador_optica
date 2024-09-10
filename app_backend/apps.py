@@ -4,7 +4,7 @@ from django.apps import AppConfig
 class AppBackendConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'app_backend'
-    verbose_name = "Administrador"
+    verbose_name = "2. Administrador"
 
     def ready(self):
         super().ready()

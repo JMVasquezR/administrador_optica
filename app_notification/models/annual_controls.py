@@ -17,5 +17,5 @@ class PatientProxy(Patient):
 
     class Meta:
         proxy = True
-        verbose_name = 'Paciente para control anual'
-        verbose_name_plural = 'Pacientes con controles anuales'
+        verbose_name = 'Control anual'
+        verbose_name_plural = 'Controles anuales'

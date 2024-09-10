@@ -11,6 +11,7 @@ from app_backend.forms import SalesTicketForm
 from app_backend.models.configurations import Configuration
 from app_backend.models.patients import Patient
 from app_backend.models.products import Product, Brand, Category
+from app_backend.models.recipes import Recipe
 from app_backend.models.sales_ticket import SalesTicket, SalesLines
 from app_backend.models.type_document import TypeDocument
 
@@ -214,3 +215,68 @@ class ConfigurationAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+@admin.register(Recipe)
+class RecipeBookAdmin(admin.ModelAdmin):
+    list_display = ('prescription_number', 'patient', 'date_of_issue')
+    fieldsets = [
+        (None, {
+            'fields': [
+                'date_of_issue',
+                'patient',
+                'is_disabled',
+            ]
+        }),
+        ('Distancia Lejos', {
+            'fields': [
+                ('right_eye_spherical_distance_far', 'right_eye_cylinder_distance_far', 'right_eye_axis_distance_far'),
+                ('left_eye_spherical_distance_far', 'left_eye_cylinder_distance_far', 'left_eye_axis_distance_far'),
+                'pupillary_distance_far'
+            ]
+        }),
+        ('Distancia Cerca', {
+            'fields': [
+                ('right_eye_spherical_distance_near', 'right_eye_cylinder_distance_near',
+                 'right_eye_axis_distance_near'),
+                ('left_eye_spherical_distance_near', 'left_eye_cylinder_distance_near', 'left_eye_axis_distance_near'),
+                'pupillary_distance_near'
+            ]
+        }),
+        ('Otro', {
+            'fields': [
+                'observation', 'instruction'
+            ]
+        })
+    ]
+    # search_fields = ['recipe_book_number', 'patient__first_name', 'patient__surname', 'patient__second_surname']
+    # autocomplete_fields = ['patient', 'store']
+    # fieldsets = [
+    #     (None, {
+    #         'fields': [
+    #             'recipe_book_number',
+    #             ('patient', 'date_of_issue'),
+    #             'store'
+    #         ]
+    #     }),
+    #     ('Distancia', {
+    #         'fields': [
+    #             ('dist_eye_right_sphe', 'dist_eye_right_cyli', 'dist_eye_right_axis'),
+    #             ('dist_eye_left_sphe', 'dist_eye_left_cyli', 'dist_eye_left_axis'),
+    #             'dist_eye_dist_pup',
+    #         ]
+    #     }),
+    #     ('Cerca', {
+    #         'fields': [
+    #             ('clos_eye_right_sphe', 'clos_eye_right_cyli', 'clos_eye_right_axis'),
+    #             ('clos_eye_left_sphe', 'clos_eye_left_cyli', 'clos_eye_left_axis'),
+    #             'clos_eye_dist_pup',
+    #         ]
+    #     }),
+    #     ('Otros', {
+    #         'fields': [
+    #             'observation',
+    #             'instruction',
+    #         ]
+    #     }),
+    # ]

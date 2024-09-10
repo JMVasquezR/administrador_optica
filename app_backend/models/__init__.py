@@ -1,1 +1,1 @@
-from . import patients, sales_ticket, type_document, products, configurations
+from . import patients, sales_ticket, type_document, products, configurations, recipes
