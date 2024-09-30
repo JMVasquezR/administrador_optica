@@ -63,7 +63,8 @@ class Product(TimeStampedModel):
         return f'{self.name} {brand}'
 
     def save(self, *args, **kwargs):
-        last_id = Product.objects.last().id if Product.objects.exists() else 1
-        formatted_id = str(last_id).zfill(3)
-        self.code = f'{self.category.code}{formatted_id}'.upper()
+        if self.code is None:
+            last_id = Product.objects.last().id if Product.objects.exists() else 1
+            formatted_id = str(last_id + 1).zfill(3)
+            self.code = f'{self.category.code}{formatted_id}'.upper()
         super().save(*args, **kwargs)

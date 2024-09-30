@@ -1,6 +1,7 @@
 from tempfile import NamedTemporaryFile
 
 import requests
+from django import forms
 from django.contrib import admin
 from django.contrib.admin import TabularInline
 from django.http import HttpResponse
@@ -104,10 +105,26 @@ def send_simple_message(pdf_path, title):
         return response
 
 
+class SalesLinesInlineForm(forms.ModelForm):
+    class Meta:
+        model = SalesLines
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Agregar atributos de datos al campo de selección de producto
+        if 'product' in self.fields:
+            self.fields['product'].widget.attrs.update({
+                'data-code': self.instance.product.code if self.instance.pk else '',
+                'data-unit-measure': self.instance.product.unit_measure if self.instance.pk else ''
+            })
+
+
 class SalesLinesInline(TabularInline):
     model = SalesLines
     fields = ['quantity', 'product_code', 'product', 'product_unit_measure', 'unit_price', 'amount']
     readonly_fields = ('amount', 'product_code', 'product_unit_measure')
+    form = SalesLinesInlineForm
     extra = 1
 
     def product_code(self, obj):
@@ -143,6 +160,9 @@ class SalesTicketAdmin(admin.ModelAdmin):
         }),
     ]
 
+    class Media:
+        js = ('js/sales_ticket.js',)
+
     def total_bill(self, obj):
         return f"{obj.total_bill}"
 
@@ -177,7 +197,7 @@ class SalesTicketAdmin(admin.ModelAdmin):
 class ProductAdmin(admin.ModelAdmin):
     list_display = ('name', 'code', 'unit_measure', 'brand', 'unit_price', 'category')
     search_fields = ('name', 'unit_price', 'category__name', 'brand__name')
-    readonly_fields = ('name',)
+    readonly_fields = ('code',)
     fieldsets = [
         (None, {
             'fields': [
@@ -230,53 +250,23 @@ class RecipeBookAdmin(admin.ModelAdmin):
         }),
         ('Distancia Lejos', {
             'fields': [
-                ('right_eye_spherical_distance_far', 'right_eye_cylinder_distance_far', 'right_eye_axis_distance_far'),
-                ('left_eye_spherical_distance_far', 'left_eye_cylinder_distance_far', 'left_eye_axis_distance_far'),
-                'pupillary_distance_far'
-            ]
+                ('left_eye_spherical_distance_far', 'right_eye_spherical_distance_far'),
+                ('left_eye_cylinder_distance_far', 'right_eye_cylinder_distance_far'),
+                ('left_eye_axis_distance_far', 'right_eye_axis_distance_far'),
+                ('pupillary_distance_far',),
+            ],
         }),
         ('Distancia Cerca', {
             'fields': [
-                ('right_eye_spherical_distance_near', 'right_eye_cylinder_distance_near',
-                 'right_eye_axis_distance_near'),
-                ('left_eye_spherical_distance_near', 'left_eye_cylinder_distance_near', 'left_eye_axis_distance_near'),
-                'pupillary_distance_near'
+                ('left_eye_spherical_distance_near', 'right_eye_spherical_distance_near'),
+                ('left_eye_cylinder_distance_near', 'right_eye_cylinder_distance_near'),
+                ('left_eye_axis_distance_near', 'right_eye_axis_distance_near'),
+                ('pupillary_distance_near',),
             ]
         }),
-        ('Otro', {
+        ('Otros', {
             'fields': [
                 'observation', 'instruction'
             ]
         })
     ]
-    # search_fields = ['recipe_book_number', 'patient__first_name', 'patient__surname', 'patient__second_surname']
-    # autocomplete_fields = ['patient', 'store']
-    # fieldsets = [
-    #     (None, {
-    #         'fields': [
-    #             'recipe_book_number',
-    #             ('patient', 'date_of_issue'),
-    #             'store'
-    #         ]
-    #     }),
-    #     ('Distancia', {
-    #         'fields': [
-    #             ('dist_eye_right_sphe', 'dist_eye_right_cyli', 'dist_eye_right_axis'),
-    #             ('dist_eye_left_sphe', 'dist_eye_left_cyli', 'dist_eye_left_axis'),
-    #             'dist_eye_dist_pup',
-    #         ]
-    #     }),
-    #     ('Cerca', {
-    #         'fields': [
-    #             ('clos_eye_right_sphe', 'clos_eye_right_cyli', 'clos_eye_right_axis'),
-    #             ('clos_eye_left_sphe', 'clos_eye_left_cyli', 'clos_eye_left_axis'),
-    #             'clos_eye_dist_pup',
-    #         ]
-    #     }),
-    #     ('Otros', {
-    #         'fields': [
-    #             'observation',
-    #             'instruction',
-    #         ]
-    #     }),
-    # ]
