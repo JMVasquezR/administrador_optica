@@ -1,0 +1,14 @@
+.env
+envs/**.env
+
+/venv/
+/venv/**
+
+.idea/
+.idea/**
+
+**.pyc
+
+**.sqlite3
+
+./celerybeat.pid
