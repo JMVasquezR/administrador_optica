@@ -138,8 +138,12 @@ USE_TZ = True
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 
-# Directorio donde Django colocará los archivos estáticos después de correr collectstatic
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+# Add these new lines
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, 'static'),
+)
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Directorios adicionales donde Django buscará archivos estáticos
 # STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
