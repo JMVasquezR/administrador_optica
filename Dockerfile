@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . /app/
 
 # Crear carpeta para archivos estáticos
-RUN mkdir -p /app/staticfiles
+RUN mkdir -p /app/staticfiles && chmod -R 755 /app/staticfiles
 
 # Colectar los archivos estáticos
 RUN python manage.py collectstatic --noinput --clear
