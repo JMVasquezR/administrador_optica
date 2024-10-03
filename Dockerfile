@@ -11,9 +11,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia el resto de los archivos del proyecto
 COPY . /app/
 
-# Ejecuta las migraciones
-RUN python manage.py migrate
-
 # Crear carpeta para archivos estáticos
 RUN mkdir -p /app/staticfiles
 
