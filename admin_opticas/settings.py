@@ -139,10 +139,10 @@ STATIC_URL = 'static/'
 MEDIA_URL = '/media/'
 
 # Directorio donde Django colocará los archivos estáticos después de correr collectstatic
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Directorios adicionales donde Django buscará archivos estáticos
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+# STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 MEDIA_ROOT = os.getenv('MEDIA_ROOT', None)
 
 # Default primary key field type
