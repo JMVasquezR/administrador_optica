@@ -14,5 +14,8 @@ COPY . /app/
 # Expone el puerto en el que Django se ejecutará
 EXPOSE 8000
 
+# Colectar los archivos estáticos
+RUN python manage.py collectstatic --noinput
+
 # Define el comando por defecto para ejecutar el servidor
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "admin_opticas.wsgi:application"]
