@@ -11,13 +11,9 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 import os
-import logging
-
 from pathlib import Path
 
 from dotenv import load_dotenv
-
-logger = logging.getLogger(__name__)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -142,7 +138,11 @@ USE_TZ = True
 STATIC_URL = 'static/'
 MEDIA_URL = '/media/'
 
-STATIC_ROOT = os.path.join(BASE_DIR, "app/static")
+# Directorio donde Django colocará los archivos estáticos después de correr collectstatic
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Directorios adicionales donde Django buscará archivos estáticos
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 MEDIA_ROOT = os.getenv('MEDIA_ROOT', None)
 
 # Default primary key field type
@@ -214,5 +214,3 @@ JET_SIDE_MENU_ITEMS = [
         {'name': 'user'},
     ]},
 ]
-
-logger.debug(f"DEBUG mode is: {os.getenv('DEBUG', 'Not set')}")
