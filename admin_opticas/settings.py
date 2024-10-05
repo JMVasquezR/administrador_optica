@@ -28,7 +28,7 @@ load_dotenv(ENV_PATH)
 SECRET_KEY = 'django-insecure-e5zg!ez@5ff9ys6eq-z57#s)*8+$g3ce4cy+573lx23cym)%l4'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -50,7 +50,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -139,20 +138,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 
-# Add these new lines
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'static'),
-)
-
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-print(f'>>> {BASE_DIR}')
-print(f'>>> {STATIC_ROOT}')
-
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-# Directorios adicionales donde Django buscará archivos estáticos
-# STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_ROOT = os.getenv('MEDIA_ROOT', None)
 
 # Default primary key field type
@@ -196,12 +182,6 @@ JET_THEMES = [
 
 JET_SIDE_MENU_COMPACT = True
 X_FRAME_OPTIONS = 'SAMEORIGIN'
-
-# JET_SIDE_MENU_CUSTOM_APPS = [
-#     ('app_backend', [  # Each list element is a tuple with application name (app_label) and list of models
-#         'patients',
-#     ]),
-# ]
 
 JET_SIDE_MENU_ITEMS = [
     {'label': 'Eventos', 'app_label': 'app_notification', 'items': [
