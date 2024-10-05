@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+
   db:
     image: postgres:13
     volumes:
@@ -10,6 +11,17 @@ services:
       POSTGRES_DB: your_db_name
       POSTGRES_USER: your_db_user
       POSTGRES_PASSWORD: your_db_password
+
+  nginx:
+    image: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - static_volume:/usr/share/nginx/html/static
+      - media_volume:/usr/share/nginx/html/media
+    depends_on:
+      - web
 
   web:
     build: .
@@ -22,10 +34,8 @@ services:
       "
     volumes:
       - .:/app
-      - static_volume:/app/staticfiles
+      - static_volume:/app/static
       - media_volume:/app/media
-    ports:
-      - "8000:8000"
     depends_on:
       - db
     env_file:
