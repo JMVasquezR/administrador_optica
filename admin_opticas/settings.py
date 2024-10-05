@@ -145,6 +145,9 @@ STATICFILES_DIRS = (
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+print(f'>>> {BASE_DIR}')
+print(f'>>> {STATIC_ROOT}')
+
 # Directorios adicionales donde Django buscará archivos estáticos
 # STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 MEDIA_ROOT = os.getenv('MEDIA_ROOT', None)
