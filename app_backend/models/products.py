@@ -62,10 +62,12 @@ class Product(TimeStampedModel):
     unit_measure = CharField(max_length=7, choices=UNIT_MEASURE, verbose_name='Unidad de medida')
 
     def __str__(self):
-        marca = self.brand.name if self.brand else ''
+        marca = self.brand.name if self.brand else self.category.name
         name_ = self.category.name if self.name == 'Sin nombre' else self.name
 
-        return f'{name_} {marca}'
+        if self.name == 'Sin nombre':
+            return f'{name_} - {marca}'
+        return f'{marca} - {name_}'
 
     @property
     def detail_product(self):
