@@ -1,4 +1,6 @@
+from django.db import models
 from django.db.models import (CharField, FloatField, ForeignKey, PROTECT, TextField)
+from django.db.models.functions import Length
 from model_utils.models import TimeStampedModel
 
 
@@ -39,12 +41,18 @@ UNIT_MEASURE = (
 )
 
 
+class ProductManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().annotate(name_length=Length('name')).order_by('name_length', 'name')
+
+
 class Product(TimeStampedModel):
     class Meta:
         verbose_name = 'Producto'
         verbose_name_plural = 'Productos'
         db_table = 'TB_BACKEND_PRODUCT'
 
+    objects = ProductManager()
     name = CharField(max_length=250, verbose_name='Nombre')
     code = CharField(max_length=7, null=True, blank=True, verbose_name='Codigo')
     description = TextField(null=True, blank=True, verbose_name='Descripción')
@@ -55,7 +63,9 @@ class Product(TimeStampedModel):
 
     def __str__(self):
         marca = self.brand.name if self.brand else ''
-        return f'{self.name} {marca}'
+        name_ = self.category.name if self.name == 'Sin nombre' else self.name
+
+        return f'{name_} {marca}'
 
     @property
     def detail_product(self):
@@ -68,3 +78,5 @@ class Product(TimeStampedModel):
             formatted_id = str(last_id + 1).zfill(3)
             self.code = f'{self.category.code}{formatted_id}'.upper()
         super().save(*args, **kwargs)
+
+
