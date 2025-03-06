@@ -1,8 +1,0 @@
-[phases.setup]
-nixPkgs = [
-  "gtk3", 
-  "gobject-introspection", 
-  "pango", 
-  "glib", 
-  "gdk-pixbuf"
-]
