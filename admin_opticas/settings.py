@@ -87,14 +87,7 @@ BD_DEFAULT = os.getenv('BD_DEFAULT', 'True') == str(True)
 
 if BD_DEFAULT:
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': os.getenv('DB_NAME', 'your_db_name'),
-            'USER': os.getenv('DB_USER', 'your_db_user'),
-            'PASSWORD': os.getenv('DB_PASSWORD', 'your_db_password'),
-            'HOST': os.getenv('DB_HOST', 'localhost'),
-            'PORT': os.getenv('DB_PORT', default=''),
-        }
+        'default': dj_database_url.config(default=os.getenv("DATABASE_URL"))
     }
 else:
     DATABASES = {
