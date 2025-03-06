@@ -14,10 +14,13 @@ import dj_database_url
 import os
 from pathlib import Path
 
-from dotenv import load_dotenv
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+if os.getenv("RAILWAY_ENV") is None:
+    from dotenv import load_dotenv
+    
+    load_dotenv()
 
 ENV_PATH = os.getenv('ENV_PATH', '.env')
 
