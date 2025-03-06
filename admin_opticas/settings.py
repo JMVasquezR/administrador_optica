@@ -24,7 +24,7 @@ if os.getenv("RAILWAY_ENV") is None:
 
 ENV_PATH = os.getenv('ENV_PATH', '.env')
 
-print('=> ', os.getenv("ALLOWED_HOSTS"))
+
 
 if os.path.exists(ENV_PATH):
     load_dotenv(ENV_PATH)
@@ -41,6 +41,8 @@ SECRET_KEY = 'django-insecure-e5zg!ez@5ff9ys6eq-z57#s)*8+$g3ce4cy+573lx23cym)%l4
 DEBUG = True
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "railway.app").split(",")
+
+print('=> ', ALLOWED_HOSTS)
 
 # Application definition
 
