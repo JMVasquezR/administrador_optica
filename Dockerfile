@@ -17,4 +17,4 @@ COPY . /app
 RUN pip install --no-cache-dir -r requirements.txt gunicorn
 
 # Comando de inicio con Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app_backend.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "admin_opticas.wsgi:application"]
