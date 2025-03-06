@@ -86,7 +86,10 @@ WSGI_APPLICATION = 'admin_opticas.wsgi.application'
 
 BD_DEFAULT = os.getenv('BD_DEFAULT', 'True') == str(True)
 
+print('=>>>')
+
 if BD_DEFAULT:
+    print('=> ', os.getenv("DATABASE_URL"))
     DATABASES = {
         'default': dj_database_url.config(default=os.getenv("DATABASE_URL"))
     }
