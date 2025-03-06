@@ -79,3 +79,4 @@ webencodings==0.5.1
 yarl==1.9.7
 zopfli==0.2.3
 dj-database-url==2.1.0
+gunicorn==21.2.0

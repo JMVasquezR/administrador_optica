@@ -1,5 +1,6 @@
 FROM python:3.12
 
+# Instala dependencias del sistema
 RUN apt-get update && apt-get install -y \
     libgirepository1.0-dev \
     libcairo2 \
@@ -12,6 +13,8 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 COPY . /app
 
-RUN pip install --no-cache-dir -r requirements.txt
+# Instala las dependencias de Python
+RUN pip install --no-cache-dir -r requirements.txt gunicorn
 
+# Comando de inicio con Gunicorn
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app_backend.wsgi:application"]
