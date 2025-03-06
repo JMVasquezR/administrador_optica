@@ -19,10 +19,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 if os.getenv("RAILWAY_ENV") is None:
     from dotenv import load_dotenv
-    
+
     load_dotenv()
 
 ENV_PATH = os.getenv('ENV_PATH', '.env')
+
+print('=> ', os.getenv("ALLOWED_HOSTS"))
 
 if os.path.exists(ENV_PATH):
     load_dotenv(ENV_PATH)
