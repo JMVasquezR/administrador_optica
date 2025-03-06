@@ -42,7 +42,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "railway.app").split(",")
 
-print('=> ', ALLOWED_HOSTS)
+print('=><<', ALLOWED_HOSTS)
 
 # Application definition
 
