@@ -23,6 +23,10 @@ else:
 SECRET_KEY = 'django-insecure-e5zg!ez@5ff9ys6eq-z57#s)*8+$g3ce4cy+573lx23cym)%l4'
 DEBUG = True
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://administradoroptica-production.up.railway.app"
+]
+
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", '').split(",")
 
 INSTALLED_APPS = [
@@ -75,7 +79,6 @@ WSGI_APPLICATION = 'admin_opticas.wsgi.application'
 BD_DEFAULT = os.getenv('BD_DEFAULT', 'True') == str(True)
 
 if BD_DEFAULT:
-    print('=> ', os.getenv("DATABASE_URL"))
     DATABASES = {
         'default': dj_database_url.config(default=os.getenv("DATABASE_URL"))
     }
