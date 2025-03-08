@@ -152,6 +152,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media') if os.getenv('MEDIA_ROOT') is None 
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'app_web/static'),
+    os.path.join(jet.__path__[0], 'static'),
 ]
 
 if not DEBUG:
