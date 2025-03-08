@@ -132,26 +132,6 @@ JET_THEMES = [
 JET_SIDE_MENU_COMPACT = True
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
-JET_SIDE_MENU_ITEMS = [
-    {'label': 'Eventos', 'app_label': 'app_notification', 'items': [
-        {'name': 'patientproxy'},
-    ]},
-    {'label': 'Administrador', 'app_label': 'app_backend', 'items': [
-        {'name': 'salesticket'},
-        {'name': 'recipe'},
-    ]},
-    {'label': 'Control', 'app_label': 'app_backend', 'items': [
-        {'name': 'category'},
-        {'name': 'configuration'},
-        {'name': 'brand'},
-        {'name': 'patient'},
-        {'name': 'product'},
-        {'name': 'typedocument'},
-    ]},
-    {'app_label': 'auth', 'items': [
-        {'name': 'group'},
-        {'name': 'user'},
-    ]},
-]
+JET_SIDE_MENU_ITEMS = None
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
