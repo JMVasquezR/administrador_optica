@@ -16,5 +16,8 @@ COPY . /app
 # Instala las dependencias de Python
 RUN pip install --no-cache-dir -r requirements.txt gunicorn
 
+# Recopila los archivos estáticos
+RUN python manage.py collectstatic --noinput
+
 # Comando de inicio con Gunicorn
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "admin_opticas.wsgi:application"]
