@@ -19,5 +19,12 @@ RUN pip install --no-cache-dir -r requirements.txt gunicorn
 # Recopila los archivos estáticos
 RUN rm -rf /app/staticfiles && python manage.py collectstatic --noinput
 
+# Copia el entrypoint y le da permisos de ejecución
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Define el entrypoint
+ENTRYPOINT ["/entrypoint.sh"]
+
 # Comando de inicio con Gunicorn
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "admin_opticas.wsgi:application"]

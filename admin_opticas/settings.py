@@ -24,7 +24,6 @@ SECRET_KEY = 'django-insecure-e5zg!ez@5ff9ys6eq-z57#s)*8+$g3ce4cy+573lx23cym)%l4
 DEBUG = True
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", '').split(",")
-print('=><<', ALLOWED_HOSTS)
 
 INSTALLED_APPS = [
     'jet.dashboard',
