@@ -90,6 +90,17 @@ else:
         }
     }
 
+LANGUAGE_CODE = 'es-pe'
+
+TIME_ZONE = 'America/Lima'
+
+USE_I18N = True
+
+USE_L10N = True
+
+USE_TZ = True
+
+
 # 🔹 Archivos estáticos y Django Jet
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
