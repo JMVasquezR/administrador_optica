@@ -16,9 +16,6 @@ COPY . /app
 # Instala las dependencias de Python
 RUN pip install --no-cache-dir -r requirements.txt gunicorn
 
-# Recopila los archivos estáticos
-RUN rm -rf /app/staticfiles && python manage.py collectstatic --noinput
-
 # Copia el entrypoint y le da permisos de ejecución
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
