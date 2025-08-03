@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from admin_opticas.pagination import CustomPagination
 from .serializers import (
     ProductSerializer, ProductListSerializer, BrandSerializer, CategorySerializer, ProductUpdateSerializer,
-    PatientSerializer, TypeDocumentSerializer
+    PatientSerializer, TypeDocumentSerializer, PatientCreateSerializer
 )
 from ..filters import ProductFilter, PatientFilter
 from ..models.patients import Patient
@@ -65,6 +65,7 @@ class ProductUpdateView(UpdateAPIView):
 
 class PatientListView(ListAPIView):
     queryset = Patient.objects.filter(is_active=True).order_by('-id')
+    # queryset = Patient.objects.all().order_by('-id')
     serializer_class = PatientSerializer
     pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend]
@@ -72,7 +73,7 @@ class PatientListView(ListAPIView):
 
 
 class PatientCreateView(generics.CreateAPIView):
-    serializer_class = PatientSerializer
+    serializer_class = PatientCreateSerializer
 
 
 class PatientDetailUpdateView(generics.RetrieveUpdateAPIView):

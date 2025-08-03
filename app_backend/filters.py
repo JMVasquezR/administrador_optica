@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django_filters import rest_framework as filters
 
 from app_backend.models.patients import Patient
@@ -16,12 +17,19 @@ class ProductFilter(filters.FilterSet):
 
 
 class PatientFilter(filters.FilterSet):
-    first_name = filters.CharFilter(lookup_expr='icontains')
-    surname = filters.CharFilter(lookup_expr='icontains')
-    second_surname = filters.CharFilter(lookup_expr='icontains')
-    gender = filters.CharFilter(lookup_expr='exact')
-    type_document = filters.CharFilter(field_name='type_document__short_name', lookup_expr='icontains')
+    full_name = filters.CharFilter(method='filter_full_name')
 
     class Meta:
         model = Patient
-        fields = ['first_name', 'surname', 'second_surname', 'gender', 'type_document']
+        fields = ['first_name', 'surname', 'second_surname', 'document_number', 'gender', 'type_document__short_name']
+
+    def filter_full_name(self, queryset, name, value):
+        terms = value.strip().lower().split()
+        for term in terms:
+            queryset = queryset.filter(
+                Q(first_name__icontains=term) |
+                Q(surname__icontains=term) |
+                Q(second_surname__icontains=term) |
+                Q(document_number__icontains=term)
+            )
+        return queryset

@@ -4,8 +4,8 @@ from model_utils.models import TimeStampedModel
 from app_backend.models.type_document import TypeDocument
 
 GENDER = (
-    ('m', 'Masculino'),
-    ('f', 'Femenino'),
+    ('M', 'Masculino'),
+    ('F', 'Femenino'),
 )
 
 

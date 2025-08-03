@@ -1641,6 +1641,25 @@ document.addEventListener("DOMContentLoaded", () => {
         brandFilter.addEventListener("change", applyFilters)
     }
 
+    // Funcionalidad de búsqueda de pacientes con debounce
+    const searchPatientInput = document.getElementById("searchPatient")
+    if (searchPatientInput) {
+        const debouncedPatientSearch = debounce(applyPatientFilters, 500)
+        searchPatientInput.addEventListener("input", debouncedPatientSearch)
+    }
+
+    // Funcionalidad de filtros de pacientes
+    const documentTypeFilter = document.getElementById("filterDocumentType")
+    const genderFilter = document.getElementById("filterGender")
+
+    if (documentTypeFilter) {
+        documentTypeFilter.addEventListener("change", applyPatientFilters)
+    }
+
+    if (genderFilter) {
+        genderFilter.addEventListener("change", applyPatientFilters)
+    }
+
     // Generar código automático cuando se selecciona una categoría
     const categorySelect = document.getElementById("category")
     const codeInput = document.getElementById("productCode")
@@ -1658,6 +1677,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Cargar categorías y marcas al inicio
     loadCategories()
     loadBrands()
+
+    // Cargar tipos de documento al inicio
+    loadDocumentTypes()
 })
 
 // Función para poblar el select de categorías del formulario de EDICIÓN
@@ -1725,14 +1747,15 @@ let currentPatientFilters = {
 }
 
 // Configuración API para pacientes
+// Update the PATIENT_API_CONFIG to match your actual endpoints
 const PATIENT_API_CONFIG = {
     baseURL: "http://127.0.0.1:8000/api",
     endpoints: {
         patients: "/pacientes/",
-        createPatient: "/pacientes/create/",
-        updatePatient: "/pacientes",
-        deletePatient: "/pacientes",
-        documentTypes: "/tipos-documento/",
+        createPatient: "/pacientes/crear/",
+        updatePatient: "/pacientes/pacientes", // Will be used with /{id}/
+        deletePatient: "/pacientes", // Will be used with /{id}/eliminar/
+        documentTypes: "/documentos/", // Updated to match your API
     },
     pageSize: 10,
 }
@@ -1825,6 +1848,7 @@ async function loadDocumentTypes() {
 }
 
 // Función para poblar selects de tipos de documento
+// Update populateDocumentTypeSelects to handle the new API structure
 function populateDocumentTypeSelects(documentTypes) {
     // Select del formulario de agregar
     const addSelect = document.getElementById("patientTypeDocument")
@@ -1835,7 +1859,7 @@ function populateDocumentTypeSelects(documentTypes) {
         documentTypes.forEach((type) => {
             const option = document.createElement("option")
             option.value = type.id
-            option.textContent = type.name
+            option.textContent = `${type.short_name} - ${type.long_name}` // Show both short and long name
             addSelect.appendChild(option)
         })
     }
@@ -1849,12 +1873,12 @@ function populateDocumentTypeSelects(documentTypes) {
         documentTypes.forEach((type) => {
             const option = document.createElement("option")
             option.value = type.id
-            option.textContent = type.name
+            option.textContent = `${type.short_name} - ${type.long_name}`
             editSelect.appendChild(option)
         })
     }
 
-    // Select del filtro
+    // Select del filtro - use short_name for filtering
     const filterSelect = document.getElementById("filterDocumentType")
     if (filterSelect) {
         while (filterSelect.children.length > 1) {
@@ -1862,11 +1886,43 @@ function populateDocumentTypeSelects(documentTypes) {
         }
         documentTypes.forEach((type) => {
             const option = document.createElement("option")
-            option.value = type.id
-            option.textContent = type.name
+            option.value = type.short_name // Use short_name for filtering as per your filter
+            option.textContent = `${type.short_name} - ${type.long_name}`
             filterSelect.appendChild(option)
         })
     }
+}
+
+// Función para construir URL de API de pacientes
+// Update the buildPatientApiUrl function to match your filter structure
+function buildPatientApiUrl(page = 1, filters = {}) {
+    let url = `${PATIENT_API_CONFIG.baseURL}${PATIENT_API_CONFIG.endpoints.patients}`
+    const params = []
+
+    // Parámetros de paginación
+    params.push(`page=${page}`)
+    params.push(`page_size=${PATIENT_API_CONFIG.pageSize}`)
+
+    // Update filters to match your Django filter structure
+    if (filters.search && filters.search.trim()) {
+        // Search in first_name, surname, and second_surname
+        params.push(`full_name=${encodeURIComponent(filters.search.trim())}`)
+        // params.push(`surname=${encodeURIComponent(filters.search.trim())}`)
+        // params.push(`second_surname=${encodeURIComponent(filters.search.trim())}`)
+    }
+    if (filters.document_type && filters.document_type.trim()) {
+        params.push(`type_document=${encodeURIComponent(filters.document_type.trim())}`)
+    }
+    if (filters.gender && filters.gender.trim()) {
+        params.push(`gender=${encodeURIComponent(filters.gender.trim())}`)
+    }
+
+    if (params.length > 0) {
+        url += "?" + params.join("&")
+    }
+
+    console.log("URL de pacientes construida:", url)
+    return url
 }
 
 // Función para cargar pacientes desde el servidor
@@ -1881,7 +1937,7 @@ async function loadPatientsFromServer(page = 1, filters = currentPatientFilters)
 
     try {
         const apiUrl = buildPatientApiUrl(page, filters)
-        console.log("Cargando pacientes desde:", apiUrl)
+        console.log("Realizando petición AJAX a:", apiUrl)
 
         const response = await fetch(apiUrl, {
             method: "GET",
@@ -1896,12 +1952,14 @@ async function loadPatientsFromServer(page = 1, filters = currentPatientFilters)
         }
 
         const data = await response.json()
-        console.log("Respuesta de pacientes:", data)
+        console.log("Respuesta de Django API (pacientes):", data)
 
+        // Procesar la respuesta igual que productos
         totalPatientItems = data.total_items || 0
         totalPatientPages = data.total_pages || 0
         currentPatientPage = data.current_page || 1
 
+        // Mapear los pacientes al formato esperado
         currentPatients = data.results.map((patient) => ({
             id: patient.id,
             first_name: patient.first_name,
@@ -1919,6 +1977,9 @@ async function loadPatientsFromServer(page = 1, filters = currentPatientFilters)
             age: calculateAge(patient.date_of_birth),
         }))
 
+        console.log("Pacientes procesados:", currentPatients.length)
+        console.log("Página actual:", currentPatientPage, "de", totalPatientPages)
+
         renderPatients(currentPatients)
         renderPatientsPagination(data)
     } catch (error) {
@@ -1929,29 +1990,20 @@ async function loadPatientsFromServer(page = 1, filters = currentPatientFilters)
     }
 }
 
-// Función para construir URL de API de pacientes
-function buildPatientApiUrl(page = 1, filters = {}) {
-    let url = `${PATIENT_API_CONFIG.baseURL}${PATIENT_API_CONFIG.endpoints.patients}`
-    const params = []
+// Función para calcular edad
+function calculateAge(birthDate) {
+    if (!birthDate) return null
 
-    params.push(`page=${page}`)
-    params.push(`page_size=${PATIENT_API_CONFIG.pageSize}`)
+    const today = new Date()
+    const birth = new Date(birthDate)
+    let age = today.getFullYear() - birth.getFullYear()
+    const monthDiff = today.getMonth() - birth.getMonth()
 
-    if (filters.search && filters.search.trim()) {
-        params.push(`search=${encodeURIComponent(filters.search.trim())}`)
-    }
-    if (filters.document_type && filters.document_type.trim()) {
-        params.push(`document_type=${encodeURIComponent(filters.document_type.trim())}`)
-    }
-    if (filters.gender && filters.gender.trim()) {
-        params.push(`gender=${encodeURIComponent(filters.gender.trim())}`)
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--
     }
 
-    if (params.length > 0) {
-        url += "?" + params.join("&")
-    }
-
-    return url
+    return age
 }
 
 // Función para mostrar loading de pacientes
@@ -1996,6 +2048,7 @@ function showPatientsError(message) {
 }
 
 // Función para renderizar pacientes
+// Update renderPatients to show document type correctly
 function renderPatients(patients) {
     const tbody = document.getElementById("patientsTableBody")
     if (!tbody) return
@@ -2033,7 +2086,7 @@ function renderPatients(patients) {
       </td>
       <td>
         <div>
-          <span class="badge bg-secondary">${patient.type_document?.name || "N/A"}</span>
+          <span class="badge bg-secondary">${patient.type_document}</span>
           <div class="small mt-1">${patient.document_number}</div>
         </div>
       </td>
@@ -2047,9 +2100,6 @@ function renderPatients(patients) {
         <button class="btn btn-sm btn-outline-primary me-1" title="Editar" onclick="editPatient(${patient.id})">
           <i class="fas fa-edit"></i>
         </button>
-        <button class="btn btn-sm btn-outline-success me-1" title="Historial" onclick="viewPatientHistory(${patient.id})">
-          <i class="fas fa-history"></i>
-        </button>
         <button class="btn btn-sm btn-outline-danger" title="Eliminar" onclick="deletePatient(${patient.id})">
           <i class="fas fa-trash"></i>
         </button>
@@ -2057,22 +2107,6 @@ function renderPatients(patients) {
     `
         tbody.appendChild(row)
     })
-}
-
-// Función para calcular edad
-function calculateAge(birthDate) {
-    if (!birthDate) return null
-
-    const today = new Date()
-    const birth = new Date(birthDate)
-    let age = today.getFullYear() - birth.getFullYear()
-    const monthDiff = today.getMonth() - birth.getMonth()
-
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-        age--
-    }
-
-    return age
 }
 
 // Función para formatear fecha
@@ -2096,6 +2130,19 @@ function renderPatientsPagination(data) {
 
     const {current_page, total_pages, next_page, previous_page} = data
 
+    // Extraer números de página de las URLs
+    const nextPageNum = next_page ? extractPageNumber(next_page) : null
+    const prevPageNum = previous_page ? extractPageNumber(previous_page) : null
+
+    console.log("Datos de paginación (pacientes):", {
+        current_page,
+        total_pages,
+        next_page,
+        previous_page,
+        nextPageNum,
+        prevPageNum,
+    })
+
     // Botón Anterior
     const prevLi = document.createElement("li")
     const canGoPrevious = current_page > 1
@@ -2108,19 +2155,64 @@ function renderPatientsPagination(data) {
         prevLink.textContent = "Anterior"
         prevLink.addEventListener("click", (e) => {
             e.preventDefault()
-            loadPatientsFromServer(current_page - 1)
+            const targetPage = prevPageNum || current_page - 1
+            console.log("Navegando a página anterior (pacientes):", targetPage)
+            loadPatientsFromServer(targetPage)
         })
         prevLi.appendChild(prevLink)
     } else {
         const prevSpan = document.createElement("span")
         prevSpan.className = "page-link"
         prevSpan.textContent = "Anterior"
+        prevSpan.setAttribute("tabindex", "-1")
         prevLi.appendChild(prevSpan)
     }
     paginationContainer.appendChild(prevLi)
 
-    // Páginas numeradas
-    for (let i = 1; i <= total_pages; i++) {
+    // Lógica para mostrar páginas
+    let startPage = 1
+    let endPage = total_pages
+
+    if (total_pages > 5) {
+        if (current_page <= 3) {
+            endPage = 5
+        } else if (current_page >= total_pages - 2) {
+            startPage = total_pages - 4
+        } else {
+            startPage = current_page - 2
+            endPage = current_page + 2
+        }
+    }
+
+    // Primera página si no está en el rango
+    if (startPage > 1) {
+        const firstLi = document.createElement("li")
+        firstLi.className = "page-item"
+
+        const firstLink = document.createElement("a")
+        firstLink.className = "page-link"
+        firstLink.href = "#"
+        firstLink.textContent = "1"
+        firstLink.addEventListener("click", (e) => {
+            e.preventDefault()
+            loadPatientsFromServer(1)
+        })
+        firstLi.appendChild(firstLink)
+        paginationContainer.appendChild(firstLi)
+
+        if (startPage > 2) {
+            const dotsLi = document.createElement("li")
+            dotsLi.className = "page-item disabled"
+            const dotsSpan = document.createElement("span")
+            dotsSpan.className = "page-link"
+            dotsSpan.textContent = "..."
+            dotsLi.appendChild(dotsSpan)
+            paginationContainer.appendChild(dotsLi)
+        }
+    }
+
+    // Páginas del rango
+    for (let i = startPage; i <= endPage; i++) {
         const li = document.createElement("li")
         li.className = `page-item ${i === current_page ? "active" : ""}`
 
@@ -2136,6 +2228,33 @@ function renderPatientsPagination(data) {
         paginationContainer.appendChild(li)
     }
 
+    // Última página si no está en el rango
+    if (endPage < total_pages) {
+        if (endPage < total_pages - 1) {
+            const dotsLi = document.createElement("li")
+            dotsLi.className = "page-item disabled"
+            const dotsSpan = document.createElement("span")
+            dotsSpan.className = "page-link"
+            dotsSpan.textContent = "..."
+            dotsLi.appendChild(dotsSpan)
+            paginationContainer.appendChild(dotsLi)
+        }
+
+        const lastLi = document.createElement("li")
+        lastLi.className = "page-item"
+
+        const lastLink = document.createElement("a")
+        lastLink.className = "page-link"
+        lastLink.href = "#"
+        lastLink.textContent = total_pages.toString()
+        lastLink.addEventListener("click", (e) => {
+            e.preventDefault()
+            loadPatientsFromServer(total_pages)
+        })
+        lastLi.appendChild(lastLink)
+        paginationContainer.appendChild(lastLi)
+    }
+
     // Botón Siguiente
     const nextLi = document.createElement("li")
     const canGoNext = current_page < total_pages
@@ -2148,34 +2267,66 @@ function renderPatientsPagination(data) {
         nextLink.textContent = "Siguiente"
         nextLink.addEventListener("click", (e) => {
             e.preventDefault()
-            loadPatientsFromServer(current_page + 1)
+            const targetPage = nextPageNum || current_page + 1
+            console.log("Navegando a página siguiente (pacientes):", targetPage)
+            loadPatientsFromServer(targetPage)
         })
         nextLi.appendChild(nextLink)
     } else {
         const nextSpan = document.createElement("span")
         nextSpan.className = "page-link"
         nextSpan.textContent = "Siguiente"
+        nextSpan.setAttribute("tabindex", "-1")
         nextLi.appendChild(nextSpan)
     }
     paginationContainer.appendChild(nextLi)
+
+    // Información de paginación
+    updatePatientsPaginationInfo(data)
 }
 
-// Funciones placeholder para acciones de pacientes
-function editPatient(id) {
-    console.log("Editando paciente:", id)
-    // TODO: Implementar edición de paciente
+// Función para actualizar información de paginación de pacientes
+function updatePatientsPaginationInfo(data) {
+    const {current_page, total_items, total_pages} = data
+    const itemsPerPage = PATIENT_API_CONFIG.pageSize
+    const startItem = (current_page - 1) * itemsPerPage + 1
+    const endItem = Math.min(current_page * itemsPerPage, total_items)
+
+    // Crear o actualizar el elemento de información
+    let infoElement = document.getElementById("patients-pagination-info")
+    if (!infoElement) {
+        infoElement = document.createElement("div")
+        infoElement.id = "patients-pagination-info"
+        infoElement.className = "text-muted small mb-3"
+
+        const paginationNav = document.querySelector('nav[aria-label="Paginación de pacientes"]')
+        if (paginationNav) {
+            paginationNav.parentNode.insertBefore(infoElement, paginationNav)
+        }
+    }
+
+    infoElement.innerHTML = `Mostrando ${startItem} a ${endItem} de ${total_items} pacientes (Página ${current_page} de ${total_pages})`
 }
 
-function viewPatientHistory(id) {
-    console.log("Viendo historial del paciente:", id)
-    // TODO: Implementar vista de historial
+// Función para aplicar filtros de pacientes
+function applyPatientFilters() {
+    const searchTerm = document.getElementById("searchPatient")?.value || ""
+    const documentTypeFilter = document.getElementById("filterDocumentType")?.value || ""
+    const genderFilter = document.getElementById("filterGender")?.value || ""
+
+    const filters = {
+        search: searchTerm,
+        document_type: documentTypeFilter,
+        gender: genderFilter,
+    }
+
+    console.log("Aplicando filtros de pacientes:", filters)
+
+    // Cargar primera página con filtros
+    loadPatientsFromServer(1, filters)
 }
 
-function deletePatient(id) {
-    console.log("Eliminando paciente:", id)
-    // TODO: Implementar eliminación de paciente
-}
-
+// Función para limpiar filtros de pacientes
 function clearPatientFilters() {
     console.log("Limpiando filtros de pacientes")
     const searchPatient = document.getElementById("searchPatient")
@@ -2186,22 +2337,96 @@ function clearPatientFilters() {
     if (filterDocumentType) filterDocumentType.value = ""
     if (filterGender) filterGender.value = ""
 
+    // Resetear filtros y cargar primera página
     currentPatientFilters = {search: "", document_type: "", gender: ""}
     loadPatientsFromServer(1, currentPatientFilters)
 }
 
-// Hacer funciones globales
-window.showAddPatientForm = showAddPatientForm
-window.showEditPatientForm = showEditPatientForm
-window.showPatientsList = showPatientsList
-window.editPatient = editPatient
-window.viewPatientHistory = viewPatientHistory
-window.deletePatient = deletePatient
-window.clearPatientFilters = clearPatientFilters
+// Función para editar paciente
+async function editPatient(id) {
+    console.log("Editando paciente:", id)
 
-// Función para llenar el formulario de edición de pacientes
+    try {
+        // Mostrar loading mientras se carga el paciente
+        const editBtn = document.querySelector(`button[onclick="editPatient(${id})"]`)
+        const originalContent = editBtn ? editBtn.innerHTML : null
+
+        if (editBtn) {
+            editBtn.disabled = true
+            editBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'
+            editBtn.title = "Cargando..."
+        }
+
+        // Obtener datos del paciente
+        const patient = await getPatientFromServer(id)
+
+        // Mostrar formulario de edición
+        showEditPatientForm(patient)
+
+        // Restaurar botón
+        if (editBtn && originalContent) {
+            editBtn.disabled = false
+            editBtn.innerHTML = originalContent
+            editBtn.title = "Editar"
+        }
+    } catch (error) {
+        console.error("Error al cargar paciente para editar:", error)
+
+        // Mostrar modal de error
+        createErrorModal("Error al Cargar Paciente", "No se pudo cargar la información del paciente: " + error.message)
+
+        // Restaurar botón
+        const editBtn = document.querySelector(`button[onclick="editPatient(${id})"]`)
+        if (editBtn) {
+            editBtn.disabled = false
+            editBtn.innerHTML = '<i class="fas fa-edit"></i>'
+            editBtn.title = "Editar"
+        }
+    }
+}
+
+// Función para obtener detalle del paciente via AJAX
+// Update getPatientFromServer to use correct endpoint
+async function getPatientFromServer(patientId) {
+    try {
+        console.log("Obteniendo paciente del servidor:", patientId)
+
+        const response = await fetch(`${PATIENT_API_CONFIG.baseURL}/pacientes/${patientId}/`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+        })
+
+        console.log("Respuesta del servidor:", response.status, response.statusText)
+
+        if (!response.ok) {
+            let errorMessage = `Error HTTP: ${response.status} - ${response.statusText}`
+
+            try {
+                const errorData = await response.json()
+                console.log("Error del servidor:", errorData)
+                errorMessage = errorData.detail || errorData.message || errorData.error || errorMessage
+            } catch (parseError) {
+                console.log("No se pudo parsear el error como JSON")
+            }
+
+            throw new Error(errorMessage)
+        }
+
+        const patient = await response.json()
+        console.log("Paciente obtenido exitosamente:", patient)
+        return patient
+    } catch (error) {
+        console.error("Error al obtener paciente:", error)
+        throw error
+    }
+}
+
+// Función para llenar el formulario de edición con datos del paciente
 function fillEditPatientForm(patient) {
-    console.log("Llenando formulario de edición de paciente:", patient)
+    console.log("Llenando formulario de edición con datos:", patient)
 
     // Campos básicos
     document.getElementById("editPatientId").value = patient.id || ""
@@ -2210,7 +2435,7 @@ function fillEditPatientForm(patient) {
     document.getElementById("editPatientSecondSurname").value = patient.second_surname || ""
     document.getElementById("editPatientDateOfBirth").value = patient.date_of_birth || ""
     document.getElementById("editPatientDocumentNumber").value = patient.document_number || ""
-    document.getElementById("editPatientPhoneOrCellular").value = patient.phone_or_cellular || ""
+    document.getElementById("editPatientPhone").value = patient.phone_or_cellular || ""
     document.getElementById("editPatientDirection").value = patient.direction || ""
     document.getElementById("editPatientEmail").value = patient.email || ""
 
@@ -2229,12 +2454,430 @@ function fillEditPatientForm(patient) {
     }
 
     // Género
-    const genderMale = document.getElementById("editPatientGenderMale")
-    const genderFemale = document.getElementById("editPatientGenderFemale")
-
-    if (patient.gender === "M") {
-        if (genderMale) genderMale.checked = true
-    } else {
-        if (genderFemale) genderFemale.checked = true
+    const genderSelect = document.getElementById("editPatientGender")
+    if (genderSelect && patient.gender) {
+        genderSelect.value = patient.gender
     }
 }
+
+// Función para crear paciente via AJAX
+async function createPatientOnServer(patientData) {
+    try {
+        console.log("Creando paciente en servidor:", patientData)
+
+        // Mapear datos al formato esperado por tu modelo Django
+        const djangoData = {
+            first_name: patientData.first_name,
+            surname: patientData.surname,
+            second_surname: patientData.second_surname || null,
+            date_of_birth: patientData.date_of_birth,
+            type_document: Number.parseInt(patientData.type_document),
+            document_number: patientData.document_number,
+            gender: patientData.gender,
+            phone_or_cellular: patientData.phone_or_cellular || null,
+            direction: patientData.direction || null,
+            email: patientData.email || null,
+        }
+
+        console.log("Datos mapeados para Django:", djangoData)
+
+        const response = await fetch(PATIENT_API_CONFIG.baseURL + PATIENT_API_CONFIG.endpoints.createPatient, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+                "X-CSRFToken": getCookie("csrftoken"),
+            },
+            body: JSON.stringify(djangoData),
+        })
+
+        if (!response.ok) {
+            let errorMessage = `Error HTTP: ${response.status}`
+
+            try {
+                const errorData = await response.json()
+                console.log("Error del servidor:", errorData)
+
+                if (errorData.detail) {
+                    errorMessage = errorData.detail
+                } else if (errorData.message) {
+                    errorMessage = errorData.message
+                } else if (typeof errorData === "object") {
+                    const fieldErrors = []
+                    for (const [field, errors] of Object.entries(errorData)) {
+                        if (Array.isArray(errors)) {
+                            fieldErrors.push(`${field}: ${errors.join(", ")}`)
+                        } else {
+                            fieldErrors.push(`${field}: ${errors}`)
+                        }
+                    }
+                    if (fieldErrors.length > 0) {
+                        errorMessage = fieldErrors.join("\n")
+                    }
+                }
+            } catch (parseError) {
+                console.log("No se pudo parsear el error como JSON")
+            }
+
+            throw new Error(errorMessage)
+        }
+
+        const result = await response.json()
+        console.log("Paciente creado exitosamente:", result)
+
+        return result
+    } catch (error) {
+        console.error("Error al crear paciente:", error)
+        throw error
+    }
+}
+
+// Función para actualizar paciente via AJAX
+// Update updatePatientOnServer to use correct endpoint
+async function updatePatientOnServer(patientId, patientData) {
+    try {
+        console.log("Actualizando paciente en servidor:", patientId, patientData)
+
+        const djangoData = {
+            first_name: patientData.first_name,
+            surname: patientData.surname,
+            second_surname: patientData.second_surname || null,
+            date_of_birth: patientData.date_of_birth || null,
+            type_document: Number.parseInt(patientData.type_document),
+            document_number: patientData.document_number,
+            gender: patientData.gender,
+            phone_or_cellular: patientData.phone_or_cellular || null,
+            direction: patientData.direction || null,
+            email: patientData.email || null,
+        }
+
+        console.log("Datos mapeados para Django:", djangoData)
+
+        const response = await fetch(`${PATIENT_API_CONFIG.baseURL}/pacientes/${patientId}/`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+                "X-CSRFToken": getCookie("csrftoken"),
+            },
+            body: JSON.stringify(djangoData),
+        })
+
+        if (!response.ok) {
+            let errorMessage = `Error HTTP: ${response.status}`
+
+            try {
+                const errorData = await response.json()
+                console.log("Error del servidor:", errorData)
+
+                if (errorData.detail) {
+                    errorMessage = errorData.detail
+                } else if (errorData.message) {
+                    errorMessage = errorData.message
+                } else if (typeof errorData === "object") {
+                    const fieldErrors = []
+                    for (const [field, errors] of Object.entries(errorData)) {
+                        if (Array.isArray(errors)) {
+                            fieldErrors.push(`${field}: ${errors.join(", ")}`)
+                        } else {
+                            fieldErrors.push(`${field}: ${errors}`)
+                        }
+                    }
+                    if (fieldErrors.length > 0) {
+                        errorMessage = fieldErrors.join("\n")
+                    }
+                }
+            } catch (parseError) {
+                console.log("No se pudo parsear el error como JSON")
+            }
+
+            throw new Error(errorMessage)
+        }
+
+        const result = await response.json()
+        console.log("Paciente actualizado exitosamente:", result)
+
+        return result
+    } catch (error) {
+        console.error("Error al actualizar paciente:", error)
+        throw error
+    }
+}
+
+// Función para eliminar paciente via AJAX
+// Update deletePatientOnServer to use correct endpoint
+async function deletePatientOnServer(patientId) {
+    try {
+        console.log("Eliminando paciente del servidor:", patientId)
+
+        const deleteUrl = `${PATIENT_API_CONFIG.baseURL}/pacientes/${patientId}/eliminar/`
+        console.log("URL de eliminación:", deleteUrl)
+
+        const response = await fetch(deleteUrl, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+                "X-CSRFToken": getCookie("csrftoken"),
+            },
+        })
+
+        console.log("Respuesta del servidor:", response.status, response.statusText)
+
+        if (!response.ok) {
+            let errorMessage = `Error HTTP: ${response.status} - ${response.statusText}`
+
+            try {
+                const errorData = await response.json()
+                console.log("Error del servidor:", errorData)
+                errorMessage = errorData.detail || errorData.message || errorData.error || errorMessage
+            } catch (parseError) {
+                console.log("No se pudo parsear el error como JSON")
+                try {
+                    const errorText = await response.text()
+                    if (errorText) {
+                        errorMessage = errorText
+                    }
+                } catch (textError) {
+                    console.log("No se pudo obtener texto de respuesta")
+                }
+            }
+
+            throw new Error(errorMessage)
+        }
+
+        let result = {success: true, message: "Paciente eliminado exitosamente"}
+
+        if (response.status !== 204) {
+            try {
+                const responseData = await response.json()
+                result = {...result, ...responseData}
+            } catch (parseError) {
+                console.log("Respuesta exitosa pero no es JSON válido")
+            }
+        }
+
+        console.log("Paciente eliminado exitosamente:", result)
+        return result
+    } catch (error) {
+        console.error("Error al eliminar paciente:", error)
+        throw error
+    }
+}
+
+// Función para eliminar paciente
+async function deletePatient(id) {
+    console.log("Eliminando paciente:", id)
+
+    const patient = currentPatients.find((p) => p.id === id)
+    const patientName = patient ? patient.full_name : `ID ${id}`
+
+    createConfirmationModal(
+        "Confirmar Eliminación",
+        `¿Estás seguro de que deseas eliminar el paciente "<strong>${patientName}</strong>"?<br><br>Esta acción no se puede deshacer.`,
+        async () => {
+            const deleteBtn = document.querySelector(`button[onclick="deletePatient(${id})"]`)
+            const originalContent = deleteBtn ? deleteBtn.innerHTML : null
+
+            try {
+                if (deleteBtn) {
+                    deleteBtn.disabled = true
+                    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'
+                    deleteBtn.title = "Eliminando..."
+                }
+
+                const result = await deletePatientOnServer(id)
+
+                const confirmationModal = document.getElementById("confirmationModal")
+                if (confirmationModal) {
+                    window.bootstrap.Modal.getInstance(confirmationModal).hide()
+                }
+
+                const successMessage = result.message || "Paciente eliminado exitosamente"
+                createSuccessModal("¡Eliminado!", successMessage)
+
+                if (currentPatients.length === 1 && currentPatientPage > 1) {
+                    loadPatientsFromServer(currentPatientPage - 1, currentPatientFilters)
+                } else {
+                    loadPatientsFromServer(currentPatientPage, currentPatientFilters)
+                }
+            } catch (error) {
+                console.error("Error completo al eliminar:", error)
+
+                const confirmationModal = document.getElementById("confirmationModal")
+                if (confirmationModal) {
+                    window.bootstrap.Modal.getInstance(confirmationModal).hide()
+                }
+
+                let errorMessage = "No se pudo eliminar el paciente"
+                if (error.message) {
+                    errorMessage = error.message
+                }
+
+                createErrorModal("Error al Eliminar", errorMessage)
+
+                if (deleteBtn && originalContent) {
+                    deleteBtn.disabled = false
+                    deleteBtn.innerHTML = originalContent
+                    deleteBtn.title = "Eliminar"
+                }
+            }
+        },
+        () => {
+            console.log("Eliminación cancelada por el usuario")
+        },
+    )
+}
+
+// Hacer funciones globales para pacientes
+window.showAddPatientForm = showAddPatientForm
+window.showEditPatientForm = showEditPatientForm
+window.showPatientsList = showPatientsList
+window.editPatient = editPatient
+window.deletePatient = deletePatient
+window.clearPatientFilters = clearPatientFilters
+window.loadPatientsFromServer = loadPatientsFromServer
+
+// Add event listeners for patient forms in the DOMContentLoaded section
+document.addEventListener("DOMContentLoaded", () => {
+    // ... existing code ...
+
+    // Manejador de envío del formulario de agregar paciente
+    const addPatientForm = document.getElementById("addPatientForm")
+    if (addPatientForm) {
+        addPatientForm.addEventListener("submit", async (e) => {
+            e.preventDefault()
+            console.log("Formulario de paciente enviado")
+
+            const submitBtn = addPatientForm.querySelector('button[type="submit"]')
+            const originalText = submitBtn.innerHTML
+
+            try {
+                // Mostrar loading
+                submitBtn.disabled = true
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Guardando...'
+
+                // Obtener datos del formulario
+                const formData = {
+                    first_name: document.getElementById("patientFirstName").value,
+                    surname: document.getElementById("patientSurname").value,
+                    second_surname: document.getElementById("patientSecondSurname").value || null,
+                    date_of_birth: document.getElementById("patientDateOfBirth").value || null,
+                    type_document: document.getElementById("patientTypeDocument").value,
+                    document_number: document.getElementById("patientDocumentNumber").value,
+                    gender: document.getElementById("patientGender").value,
+                    phone_or_cellular: document.getElementById("patientPhone").value || null,
+                    direction: document.getElementById("patientDirection").value || null,
+                    email: document.getElementById("patientEmail").value || null,
+                }
+
+                console.log("Datos del paciente:", formData)
+
+                // Validar campos requeridos
+                if (
+                    !formData.first_name ||
+                    !formData.surname ||
+                    !formData.type_document ||
+                    !formData.document_number ||
+                    !formData.gender
+                ) {
+                    throw new Error("Por favor completa todos los campos obligatorios")
+                }
+
+                // Crear en el servidor
+                await createPatientOnServer(formData)
+
+                // Mostrar modal de éxito
+                createSuccessModal("¡Paciente Creado!", "El paciente ha sido agregado exitosamente al sistema.")
+
+                // Resetear formulario y volver a la lista
+                addPatientForm.reset()
+                showPatientsList()
+
+                // Recargar pacientes para mostrar el nuevo
+                loadPatientsFromServer(1, currentPatientFilters)
+            } catch (error) {
+                // Mostrar modal de error
+                createErrorModal("Error al Crear Paciente", "No se pudo guardar el paciente: " + error.message)
+                console.error("Error completo:", error)
+            } finally {
+                // Restaurar botón
+                submitBtn.disabled = false
+                submitBtn.innerHTML = originalText
+            }
+        })
+    }
+
+    // Manejador de envío del formulario de edición de paciente
+    const editPatientForm = document.getElementById("editPatientForm")
+    if (editPatientForm) {
+        editPatientForm.addEventListener("submit", async (e) => {
+            e.preventDefault()
+            console.log("Formulario de edición de paciente enviado")
+
+            const submitBtn = editPatientForm.querySelector('button[type="submit"]')
+            const originalText = submitBtn.innerHTML
+
+            try {
+                // Mostrar loading
+                submitBtn.disabled = true
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Actualizando...'
+
+                // Obtener ID del paciente
+                const patientId = document.getElementById("editPatientId").value
+                if (!patientId) {
+                    throw new Error("ID del paciente no encontrado")
+                }
+
+                // Obtener datos del formulario
+                const formData = {
+                    first_name: document.getElementById("editPatientFirstName").value,
+                    surname: document.getElementById("editPatientSurname").value,
+                    second_surname: document.getElementById("editPatientSecondSurname").value || null,
+                    date_of_birth: document.getElementById("editPatientDateOfBirth").value || null,
+                    type_document: document.getElementById("editPatientTypeDocument").value,
+                    document_number: document.getElementById("editPatientDocumentNumber").value,
+                    gender: document.getElementById("editPatientGender").value,
+                    phone_or_cellular: document.getElementById("editPatientPhone").value || null,
+                    direction: document.getElementById("editPatientDirection").value || null,
+                    email: document.getElementById("editPatientEmail").value || null,
+                }
+
+                console.log("Datos del paciente a actualizar:", formData)
+
+                // Validar campos requeridos
+                if (
+                    !formData.first_name ||
+                    !formData.surname ||
+                    !formData.type_document ||
+                    !formData.document_number ||
+                    !formData.gender
+                ) {
+                    throw new Error("Por favor completa todos los campos obligatorios")
+                }
+
+                // Actualizar en el servidor
+                await updatePatientOnServer(patientId, formData)
+
+                // Mostrar modal de éxito
+                createSuccessModal("¡Paciente Actualizado!", "Los cambios han sido guardados exitosamente.")
+
+                // Volver a la lista
+                showPatientsList()
+
+                // Recargar pacientes para mostrar los cambios
+                loadPatientsFromServer(currentPatientPage, currentPatientFilters)
+            } catch (error) {
+                // Mostrar modal de error
+                createErrorModal("Error al Actualizar Paciente", "No se pudieron guardar los cambios: " + error.message)
+                console.error("Error completo:", error)
+            } finally {
+                // Restaurar botón
+                submitBtn.disabled = false
+                submitBtn.innerHTML = originalText
+            }
+        })
+    }
+
+    // ... rest of existing code ...
+})

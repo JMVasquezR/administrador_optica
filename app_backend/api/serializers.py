@@ -40,6 +40,12 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class PatientCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Patient
+        fields = '__all__'
+
+
 class PatientSerializer(serializers.ModelSerializer):
     full_name = serializers.ReadOnlyField()
     full_document = serializers.ReadOnlyField()
