@@ -201,13 +201,11 @@ class ProductAdmin(admin.ModelAdmin):
     fieldsets = [
         (None, {
             'fields': [
-                'name',
-                'code',
-                'brand',
-                'category',
+                ('name', 'code'),
                 'unit_measure',
-                'description',
-                'unit_price',
+                ('brand', 'category'),
+                ('unit_price', 'initial_stock'),
+                'description'
             ]
         }),
     ]
@@ -221,7 +219,7 @@ class BrandAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('code', 'name')
+    list_display = ('name', )
     search_fields = ['name']
 
 

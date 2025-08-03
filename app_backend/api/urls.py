@@ -1,7 +1,11 @@
 from django.urls import path
 from rest_framework import routers
 
-from app_backend.api.views import ProductDetailView
+from app_backend.api.views import (
+    ProductView, ProductoListView, ProductCreateView, MarcasListView, CategoriasListView, ProductDeleteView,
+    ProductDetailView, ProductUpdateView, PatientListView, PatientCreateView, PatientDetailUpdateView,
+    PatientDeleteView, TypeDocumentListAPIView
+)
 
 app_name = 'app_backend'
 
@@ -9,4 +13,21 @@ router = routers.DefaultRouter()
 
 urlpatterns = router.urls
 
-urlpatterns.append(path('product/<int:pk>/', ProductDetailView.as_view(), name='product-detail'), )
+# Productos
+urlpatterns.append(path('product/<int:pk>/', ProductView.as_view(), name='product-detail'), )
+urlpatterns.append(path('marcas/', MarcasListView.as_view(), name='marcas-list'), )
+urlpatterns.append(path('categorias/', CategoriasListView.as_view(), name='categorias-list'), )
+urlpatterns.append(path('productos/', ProductoListView.as_view(), name='producto-list'), )
+urlpatterns.append(path('productos/create/', ProductCreateView.as_view(), name='crear-producto'), )
+urlpatterns.append(path('productos/<int:pk>/delete/', ProductDeleteView.as_view(), name='eliminar-producto'), )
+urlpatterns.append(path('productos/<int:pk>/', ProductDetailView.as_view(), name='detalle-producto'), )
+urlpatterns.append(path('productos/<int:pk>/edit/', ProductUpdateView.as_view(), name='editar-producto'), )
+
+# Pacientes
+urlpatterns.append(path('pacientes/', PatientListView.as_view(), name='listar-pacientes'), )
+urlpatterns.append(path('pacientes/crear/', PatientCreateView.as_view(), name='crear-paciente'), )
+urlpatterns.append(path('pacientes/<int:id>/', PatientDetailUpdateView.as_view(), name='detalle-editar-paciente'), )
+urlpatterns.append(path('pacientes/<int:id>/eliminar/', PatientDeleteView.as_view(), name='eliminar-paciente'), )
+
+# Documentos
+urlpatterns.append(path('documentos/', TypeDocumentListAPIView.as_view(), name='listar-documentos'), )

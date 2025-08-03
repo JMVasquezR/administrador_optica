@@ -1,4 +1,4 @@
-from django.db.models import (CharField, DateField, ForeignKey, PROTECT, EmailField)
+from django.db.models import (CharField, DateField, ForeignKey, PROTECT, EmailField, BooleanField)
 from model_utils.models import TimeStampedModel
 
 from app_backend.models.type_document import TypeDocument
@@ -25,6 +25,7 @@ class Patient(TimeStampedModel):
     phone_or_cellular = CharField(max_length=150, null=True, blank=True, verbose_name='Telefono o Celular')
     direction = CharField(max_length=500, blank=True, null=True, verbose_name='Dirección')
     email = EmailField(blank=True, null=True, verbose_name='Correo')
+    is_active = BooleanField(default=True, verbose_name='Estado')
 
     def __str__(self):
         return f'{self.first_name} {self.surname} {self.second_surname if self.second_surname else ""}'

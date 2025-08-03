@@ -1,0 +1,1316 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opticas K&M Lens - Panel de Administración</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="{% static 'css/admin_home.css' %}" rel="stylesheet">
+</head>
+<body>
+<!-- Header -->
+<header class="bg-white shadow-sm border-bottom">
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid px-4">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-eye text-red-custom fs-2 me-3"></i>
+                <span class="navbar-brand text-red-custom fw-bold mb-0">Opticas K&M Lens - Admin</span>
+            </div>
+            <div class="d-flex align-items-center">
+                <div class="position-relative me-3">
+                    <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                    <input type="text" class="form-control ps-5" placeholder="Buscar..." style="width: 250px;">
+                </div>
+                <button class="btn btn-outline-secondary btn-sm me-3">
+                    <i class="fas fa-bell"></i>
+                </button>
+                <div class="bg-red-custom rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
+                     style="width: 32px; height: 32px;">
+                    A
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<div class="d-flex">
+    <!-- Sidebar -->
+    <aside class="sidebar bg-white shadow-sm">
+        <nav class="p-3">
+            <ul class="nav flex-column">
+                <li class="nav-item mb-1">
+                    <button class="nav-link-custom active" onclick="showSection('dashboard')">
+                        <i class="fas fa-chart-line me-3"></i>
+                        Dashboard
+                    </button>
+                </li>
+                <li class="nav-item mb-1">
+                    <button class="nav-link-custom" onclick="showSection('products')">
+                        <i class="fas fa-glasses me-3"></i>
+                        Productos
+                    </button>
+                </li>
+                <li class="nav-item mb-1">
+                    <button class="nav-link-custom" onclick="showSection('clients')">
+                        <i class="fas fa-users me-3"></i>
+                        Clientes
+                    </button>
+                </li>
+                <li class="nav-item mb-1">
+                    <button class="nav-link-custom" onclick="showSection('appointments')">
+                        <i class="fas fa-calendar me-3"></i>
+                        Citas
+                    </button>
+                </li>
+                <li class="nav-item mb-1">
+                    <button class="nav-link-custom" onclick="showSection('sales')">
+                        <i class="fas fa-shopping-cart me-3"></i>
+                        Ventas
+                    </button>
+                </li>
+                <li class="nav-item mb-1">
+                    <button class="nav-link-custom" onclick="showSection('settings')">
+                        <i class="fas fa-cog me-3"></i>
+                        Configuración
+                    </button>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-fill p-4 bg-light">
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="content-section">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">Dashboard</h2>
+                <button class="btn btn-red-custom">
+                    <i class="fas fa-plus me-2"></i>
+                    Nueva Cita
+                </button>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted mb-1 small">Ventas del Mes</p>
+                                    <h3 class="fw-bold mb-1">S/ 15,420</h3>
+                                    <small class="text-success">+12% desde el mes pasado</small>
+                                </div>
+                                <i class="fas fa-chart-line text-success fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted mb-1 small">Citas Programadas</p>
+                                    <h3 class="fw-bold mb-1">24</h3>
+                                    <small class="text-primary">+3 desde el mes pasado</small>
+                                </div>
+                                <i class="fas fa-calendar text-primary fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted mb-1 small">Productos en Stock</p>
+                                    <h3 class="fw-bold mb-1">156</h3>
+                                    <small class="text-warning">-5 desde el mes pasado</small>
+                                </div>
+                                <i class="fas fa-box text-warning fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted mb-1 small">Clientes Activos</p>
+                                    <h3 class="fw-bold mb-1">89</h3>
+                                    <small class="text-info">+8 desde el mes pasado</small>
+                                </div>
+                                <i class="fas fa-users text-info fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <!-- Recent Appointments -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-calendar text-red-custom me-2"></i>
+                                Citas de Hoy
+                            </h5>
+                            <small class="text-muted">Próximas citas programadas</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="appointment-item">
+                                <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded mb-3">
+                                    <div>
+                                        <p class="fw-semibold mb-1">María González</p>
+                                        <small class="text-muted">Examen de vista</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="fw-semibold d-block">10:00 AM</small>
+                                        <span class="badge bg-success">confirmada</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="appointment-item">
+                                <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded mb-3">
+                                    <div>
+                                        <p class="fw-semibold mb-1">Carlos Ruiz</p>
+                                        <small class="text-muted">Adaptación de lentes</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="fw-semibold d-block">11:30 AM</small>
+                                        <span class="badge bg-warning">pendiente</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="appointment-item">
+                                <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded mb-3">
+                                    <div>
+                                        <p class="fw-semibold mb-1">Ana López</p>
+                                        <small class="text-muted">Control de seguimiento</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="fw-semibold d-block">2:00 PM</small>
+                                        <span class="badge bg-success">confirmada</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="appointment-item">
+                                <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                                    <div>
+                                        <p class="fw-semibold mb-1">Pedro Martín</p>
+                                        <small class="text-muted">Examen de vista</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="fw-semibold d-block">3:30 PM</small>
+                                        <span class="badge bg-danger">cancelada</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Sales -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-shopping-cart text-red-custom me-2"></i>
+                                Ventas Recientes
+                            </h5>
+                            <small class="text-muted">Últimas transacciones realizadas</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="sale-item">
+                                <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded mb-3">
+                                    <div>
+                                        <p class="fw-semibold mb-1">Gafas Ray-Ban</p>
+                                        <small class="text-muted">Laura Pérez</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <p class="fw-semibold text-success mb-1">S/ 450</p>
+                                        <small class="text-muted">2024-01-15</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="sale-item">
+                                <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded mb-3">
+                                    <div>
+                                        <p class="fw-semibold mb-1">Lentes de contacto</p>
+                                        <small class="text-muted">José García</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <p class="fw-semibold text-success mb-1">S/ 120</p>
+                                        <small class="text-muted">2024-01-15</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="sale-item">
+                                <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded mb-3">
+                                    <div>
+                                        <p class="fw-semibold mb-1">Montura Oakley</p>
+                                        <small class="text-muted">Carmen Silva</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <p class="fw-semibold text-success mb-1">S/ 280</p>
+                                        <small class="text-muted">2024-01-14</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="sale-item">
+                                <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                                    <div>
+                                        <p class="fw-semibold mb-1">Gafas de sol</p>
+                                        <small class="text-muted">Miguel Torres</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <p class="fw-semibold text-success mb-1">S/ 180</p>
+                                        <small class="text-muted">2024-01-14</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Acciones Rápidas</h5>
+                    <small class="text-muted">Tareas frecuentes del día a día</small>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6 col-md-3 mb-3">
+                            <button class="btn btn-outline-red-custom quick-action-btn">
+                                <i class="fas fa-eye fs-3 mb-2"></i>
+                                <small class="d-block">Nuevo Examen</small>
+                            </button>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <button class="btn btn-outline-red-custom quick-action-btn">
+                                <i class="fas fa-glasses fs-3 mb-2"></i>
+                                <small class="d-block">Agregar Producto</small>
+                            </button>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <button class="btn btn-outline-red-custom quick-action-btn">
+                                <i class="fas fa-users fs-3 mb-2"></i>
+                                <small class="d-block">Nuevo Cliente</small>
+                            </button>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <button class="btn btn-outline-red-custom quick-action-btn">
+                                <i class="fas fa-box fs-3 mb-2"></i>
+                                <small class="d-block">Inventario</small>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Section -->
+        <div id="products-section" class="content-section" style="display: none;">
+            <!-- Products List View -->
+            <div id="products-list" class="products-view">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="fw-bold text-dark">Gestión de Productos</h2>
+                    <button class="btn btn-red-custom" onclick="showAddProductForm()">
+                        <i class="fas fa-plus me-2"></i>
+                        Agregar Producto
+                    </button>
+                </div>
+
+                <!-- Search and Filters -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Buscar producto</label>
+                                <div class="position-relative">
+                                    <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                                    <input type="text" class="form-control ps-5" placeholder="Nombre o código..."
+                                           id="searchProduct">
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Categoría</label>
+                                <select class="form-select" id="filterCategory">
+                                    <option value="">Todas las categorías</option>
+                                    <!-- Las categorías se cargarán dinámicamente -->
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Marca</label>
+                                <select class="form-select" id="filterBrand">
+                                    <option value="">Todas las marcas</option>
+                                    <!-- Las marcas se cargarán dinámicamente -->
+                                </select>
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <label class="form-label">&nbsp;</label>
+                                <button class="btn btn-outline-red-custom w-100" onclick="clearFilters()">
+                                    <i class="fas fa-times me-1"></i>
+                                    Limpiar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Products Table -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Código</th>
+                                    <th>Unidad de Medida</th>
+                                    <th>Marca</th>
+                                    <th>Precio</th>
+                                    <th>Categoría</th>
+                                    <th>Stock</th>
+                                    <th>Acciones</th>
+                                </tr>
+                                </thead>
+                                <tbody id="productsTableBody">
+                                <!-- Los productos se cargarán dinámicamente aquí -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination Info and Controls -->
+                        <nav aria-label="Paginación de productos" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                <!-- La paginación se generará dinámicamente aquí -->
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Product Form View -->
+            <div id="add-product-form" class="products-view" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="fw-bold text-dark">Agregar Nuevo Producto</h2>
+                    <button class="btn btn-outline-secondary" onclick="showProductsList()">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Volver al Listado
+                    </button>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header bg-white">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-plus-circle text-red-custom me-2"></i>
+                                    Información del Producto
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="addProductForm">
+                                    <div class="row">
+                                        <div class="col-md-8 mb-3">
+                                            <label for="productName" class="form-label">Nombre del Producto <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="productName"
+                                                   placeholder="Ej: Gafas Ray-Ban Aviator" required maxlength="250">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Código del Producto</label>
+                                            <div class="input-group">
+                                                    <span class="input-group-text bg-light">
+                                                        <i class="fas fa-barcode text-muted"></i>
+                                                    </span>
+                                                <input type="text" class="form-control bg-light" id="productCode"
+                                                       value="AUTO-GENERADO" readonly>
+                                            </div>
+                                            <small class="text-muted">Se genera automáticamente al seleccionar
+                                                categoría</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label for="unitMeasure" class="form-label">Unidad de Medida <span
+                                                    class="text-danger">*</span></label>
+                                            <select class="form-select" id="unitMeasure" required>
+                                                <option value="">Seleccionar unidad</option>
+                                                <option value="UNIDAD">Unidad</option>
+                                                <option value="PAR">Par</option>
+                                                <option value="CAJA">Caja</option>
+                                                <option value="PAQUETE">Paquete</option>
+                                                <option value="BOTELLA">Botella</option>
+                                                <option value="METRO">Metro</option>
+                                                <option value="LITRO">Litro</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label for="brand" class="form-label">Marca</label>
+                                            <select class="form-select" id="brand">
+                                                <option value="">Seleccionar marca (Opcional)</option>
+                                                <!-- Las marcas se cargarán dinámicamente -->
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label for="category" class="form-label">Categoría <span
+                                                    class="text-danger">*</span></label>
+                                            <select class="form-select" id="category" required>
+                                                <option value="">Seleccionar categoría</option>
+                                                <!-- Las categorías se cargarán dinámicamente -->
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="price" class="form-label">Precio (S/)</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">S/</span>
+                                                <input type="number" class="form-control" id="price" placeholder="0.00"
+                                                       step="0.01" min="0">
+                                            </div>
+                                            <small class="text-muted">Opcional: Precio unitario del producto</small>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="stock" class="form-label">Stock Inicial</label>
+                                            <input type="number" class="form-control" id="stock" placeholder="0" min="0"
+                                                   value="0">
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="description" class="form-label">Descripción</label>
+                                        <textarea class="form-control" id="description" rows="4"
+                                                  placeholder="Descripción detallada del producto..."></textarea>
+                                        <small class="text-muted">Opcional: Incluye características, materiales,
+                                            etc.</small>
+                                    </div>
+
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <button type="button" class="btn btn-outline-secondary"
+                                                onclick="showProductsList()">
+                                            <i class="fas fa-times me-2"></i>
+                                            Cancelar
+                                        </button>
+                                        <button type="submit" class="btn btn-red-custom">
+                                            <i class="fas fa-save me-2"></i>
+                                            Guardar Producto
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header bg-white">
+                                <h6 class="card-title mb-0">
+                                    <i class="fas fa-info-circle text-red-custom me-2"></i>
+                                    Información Adicional
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Estado del Producto</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="status" id="statusActive"
+                                               value="active" checked>
+                                        <label class="form-check-label" for="statusActive">
+                                            <i class="fas fa-check-circle text-success me-1"></i>
+                                            Activo
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="status" id="statusInactive"
+                                               value="inactive">
+                                        <label class="form-check-label" for="statusInactive">
+                                            <i class="fas fa-pause-circle text-warning me-1"></i>
+                                            Inactivo
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-info">
+                                    <i class="fas fa-lightbulb me-2"></i>
+                                    <strong>Información:</strong>
+                                    <ul class="mb-0 mt-2">
+                                        <li>Los campos marcados con <span class="text-danger">*</span> son obligatorios
+                                        </li>
+                                        <li>El código se genera automáticamente al seleccionar categoría</li>
+                                        <li>La marca es opcional según tu modelo</li>
+                                        <li>El precio es opcional y puede definirse después</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Product Form View -->
+            <div id="edit-product-form" class="products-view" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="fw-bold text-dark">Editar Producto</h2>
+                    <button class="btn btn-outline-secondary" onclick="showProductsList()">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Volver al Listado
+                    </button>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header bg-white">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-edit text-red-custom me-2"></i>
+                                    Información del Producto
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="editProductForm">
+                                    <input type="hidden" id="editProductId" value="">
+
+                                    <div class="row">
+                                        <div class="col-md-8 mb-3">
+                                            <label for="editProductName" class="form-label">Nombre del Producto <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="editProductName"
+                                                   placeholder="Ej: Gafas Ray-Ban Aviator" required maxlength="250">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Código del Producto</label>
+                                            <div class="input-group">
+                                                    <span class="input-group-text bg-light">
+                                                        <i class="fas fa-barcode text-muted"></i>
+                                                    </span>
+                                                <input type="text" class="form-control bg-light" id="editProductCode"
+                                                       placeholder="Código del producto" readonly>
+                                            </div>
+                                            <small class="text-muted">El código no se puede modificar</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label for="editUnitMeasure" class="form-label">Unidad de Medida <span
+                                                    class="text-danger">*</span></label>
+                                            <select class="form-select" id="editUnitMeasure" required>
+                                                <option value="">Seleccionar unidad</option>
+                                                <option value="UNIDAD">Unidad</option>
+                                                <option value="PAR">Par</option>
+                                                <option value="CAJA">Caja</option>
+                                                <option value="PAQUETE">Paquete</option>
+                                                <option value="BOTELLA">Botella</option>
+                                                <option value="METRO">Metro</option>
+                                                <option value="LITRO">Litro</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label for="editBrand" class="form-label">Marca</label>
+                                            <select class="form-select" id="editBrand">
+                                                <option value="">Seleccionar marca (Opcional)</option>
+                                                <!-- Las marcas se cargarán dinámicamente -->
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label for="editCategory" class="form-label">Categoría <span
+                                                    class="text-danger">*</span></label>
+                                            <select class="form-select" id="editCategory" required>
+                                                <option value="">Seleccionar categoría</option>
+                                                <!-- Las categorías se cargarán dinámicamente -->
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="editPrice" class="form-label">Precio (S/)</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">S/</span>
+                                                <input type="number" class="form-control" id="editPrice"
+                                                       placeholder="0.00"
+                                                       step="0.01" min="0">
+                                            </div>
+                                            <small class="text-muted">Precio unitario del producto</small>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="editStock" class="form-label">Stock</label>
+                                            <input type="number" class="form-control" id="editStock" placeholder="0"
+                                                   min="0"
+                                                   value="0">
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="editDescription" class="form-label">Descripción</label>
+                                        <textarea class="form-control" id="editDescription" rows="4"
+                                                  placeholder="Descripción detallada del producto..."></textarea>
+                                        <small class="text-muted">Descripción del producto</small>
+                                    </div>
+
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <button type="button" class="btn btn-outline-secondary"
+                                                onclick="showProductsList()">
+                                            <i class="fas fa-times me-2"></i>
+                                            Cancelar
+                                        </button>
+                                        <button type="submit" class="btn btn-red-custom">
+                                            <i class="fas fa-save me-2"></i>
+                                            Actualizar Producto
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header bg-white">
+                                <h6 class="card-title mb-0">
+                                    <i class="fas fa-info-circle text-red-custom me-2"></i>
+                                    Estado del Producto
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="editStatus"
+                                               id="editStatusActive"
+                                               value="active">
+                                        <label class="form-check-label" for="editStatusActive">
+                                            <i class="fas fa-check-circle text-success me-1"></i>
+                                            Activo
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="editStatus"
+                                               id="editStatusInactive"
+                                               value="inactive">
+                                        <label class="form-check-label" for="editStatusInactive">
+                                            <i class="fas fa-pause-circle text-warning me-1"></i>
+                                            Inactivo
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Atención:</strong>
+                                    <ul class="mb-0 mt-2">
+                                        <li>Los campos marcados con <span class="text-danger">*</span> son obligatorios
+                                        </li>
+                                        <li>Los cambios se aplicarán inmediatamente</li>
+                                        <li>Verifica los datos antes de guardar</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="clients-section" class="content-section" style="display: none;">
+            <!-- Patients List View -->
+            <div id="patients-list" class="patients-view">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="fw-bold text-dark">Gestión de Pacientes</h2>
+                    <button class="btn btn-red-custom" onclick="showAddPatientForm()">
+                        <i class="fas fa-plus me-2"></i>
+                        Agregar Paciente
+                    </button>
+                </div>
+
+                <!-- Search and Filters -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Buscar paciente</label>
+                                <div class="position-relative">
+                                    <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                                    <input type="text" class="form-control ps-5"
+                                           placeholder="Nombre, apellido o documento..."
+                                           id="searchPatient">
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Tipo de Documento</label>
+                                <select class="form-select" id="filterDocumentType">
+                                    <option value="">Todos los tipos</option>
+                                    <!-- Los tipos se cargarán dinámicamente -->
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Género</label>
+                                <select class="form-select" id="filterGender">
+                                    <option value="">Todos los géneros</option>
+                                    <option value="M">Masculino</option>
+                                    <option value="F">Femenino</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <label class="form-label">&nbsp;</label>
+                                <button class="btn btn-outline-red-custom w-100" onclick="clearPatientFilters()">
+                                    <i class="fas fa-times me-1"></i>
+                                    Limpiar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Patients Table -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                <tr>
+                                    <th>Paciente</th>
+                                    <th>Documento</th>
+                                    <th>Fecha Nacimiento</th>
+                                    <th>Género</th>
+                                    <th>Contacto</th>
+                                    <th>Email</th>
+                                    <th>Acciones</th>
+                                </tr>
+                                </thead>
+                                <tbody id="patientsTableBody">
+                                <!-- Los pacientes se cargarán dinámicamente aquí -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination Info and Controls -->
+                        <nav aria-label="Paginación de pacientes" class="mt-4">
+                            <ul class="pagination justify-content-center" id="patientsPagination">
+                                <!-- La paginación se generará dinámicamente aquí -->
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Patient Form View -->
+            <div id="add-patient-form" class="patients-view" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="fw-bold text-dark">Agregar Nuevo Paciente</h2>
+                    <button class="btn btn-outline-secondary" onclick="showPatientsList()">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Volver al Listado
+                    </button>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header bg-white">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-user-plus text-red-custom me-2"></i>
+                                    Información Personal
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="addPatientForm">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="patientFirstName" class="form-label">Nombres <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="patientFirstName"
+                                                   placeholder="Nombres completos" required maxlength="250">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="patientSurname" class="form-label">Apellido Paterno <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="patientSurname"
+                                                   placeholder="Apellido paterno" required maxlength="100">
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="patientSecondSurname" class="form-label">Apellido
+                                                Materno</label>
+                                            <input type="text" class="form-control" id="patientSecondSurname"
+                                                   placeholder="Apellido materno" maxlength="100">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="patientDateOfBirth" class="form-label">Fecha de
+                                                Nacimiento</label>
+                                            <input type="date" class="form-control" id="patientDateOfBirth">
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label for="patientTypeDocument" class="form-label">Tipo de Documento <span
+                                                    class="text-danger">*</span></label>
+                                            <select class="form-select" id="patientTypeDocument" required>
+                                                <option value="">Seleccionar tipo</option>
+                                                <!-- Los tipos se cargarán dinámicamente -->
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label for="patientDocumentNumber" class="form-label">Número de Documento
+                                                <span
+                                                        class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="patientDocumentNumber"
+                                                   placeholder="Número de documento" required maxlength="25">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label for="patientGender" class="form-label">Género <span
+                                                    class="text-danger">*</span></label>
+                                            <select class="form-select" id="patientGender" required>
+                                                <option value="">Seleccionar género</option>
+                                                <option value="M">Masculino</option>
+                                                <option value="F">Femenino</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="patientPhone" class="form-label">Teléfono o Celular</label>
+                                            <input type="tel" class="form-control" id="patientPhone"
+                                                   placeholder="Número de contacto" maxlength="150">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="patientEmail" class="form-label">Correo Electrónico</label>
+                                            <input type="email" class="form-control" id="patientEmail"
+                                                   placeholder="correo@ejemplo.com">
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="patientDirection" class="form-label">Dirección</label>
+                                        <textarea class="form-control" id="patientDirection" rows="3"
+                                                  placeholder="Dirección completa..." maxlength="500"></textarea>
+                                    </div>
+
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <button type="button" class="btn btn-outline-secondary"
+                                                onclick="showPatientsList()">
+                                            <i class="fas fa-times me-2"></i>
+                                            Cancelar
+                                        </button>
+                                        <button type="submit" class="btn btn-red-custom">
+                                            <i class="fas fa-save me-2"></i>
+                                            Guardar Paciente
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header bg-white">
+                                <h6 class="card-title mb-0">
+                                    <i class="fas fa-info-circle text-red-custom me-2"></i>
+                                    Información Adicional
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-lightbulb me-2"></i>
+                                    <strong>Información:</strong>
+                                    <ul class="mb-0 mt-2">
+                                        <li>Los campos marcados con <span class="text-danger">*</span> son obligatorios
+                                        </li>
+                                        <li>El número de documento debe ser único</li>
+                                        <li>La fecha de nacimiento es opcional</li>
+                                        <li>El correo debe tener formato válido</li>
+                                    </ul>
+                                </div>
+
+                                <div class="mt-3">
+                                    <h6 class="fw-bold">Historial Médico</h6>
+                                    <p class="text-muted small">Una vez creado el paciente, podrás:</p>
+                                    <ul class="small text-muted">
+                                        <li>Agregar exámenes de vista</li>
+                                        <li>Registrar prescripciones</li>
+                                        <li>Programar citas de seguimiento</li>
+                                        <li>Ver historial completo</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Patient Form View -->
+            <div id="edit-patient-form" class="patients-view" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="fw-bold text-dark">Editar Paciente</h2>
+                    <button class="btn btn-outline-secondary" onclick="showPatientsList()">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Volver al Listado
+                    </button>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header bg-white">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-user-edit text-red-custom me-2"></i>
+                                    Información Personal
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="editPatientForm">
+                                    <input type="hidden" id="editPatientId" value="">
+
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="editPatientFirstName" class="form-label">Nombres <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="editPatientFirstName"
+                                                   placeholder="Nombres completos" required maxlength="250">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="editPatientSurname" class="form-label">Apellido Paterno <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="editPatientSurname"
+                                                   placeholder="Apellido paterno" required maxlength="100">
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="editPatientSecondSurname" class="form-label">Apellido
+                                                Materno</label>
+                                            <input type="text" class="form-control" id="editPatientSecondSurname"
+                                                   placeholder="Apellido materno" maxlength="100">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="editPatientDateOfBirth" class="form-label">Fecha de
+                                                Nacimiento</label>
+                                            <input type="date" class="form-control" id="editPatientDateOfBirth">
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label for="editPatientTypeDocument" class="form-label">Tipo de Documento
+                                                <span
+                                                        class="text-danger">*</span></label>
+                                            <select class="form-select" id="editPatientTypeDocument" required>
+                                                <option value="">Seleccionar tipo</option>
+                                                <!-- Los tipos se cargarán dinámicamente -->
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label for="editPatientDocumentNumber" class="form-label">Número de
+                                                Documento <span
+                                                        class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="editPatientDocumentNumber"
+                                                   placeholder="Número de documento" required maxlength="25">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label for="editPatientGender" class="form-label">Género <span
+                                                    class="text-danger">*</span></label>
+                                            <select class="form-select" id="editPatientGender" required>
+                                                <option value="">Seleccionar género</option>
+                                                <option value="M">Masculino</option>
+                                                <option value="F">Femenino</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="editPatientPhone" class="form-label">Teléfono o Celular</label>
+                                            <input type="tel" class="form-control" id="editPatientPhone"
+                                                   placeholder="Número de contacto" maxlength="150">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="editPatientEmail" class="form-label">Correo Electrónico</label>
+                                            <input type="email" class="form-control" id="editPatientEmail"
+                                                   placeholder="correo@ejemplo.com">
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="editPatientDirection" class="form-label">Dirección</label>
+                                        <textarea class="form-control" id="editPatientDirection" rows="3"
+                                                  placeholder="Dirección completa..." maxlength="500"></textarea>
+                                    </div>
+
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <button type="button" class="btn btn-outline-secondary"
+                                                onclick="showPatientsList()">
+                                            <i class="fas fa-times me-2"></i>
+                                            Cancelar
+                                        </button>
+                                        <button type="submit" class="btn btn-red-custom">
+                                            <i class="fas fa-save me-2"></i>
+                                            Actualizar Paciente
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header bg-white">
+                                <h6 class="card-title mb-0">
+                                    <i class="fas fa-history text-red-custom me-2"></i>
+                                    Historial del Paciente
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Atención:</strong>
+                                    <ul class="mb-0 mt-2">
+                                        <li>Los campos marcados con <span class="text-danger">*</span> son obligatorios
+                                        </li>
+                                        <li>Los cambios se aplicarán inmediatamente</li>
+                                        <li>Verifica los datos antes de guardar</li>
+                                    </ul>
+                                </div>
+
+                                <div class="mt-3">
+                                    <h6 class="fw-bold">Acciones Rápidas</h6>
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-eye me-2"></i>
+                                            Ver Historial Médico
+                                        </button>
+                                        <button class="btn btn-outline-success btn-sm">
+                                            <i class="fas fa-calendar-plus me-2"></i>
+                                            Programar Cita
+                                        </button>
+                                        <button class="btn btn-outline-info btn-sm">
+                                            <i class="fas fa-prescription me-2"></i>
+                                            Nueva Prescripción
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="appointments-section" class="content-section" style="display: none;">
+            <div class="text-center py-5">
+                <i class="fas fa-calendar text-muted" style="font-size: 4rem;"></i>
+                <h3 class="text-muted mt-3">Sección en Desarrollo</h3>
+                <p class="text-muted">La sección "Citas" estará disponible próximamente.</p>
+            </div>
+        </div>
+
+        <div id="sales-section" class="content-section" style="display: none;">
+            <div class="text-center py-5">
+                <i class="fas fa-shopping-cart text-muted" style="font-size: 4rem;"></i>
+                <h3 class="text-muted mt-3">Sección en Desarrollo</h3>
+                <p class="text-muted">La sección "Ventas" estará disponible próximamente.</p>
+            </div>
+        </div>
+
+        <div id="settings-section" class="content-section" style="display: none;">
+            <div class="text-center py-5">
+                <i class="fas fa-cog text-muted" style="font-size: 4rem;"></i>
+                <h3 class="text-muted mt-3">Sección en Desarrollo</h3>
+                <p class="text-muted">La sección "Configuración" estará disponible próximamente.</p>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Footer -->
+<footer class="bg-red-custom text-white py-3 mt-4">
+    <div class="container-fluid px-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex flex-wrap align-items-center">
+                    <div class="d-flex align-items-center me-4 mb-2 mb-md-0">
+                        <i class="fas fa-phone me-2"></i>
+                        <small>+51 980 702 060 | +51 977 447 313</small>
+                    </div>
+                    <div class="d-flex align-items-center me-4 mb-2 mb-md-0">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        <small>Multicentro Santa Clara, Lima, Peru</small>
+                    </div>
+                    <div class="d-flex align-items-center mb-2 mb-md-0">
+                        <i class="fas fa-clock me-2"></i>
+                        <small>Lun-Sab: 10:00-20:30</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <small>&copy; 2024 Opticas K&M Lens. Todos los derechos reservados.</small>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/admin_home.js' %}"></script>
+<script>
+    document.getElementById('addProductForm').addEventListener('submit', function (event) {
+        event.preventDefault(); // Prevent the form from submitting in the traditional way
+
+        // Collect form data
+        const productName = document.getElementById('productName').value;
+        const unitMeasure = document.getElementById('unitMeasure').value;
+        const brand = document.getElementById('brand').value;
+        const category = document.getElementById('category').value;
+        const price = document.getElementById('price').value;
+        const stock = document.getElementById('stock').value;
+        const description = document.getElementById('description').value;
+        const status = document.querySelector('input[name="status"]:checked').value;
+
+        // Create a payload object
+        const payload = {
+            productName: productName,
+            unitMeasure: unitMeasure,
+            brand: brand,
+            category: category,
+            price: price,
+            stock: stock,
+            description: description,
+            status: status
+        };
+
+        // Make the API request
+        fetch('/api/products/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')  // Function to get the CSRF token
+            },
+            body: JSON.stringify(payload)
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.message || 'Error al guardar el producto');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Handle success
+                // alert("¡Producto agregado exitosamente!")
+                createSuccessModal('¡Producto Creado!', 'El producto ha sido agregado exitosamente al inventario.')
+                showProductsList(); // Navigate back to the product list
+            })
+            .catch(error => {
+                // Handle error
+                // alert("Error al guardar el producto: " + error.message)
+                createErrorModal('Error al Crear Producto', 'No se pudo guardar el producto: ' + error.message)
+            });
+    });
+
+    // Function to get CSRF token from cookies
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function createSuccessModal(title, message) {
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.id = 'successModal';
+        modal.tabIndex = '-1';
+        modal.setAttribute('aria-labelledby', 'successModalLabel');
+        modal.setAttribute('aria-hidden', 'true');
+
+        modal.innerHTML = `
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title" id="successModalLabel">${title}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        ${message}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        const modalInstance = new bootstrap.Modal(document.getElementById('successModal'));
+        modalInstance.show();
+
+        // Remove the modal from the DOM after it is hidden
+        document.getElementById('successModal').addEventListener('hidden.bs.modal', function (event) {
+            document.body.removeChild(modal);
+        });
+    }
+
+    function createErrorModal(title, message) {
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.id = 'errorModal';
+        modal.tabIndex = '-1';
+        modal.setAttribute('aria-labelledby', 'errorModalLabel');
+        modal.setAttribute('aria-hidden', 'true');
+
+        modal.innerHTML = `
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title" id="errorModalLabel">${title}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        ${message}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        const modalInstance = new bootstrap.Modal(document.getElementById('errorModal'));
+        modalInstance.show();
+
+        // Remove the modal from the DOM after it is hidden
+        document.getElementById('errorModal').addEventListener('hidden.bs.modal', function (event) {
+            document.body.removeChild(modal);
+        });
+    }
+</script>
+</body>
+</html>
