@@ -4,7 +4,8 @@ from rest_framework import routers
 from app_backend.api.views import (
     ProductView, ProductoListView, ProductCreateView, MarcasListView, CategoriasListView, ProductDeleteView,
     ProductDetailView, ProductUpdateView, PatientListView, PatientCreateView, PatientDetailUpdateView,
-    PatientDeleteView, TypeDocumentListAPIView
+    PatientDeleteView, TypeDocumentListAPIView, RecipeListView, RecipeCreateView, RecipeRetrieveUpdateView,
+    RecipeDeleteView
 )
 
 app_name = 'app_backend'
@@ -31,3 +32,9 @@ urlpatterns.append(path('pacientes/<int:id>/eliminar/', PatientDeleteView.as_vie
 
 # Documentos
 urlpatterns.append(path('documentos/', TypeDocumentListAPIView.as_view(), name='listar-documentos'), )
+
+# Recetarios
+urlpatterns.append(path('recetas/', RecipeListView.as_view(), name='listar-recetas'), )
+urlpatterns.append(path('recetas/crear/', RecipeCreateView.as_view(), name='crear-receta'), )
+urlpatterns.append(path('recetas/<int:id>/', RecipeRetrieveUpdateView.as_view(), name='detalle-actualizar-receta'), )
+urlpatterns.append(path('recetas/<int:id>/eliminar/', RecipeDeleteView.as_view(), name='eliminar-receta'), )

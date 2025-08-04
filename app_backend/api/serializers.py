@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from app_backend.models.patients import Patient
 from app_backend.models.products import Product, Brand
+from app_backend.models.recipes import Recipe
 from app_backend.models.type_document import TypeDocument
 
 
@@ -67,3 +68,12 @@ class TypeDocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = TypeDocument
         fields = ['id', 'short_name', 'long_name']
+
+
+class RecipeSerializer(serializers.ModelSerializer):
+    name_patient = serializers.CharField(source='patient.full_name', read_only=True)
+
+    class Meta:
+        model = Recipe
+        fields = '__all__'
+        read_only_fields = ['id', 'prescription_number', 'name_patient']

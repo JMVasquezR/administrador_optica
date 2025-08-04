@@ -8,11 +8,12 @@ from rest_framework.views import APIView
 from admin_opticas.pagination import CustomPagination
 from .serializers import (
     ProductSerializer, ProductListSerializer, BrandSerializer, CategorySerializer, ProductUpdateSerializer,
-    PatientSerializer, TypeDocumentSerializer, PatientCreateSerializer
+    PatientSerializer, TypeDocumentSerializer, PatientCreateSerializer, RecipeSerializer
 )
-from ..filters import ProductFilter, PatientFilter
+from ..filters import ProductFilter, PatientFilter, RecipeFilter
 from ..models.patients import Patient
 from ..models.products import Product, Brand, Category
+from ..models.recipes import Recipe
 from ..models.type_document import TypeDocument
 
 
@@ -96,3 +97,32 @@ class PatientDeleteView(APIView):
 class TypeDocumentListAPIView(ListAPIView):
     queryset = TypeDocument.objects.all()
     serializer_class = TypeDocumentSerializer
+
+
+class RecipeListView(generics.ListAPIView):
+    queryset = Recipe.objects.all().order_by('-id')
+    serializer_class = RecipeSerializer
+    pagination_class = CustomPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = RecipeFilter
+
+
+class RecipeCreateView(generics.CreateAPIView):
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeSerializer
+
+
+class RecipeRetrieveUpdateView(generics.RetrieveUpdateAPIView):
+    queryset = Recipe.objects.filter(is_active=True)
+    serializer_class = RecipeSerializer
+    lookup_field = 'id'
+
+
+class RecipeDeleteView(generics.DestroyAPIView):
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeSerializer
+    lookup_field = 'id'
+
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save()

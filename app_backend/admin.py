@@ -241,9 +241,10 @@ class RecipeBookAdmin(admin.ModelAdmin):
     fieldsets = [
         (None, {
             'fields': [
+                'prescription_number',
                 'date_of_issue',
                 'patient',
-                'is_disabled',
+                'is_active',
             ]
         }),
         ('Distancia Lejos', {
