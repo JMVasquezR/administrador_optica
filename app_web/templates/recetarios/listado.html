@@ -1,0 +1,75 @@
+<div id="recipes-list" class="recipes-view">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark">Gestión de Recetarios</h2>
+        <button class="btn btn-red-custom" onclick="showAddRecipeForm()">
+            <i class="fas fa-plus me-2"></i>
+            Agregar Recetario
+        </button>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Buscar recetario</label>
+                    <div class="position-relative">
+                        <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                        <input type="text" class="form-control ps-5"
+                               placeholder="Número de recetario o paciente..."
+                               id="searchRecipe">
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Estado</label>
+                    <select class="form-select" id="filterRecipeStatus">
+                        <option value="">Todos los estados</option>
+                        <option value="true">Activo</option>
+                        <option value="false">Inactivo</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Fecha</label>
+                    <input type="date" class="form-control" id="filterRecipeDate">
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-outline-red-custom w-100" onclick="clearRecipeFilters()">
+                        <i class="fas fa-times me-1"></i>
+                        Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recipes Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Número</th>
+                        <th>Paciente</th>
+                        <th>Fecha Emisión</th>
+                        <th>Estado</th>
+                        <th>Observaciones</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody id="recipesTableBody">
+                    <!-- Los recetarios se cargarán dinámicamente aquí -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Info and Controls -->
+            <nav aria-label="Paginación de recetarios" class="mt-4">
+                <ul class="pagination justify-content-center" id="recipesPagination">
+                    <!-- La paginación se generará dinámicamente aquí -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>

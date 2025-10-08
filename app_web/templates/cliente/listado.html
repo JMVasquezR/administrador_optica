@@ -1,0 +1,79 @@
+<div id="patients-list" class="patients-view">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark">Gestión de Pacientes</h2>
+        <button class="btn btn-red-custom" onclick="showAddPatientForm()">
+            <i class="fas fa-plus me-2"></i>
+            Agregar Paciente
+        </button>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Buscar paciente</label>
+                    <div class="position-relative">
+                        <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                        <input type="text" class="form-control ps-5"
+                               placeholder="Nombre, apellido o documento..."
+                               id="searchPatient">
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Tipo de Documento</label>
+                    <select class="form-select" id="filterDocumentType">
+                        <option value="">Todos los tipos</option>
+                        <!-- Los tipos se cargarán dinámicamente -->
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Género</label>
+                    <select class="form-select" id="filterGender">
+                        <option value="">Todos los géneros</option>
+                        <option value="M">Masculino</option>
+                        <option value="F">Femenino</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-outline-red-custom w-100" onclick="clearPatientFilters()">
+                        <i class="fas fa-times me-1"></i>
+                        Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Patients Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Paciente</th>
+                        <th>Documento</th>
+                        <th>Fecha Nacimiento</th>
+                        <th>Género</th>
+                        <th>Contacto</th>
+                        <th>Email</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody id="patientsTableBody">
+                    <!-- Los pacientes se cargarán dinámicamente aquí -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Info and Controls -->
+            <nav aria-label="Paginación de pacientes" class="mt-4">
+                <ul class="pagination justify-content-center" id="patientsPagination">
+                    <!-- La paginación se generará dinámicamente aquí -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>

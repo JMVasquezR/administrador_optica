@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import (CharField, FloatField, ForeignKey, PROTECT, TextField)
+from django.db.models import (CharField, FloatField, ForeignKey, PROTECT, TextField, IntegerField, BooleanField)
 from django.db.models.functions import Length
 from model_utils.models import TimeStampedModel
 
@@ -11,14 +11,13 @@ class Category(TimeStampedModel):
         db_table = 'TB_BACKEND_CATEGORY'
 
     name = CharField(max_length=250, verbose_name='Nombre')
-    code = CharField(max_length=4, verbose_name='Codigo')
     description = TextField(null=True, blank=True, verbose_name='Descripción')
 
     def __str__(self):
         return f'{self.name}'
 
     def save(self, *args, **kwargs):
-        self.code = self.code.upper()
+        self.code = self.name.upper()
         super().save(*args, **kwargs)
 
 
@@ -38,6 +37,11 @@ class Brand(TimeStampedModel):
 UNIT_MEASURE = (
     ('UNIDAD', 'UNIDAD'),
     ('PAR', 'PAR'),
+    ('CAJA', 'CAJA'),
+    ('BOTELLA', 'BOTELLA'),
+    ('PAQUETE', 'PAQUETE'),
+    ('METRO', 'METRO'),
+    ('LITRO', 'LITRO'),
 )
 
 
@@ -53,13 +57,15 @@ class Product(TimeStampedModel):
         db_table = 'TB_BACKEND_PRODUCT'
 
     objects = ProductManager()
-    name = CharField(max_length=250, verbose_name='Nombre')
-    code = CharField(max_length=7, null=True, blank=True, verbose_name='Codigo')
+    name = CharField(max_length=250, verbose_name='Nombre del Producto')
+    code = CharField(max_length=150, null=True, blank=True, verbose_name='Código del Producto')
     description = TextField(null=True, blank=True, verbose_name='Descripción')
-    unit_price = FloatField(null=True, blank=True, verbose_name='Precio')
-    category = ForeignKey(Category, on_delete=PROTECT, verbose_name='Categoria')
+    unit_price = FloatField(null=True, blank=True, verbose_name='Precio (S/)')
+    category = ForeignKey(Category, on_delete=PROTECT, verbose_name='Categoría')
     brand = ForeignKey(Brand, on_delete=PROTECT, null=True, blank=True, verbose_name='Marca')
-    unit_measure = CharField(max_length=7, choices=UNIT_MEASURE, verbose_name='Unidad de medida')
+    unit_measure = CharField(max_length=7, choices=UNIT_MEASURE, verbose_name='Unidad de Medida')
+    initial_stock = IntegerField(default=0, verbose_name='Stock Inicial')
+    status = BooleanField(default=True, verbose_name='Estado del Producto')
 
     def __str__(self):
         marca = self.brand.name if self.brand else self.category.name
@@ -75,10 +81,8 @@ class Product(TimeStampedModel):
         return f'{self.name} {brand}'
 
     def save(self, *args, **kwargs):
-        if self.code is None:
+        if self.code is None or self.code == 'AUTO-GENERADO':
             last_id = Product.objects.last().id if Product.objects.exists() else 1
             formatted_id = str(last_id + 1).zfill(3)
-            self.code = f'{self.category.code}{formatted_id}'.upper()
+            self.code = f'OPTCASKYMLENS{formatted_id}'.upper()
         super().save(*args, **kwargs)
-
-

@@ -3,14 +3,16 @@ Django settings for admin_opticas project.
 """
 
 import os
+from pathlib import Path
+
 import dj_database_url
 import jet
-from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 if os.getenv("RAILWAY_ENV") is None:
     from dotenv import load_dotenv
+
     load_dotenv()
 
 ENV_PATH = os.getenv('ENV_PATH', '.env')
@@ -38,6 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_filters',
+    'corsheaders',
     'rest_framework',
     'app_backend',
     'app_notification',
@@ -45,8 +49,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Agregar WhiteNoise
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -54,6 +59,12 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend'
+    ]
+}
 
 ROOT_URLCONF = 'admin_opticas.urls'
 
@@ -72,6 +83,8 @@ TEMPLATES = [
         },
     },
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 WSGI_APPLICATION = 'admin_opticas.wsgi.application'
 
@@ -99,7 +112,6 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
 
 # 🔹 Archivos estáticos y Django Jet
 STATIC_URL = '/static/'
