@@ -366,3 +366,63 @@ footer {
 .success-animation {
     animation: successPulse 0.3s ease-in-out;
 }
+
+/* Botón hamburguesa */
+.navbar-toggler {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #dc3545;
+    cursor: pointer;
+}
+
+.navbar-toggler:focus {
+    outline: none;
+}
+
+/* Sidebar responsive */
+#sidebarMenu {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 250px;
+    background-color: #fff;
+    z-index: 1050;
+    overflow-y: auto;
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+}
+
+#sidebarMenu:not(.d-none) {
+    transform: translateX(0);
+}
+
+/* Overlay */
+.menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+    transition: opacity 0.3s ease-in-out;
+}
+
+#menu-overlay.d-none {
+    display: none;
+}
+
+/* Ajustes para pantallas grandes */
+@media (min-width: 992px) {
+    #sidebarMenu {
+        transform: translateX(0);
+        position: sticky;
+    }
+
+    .menu-overlay {
+        display: none;
+    }
+}

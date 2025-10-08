@@ -1,3 +1,36 @@
+document.addEventListener("DOMContentLoaded", function () {
+    function toggleSidebar() {
+        const sidebar = document.getElementById("sidebarMenu");
+        const overlay = document.getElementById("menu-overlay");
+
+        // Verificar que los elementos existen en el DOM
+        if (!sidebar || !overlay) {
+            console.error("Error: Sidebar o overlay no encontrados. Revisa los IDs en el HTML.");
+            return;
+        }
+
+        // Alternar visibilidad del sidebar
+        const isSidebarOpen = !sidebar.classList.contains("d-none");
+
+        if (isSidebarOpen) {
+            // Si está abierto, lo cerramos
+            sidebar.classList.add("d-none");
+            overlay.classList.add("d-none");
+            overlay.classList.remove("menu-overlay-visible"); // Clase CSS adicional (opcional)
+        } else {
+            // Si está cerrado, lo abrimos
+            sidebar.classList.remove("d-none");
+            overlay.classList.remove("d-none");
+            overlay.classList.add("menu-overlay-visible");
+        }
+    }
+
+    // Exponer la función globalmente para llamarla desde el atributo onclick
+    window.toggleSidebar = toggleSidebar;
+});
+
+
+
 // Navigation functionality
 function showSection(sectionName) {
     console.log("Mostrando sección:", sectionName)
