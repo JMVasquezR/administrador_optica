@@ -5,7 +5,7 @@ from app_backend.api.views import (
     ProductView, ProductoListView, ProductCreateView, MarcasListView, CategoriasListView, ProductDeleteView,
     ProductDetailView, ProductUpdateView, PatientListView, PatientCreateView, PatientDetailUpdateView,
     PatientDeleteView, TypeDocumentListAPIView, RecipeListView, RecipeCreateView, RecipeRetrieveUpdateView,
-    RecipeDeleteView
+    RecipeDeleteView, BoletaListView, SalesTicketCreateAPIView, SalesTicketRetrUpdAPIView
 )
 
 app_name = 'app_backend'
@@ -38,3 +38,8 @@ urlpatterns.append(path('recetas/', RecipeListView.as_view(), name='listar-recet
 urlpatterns.append(path('recetas/crear/', RecipeCreateView.as_view(), name='crear-receta'), )
 urlpatterns.append(path('recetas/<int:id>/', RecipeRetrieveUpdateView.as_view(), name='detalle-actualizar-receta'), )
 urlpatterns.append(path('recetas/<int:id>/eliminar/', RecipeDeleteView.as_view(), name='eliminar-receta'), )
+
+# Boletas
+urlpatterns.append(path('boletas/', BoletaListView.as_view(), name='listar-boletas'), )
+urlpatterns.append(path('boletas/crear/', SalesTicketCreateAPIView.as_view(), name='boleta-create'), )
+urlpatterns.append(path('boletas/<int:pk>/', SalesTicketRetrUpdAPIView.as_view(), name='boleta-detalle-actualizar'), )

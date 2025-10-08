@@ -58,6 +58,20 @@ function showSection(sectionName) {
             // Cargar recetarios de la primera página
             loadRecipesFromServer(1)
         }
+
+        if (sectionName === "boletas") {
+            const boletasList = document.getElementById("boletas-list")
+            // const addRecipeForm = document.getElementById("add-recipe-form")
+            // const editRecipeForm = document.getElementById("edit-recipe-form")
+
+            // Asegurar que se muestre la lista y se oculten los formularios
+            if (boletasList) boletasList.style.display = "block"
+            // if (addRecipeForm) addRecipeForm.style.display = "none"
+            // if (editRecipeForm) editRecipeForm.style.display = "none"
+
+            // Cargar recetarios de la primera página
+            loadBoletasFromServer(1)
+        }
     }
 }
 
@@ -1438,7 +1452,6 @@ function populateFilterBrandSelect(brands) {
 // Función para generar código automático
 function generateProductCode(categoryName) {
     let prefix = ""
-
     switch (categoryName) {
         case "Gafas de Sol":
             prefix = "GS"
@@ -1603,6 +1616,50 @@ function showPatientsList() {
     if (patientsList) {
         patientsList.style.display = "block"
         console.log("Lista de pacientes mostrada")
+    }
+}
+
+function showAddRecipeForm() {
+    console.log("Ejecutando showAddRecipeForm()")
+    const recipesList = document.getElementById("recipes-list")
+    const addRecipeForm = document.getElementById("add-recipe-form")
+    const editRecipeForm = document.getElementById("edit-recipe-form")
+
+    // Ocultar todas las vistas
+    if (recipesList) recipesList.style.display = "none"
+    if (editRecipeForm) editRecipeForm.style.display = "none"
+
+    // Mostrar formulario de agregar
+    if (addRecipeForm) {
+        addRecipeForm.style.display = "block"
+        console.log("Formulario de agregar recetario mostrado")
+
+        // Cargar pacientes para el select
+        loadPatientsForSelect()
+
+        // Establecer fecha actual por defecto
+        const recipeDateOfIssue = document.getElementById("recipeDateOfIssue")
+        if (recipeDateOfIssue) {
+            const today = new Date().toISOString().split("T")[0]
+            recipeDateOfIssue.value = today
+        }
+    }
+}
+
+function showBoletasList() {
+    console.log("Ejecutando showBoletasList()")
+    const addBoletatForm = document.getElementById("add-boleta-form")
+    const editBoletatForm = document.getElementById("edit-boleta-form")
+    const boletasList = document.getElementById("boletas-list")
+
+    // Ocultar formularios
+    if (addBoletatForm) addBoletatForm.style.display = "none"
+    if (editBoletatForm) editBoletatForm.style.display = "none"
+
+    // Mostrar lista
+    if (boletasList) {
+        boletasList.style.display = "block"
+        console.log("Lista de boletas mostrada")
     }
 }
 
@@ -1891,19 +1948,7 @@ function renderPatients(patients) {
     })
 }
 
-// Función para formatear fecha
-function formatDate(dateString) {
-    if (!dateString) return ""
-
-    const date = new Date(dateString)
-    return date.toLocaleDateString("es-PE", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-    })
-}
-
-// Función para renderizar paginación de pacientes
+// Función para renderizar la paginación de pacientes
 function renderPatientsPagination(data) {
     const paginationContainer = document.getElementById("patientsPagination")
     if (!paginationContainer) return
@@ -2086,7 +2131,6 @@ function updatePatientsPaginationInfo(data) {
             paginationNav.parentNode.insertBefore(infoElement, paginationNav)
         }
     }
-
     infoElement.innerHTML = `Mostrando ${startItem} a ${endItem} de ${total_items} pacientes (Página ${current_page} de ${total_pages})`
 }
 
@@ -2520,6 +2564,86 @@ window.deletePatient = deletePatient
 window.clearPatientFilters = clearPatientFilters
 window.loadPatientsFromServer = loadPatientsFromServer
 
+document.getElementById("addBoletaForm").addEventListener("submit", function (e) {
+    e.preventDefault(); // Prevenir el envío normal del formulario
+
+    // Recoger los valores del formulario
+    const ballotNumber = Math.floor(100000 + Math.random() * 900000).toString(); // Generar número único de boleta
+    const dateOfIssue = document.getElementById("boletaDateOfIssue").value; // Fecha de emisión
+    const patient = document.getElementById("boletaPatient").value; // Paciente ID
+    const observation = document.getElementById("boletaObservation").value; // Observaciones
+    const salesTotal = parseFloat(document.getElementById("boletaTotal").value || 0); // Total general
+
+    // Buscar todas las líneas de detalle dinámico
+    const rows = document.querySelectorAll("#boletaDetails .row");
+    const saleslines = [];
+
+    console.log('> ', rows)
+
+    rows.forEach((row) => {
+        const quantity = parseInt(row.querySelector("input[type='number']").value || 0); // Cantidad
+        const product = parseInt(row.querySelector("select[name='producto']").value || 0); // Producto ID
+        const unit_price = parseFloat(row.querySelector("input[step='0.5']").value || 0); // Precio Unitario
+        const amount = (quantity * unit_price).toFixed(2); // Calculo de Importe
+
+        // Validar datos de la línea antes de agregarla
+        if (quantity > 0 && product > 0 && unit_price > 0) {
+            saleslines.push({
+                quantity: quantity,
+                product_id: product,
+                unit_price: unit_price,
+                amount: parseFloat(amount),
+            });
+        }
+    });
+
+    // Validar si hay al menos una línea de detalle válida
+    if (!saleslines.length) {
+        alert("Debe agregar al menos una línea de venta con datos válidos.");
+        return;
+    }
+
+    // Preparar los datos del formulario
+    const data = {
+        ballot_number: `BOL${ballotNumber}`,
+        date_of_issue: dateOfIssue,
+        patient_id: parseInt(patient),
+        sales_total: salesTotal,
+        observation: observation,
+        saleslines: saleslines,
+    };
+
+    // Enviar los datos al API
+    fetch("/api/boletas/crear/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: JSON.stringify(data),
+    })
+        .then((response) => {
+            if (!response.ok) {
+                return response.json().then((errorData) => {
+                    throw new Error(JSON.stringify(errorData));
+                });
+            }
+            return response.json();
+        })
+        .then((result) => {
+            alert("Boleta creada exitosamente.");
+            console.log("Boleta creada:", result);
+            // Opcional: Limpiar el formulario
+            document.getElementById("addPatientForm").reset();
+            document.getElementById("boletaDetails").innerHTML = ""; // Eliminar las líneas dinámicamente
+        })
+        .catch((error) => {
+            console.error("Error al guardar la boleta:", error);
+            alert(`Error al guardar la boleta: ${error.message}`);
+        });
+});
+
+
 // Add event listeners for patient forms in the DOMContentLoaded section
 document.addEventListener("DOMContentLoaded", () => {
     // ... existing code ...
@@ -2661,6 +2785,35 @@ document.addEventListener("DOMContentLoaded", () => {
         })
     }
 
+    const searchProductInput = document.getElementById("searchProduct")
+    if (searchProductInput) {
+        const debouncedProductSearch = debounce(applyFilters, 500)
+        searchProductInput.addEventListener("input", debouncedProductSearch)
+    }
+
+    const filterCategoryFilter = document.getElementById("filterCategory")
+    const filterBrandFilter = document.getElementById("filterBrand")
+
+    if (filterCategoryFilter) {
+        filterCategoryFilter.addEventListener("change", applyFilters)
+    }
+
+    if (filterBrandFilter) {
+        filterBrandFilter.addEventListener("change", applyFilters)
+    }
+
+    const searchPatientInput = document.getElementById("searchPatient")
+    if (searchPatientInput) {
+        const debouncedPatientSearch = debounce(applyPatientFilters, 500)
+        searchPatientInput.addEventListener("input", debouncedPatientSearch)
+    }
+
+    const filterGenderFilter = document.getElementById("filterGender")
+
+    if (filterGenderFilter) {
+        filterGenderFilter.addEventListener("change", applyPatientFilters)
+    }
+
     // Funcionalidad de búsqueda de recetarios con debounce
     const searchRecipeInput = document.getElementById("searchRecipe")
     if (searchRecipeInput) {
@@ -2768,114 +2921,32 @@ document.addEventListener("DOMContentLoaded", () => {
         })
     }
 
-    // Manejador de envío del formulario de edición de recetario
-    const editRecipeForm = document.getElementById("editRecipeForm")
-    if (editRecipeForm) {
-        editRecipeForm.addEventListener("submit", async (e) => {
-            e.preventDefault()
-            console.log("Formulario de edición de recetario enviado")
-
-            const submitBtn = editRecipeForm.querySelector('button[type="submit"]')
-            const originalText = submitBtn.innerHTML
-
-            try {
-                // Mostrar loading
-                submitBtn.disabled = true
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Actualizando...'
-
-                // Obtener ID del recetario
-                const recipeId = document.getElementById("editRecipeId").value
-                if (!recipeId) {
-                    throw new Error("ID del recetario no encontrado")
-                }
-
-                // Obtener datos del formulario
-                const formData = {
-                    patient: Number.parseInt(document.getElementById("editRecipePatient").value),
-                    date_of_issue: document.getElementById("editRecipeDateOfIssue").value,
-                    // Datos de distancia (lejos) - Ojo derecho
-                    right_eye_spherical_distance_far:
-                        Number.parseFloat(document.getElementById("editRightEyeSphericalDistanceFar").value) || null,
-                    right_eye_cylinder_distance_far:
-                        Number.parseFloat(document.getElementById("editRightEyeCylinderDistanceFar").value) || null,
-                    right_eye_axis_distance_far:
-                        Number.parseFloat(document.getElementById("editRightEyeAxisDistanceFar").value) || null,
-                    // Datos de distancia (lejos) - Ojo izquierdo
-                    left_eye_spherical_distance_far:
-                        Number.parseFloat(document.getElementById("editLeftEyeSphericalDistanceFar").value) || null,
-                    left_eye_cylinder_distance_far:
-                        Number.parseFloat(document.getElementById("editLeftEyeCylinderDistanceFar").value) || null,
-                    left_eye_axis_distance_far:
-                        Number.parseFloat(document.getElementById("editLeftEyeAxisDistanceFar").value) || null,
-                    // Distancia pupilar (lejos)
-                    pupillary_distance_far: Number.parseFloat(document.getElementById("editPupillaryDistanceFar").value) || null,
-                    // Datos de cerca - Ojo derecho
-                    right_eye_spherical_distance_near:
-                        Number.parseFloat(document.getElementById("editRightEyeSphericalDistanceNear").value) || null,
-                    right_eye_cylinder_distance_near:
-                        Number.parseFloat(document.getElementById("editRightEyeCylinderDistanceNear").value) || null,
-                    right_eye_axis_distance_near:
-                        Number.parseFloat(document.getElementById("editRightEyeAxisDistanceNear").value) || null,
-                    // Datos de cerca - Ojo izquierdo
-                    left_eye_spherical_distance_near:
-                        Number.parseFloat(document.getElementById("editLeftEyeSphericalDistanceNear").value) || null,
-                    left_eye_cylinder_distance_near:
-                        Number.parseFloat(document.getElementById("editLeftEyeCylinderDistanceNear").value) || null,
-                    left_eye_axis_distance_near:
-                        Number.parseFloat(document.getElementById("editLeftEyeAxisDistanceNear").value) || null,
-                    // Distancia pupilar (cerca)
-                    pupillary_distance_near:
-                        Number.parseFloat(document.getElementById("editPupillaryDistanceNear").value) || null,
-                    // Observaciones e instrucciones
-                    observation: document.getElementById("editRecipeObservation").value || null,
-                    instruction: document.getElementById("editRecipeInstruction").value || null,
-                    is_active: document.querySelector('input[name="editRecipeStatus"]:checked')?.value === "true",
-                }
-
-                console.log("Datos del recetario a actualizar:", formData)
-
-                // Validar campos requeridos
-                if (!formData.patient || !formData.date_of_issue) {
-                    throw new Error("Por favor completa todos los campos obligatorios")
-                }
-
-                // Actualizar en el servidor
-                await updateRecipeOnServer(recipeId, formData)
-
-                // Mostrar modal de éxito
-                createSuccessModal("¡Recetario Actualizado!", "Los cambios han sido guardados exitosamente.")
-
-                // Volver a la lista
-                showRecipesList()
-
-                // Recargar recetarios para mostrar los cambios
-                loadRecipesFromServer(currentRecipePage, currentRecipeFilters)
-            } catch (error) {
-                // Mostrar modal de error
-                createErrorModal("Error al Actualizar Recetario", "No se pudieron guardar los cambios: " + error.message)
-                console.error("Error completo:", error)
-            } finally {
-                // Restaurar botón
-                submitBtn.disabled = false
-                submitBtn.innerHTML = originalText
-            }
-        })
-    }
-
-    // ... rest of existing code ...
+    // Actualizar el array de secciones
+    const sections = ["dashboard", "products", "clients", "recipes", "appointments", "sales", "settings"]
 })
 
 // ==================== GESTIÓN DE RECETARIOS ====================
 
 // Variables globales para recetarios
 let currentRecipePage = 1
+let currentBoletaPage = 1
 let totalRecipeItems = 0
+let totalBoletaItems = 0
+let totalBoletaPages = 0
 let totalRecipePages = 0
 let currentRecipes = []
+let currentBoletas = []
 let isLoadingRecipes = false
+let isLoadingBoletas = false
 
 // Variables para filtros de recetarios
 let currentRecipeFilters = {
+    search: "",
+    status: "",
+    date: "",
+}
+
+let currentBoletaFilters = {
     search: "",
     status: "",
     date: "",
@@ -2893,28 +2964,205 @@ const RECIPE_API_CONFIG = {
     pageSize: 10,
 }
 
+// Configuración API para recetarios
+const BOLETAS_API_CONFIG = {
+    baseURL: "http://127.0.0.1:8000/api",
+    endpoints: {
+        recipes: "/boletas/",
+        createRecipe: "/boletas/crear/",
+        updateRecipe: "/boletas", // Will be used with /{id}/
+        deleteRecipe: "/boletas", // Will be used with /{id}/eliminar/
+    },
+    pageSize: 10,
+}
+
 // Funciones de navegación para recetarios
-function showAddRecipeForm() {
-    console.log("Ejecutando showAddRecipeForm()")
-    const recipesList = document.getElementById("recipes-list")
-    const addRecipeForm = document.getElementById("add-recipe-form")
-    const editRecipeForm = document.getElementById("edit-recipe-form")
+function showAddBoletaForm() {
+    console.log("Ejecutando showAddBoletaForm()")
+    const boletasList = document.getElementById("boletas-list")
+    const addBoletaForm = document.getElementById("add-boleta-form")
+    const editBoletaForm = document.getElementById("edit-boleta-form")
 
     // Ocultar todas las vistas
-    if (recipesList) recipesList.style.display = "none"
-    if (editRecipeForm) editRecipeForm.style.display = "none"
+    if (boletasList) boletasList.style.display = "none"
+    if (editBoletaForm) editBoletaForm.style.display = "none"
 
     // Mostrar formulario de agregar
-    if (addRecipeForm) {
-        addRecipeForm.style.display = "block"
-        console.log("Formulario de agregar recetario mostrado")
+    if (addBoletaForm) {
+        addBoletaForm.style.display = "block"
+        console.log("Formulario de agregar boleta mostrado")
 
         // Cargar pacientes para el select
-        loadPatientsForSelect()
+        loadBoletasForSelect()
+        renderLineaBoletas()
 
         // Establecer fecha actual por defecto
-        const today = new Date().toISOString().split("T")[0]
-        document.getElementById("recipeDateOfIssue").value = today
+        // const recipeDateOfIssue = document.getElementById("recipeDateOfIssue")
+        // if (recipeDateOfIssue) {
+        //     const today = new Date().toISOString().split("T")[0]
+        //     recipeDateOfIssue.value = today
+        // }
+    }
+}
+
+function ajustarBotones() {
+    const tbody = document.getElementById("boletaDetails");
+    if (!tbody) return;
+
+    // Obtener todas las filas actuales
+    const rows = tbody.querySelectorAll(".row");
+
+    // Si solo queda una fila, asegúrate de que tenga solo el botón de Agregar
+    if (rows.length === 1) {
+        const firstRow = rows[0];
+        const buttonContainer = firstRow.querySelector(".col-md-2");
+
+        // Limpiar botones existentes
+        buttonContainer.innerHTML = `
+            <button class="btn btn-sm btn-outline-success me-1" title="Agregar" onclick="renderLineaBoletas()">
+                <i class="fas fa-plus"></i>
+            </button>
+        `;
+    } else if (rows.length > 1) {
+        // Asegurarse de que solo la última fila tenga el botón de agregar
+        rows.forEach((row, index) => {
+            const buttonContainer = row.querySelector(".col-md-2");
+
+            if (index === rows.length - 1) {
+                // Última fila: Agregar ambos botones
+                buttonContainer.innerHTML = `
+                    <button class="btn btn-sm btn-outline-success me-1" title="Agregar" onclick="renderLineaBoletas()">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger me-1" title="Eliminar" onclick="eliminarUltimaLinea()">
+                        <i class="fas fa-remove"></i>
+                    </button>
+                `;
+            } else {
+                // Fila que no es la última: Solo botón de eliminar
+                buttonContainer.innerHTML = `
+                    <button class="btn btn-sm btn-outline-danger me-1" title="Eliminar" onclick="eliminarUltimaLinea()">
+                        <i class="fas fa-remove"></i>
+                    </button>
+                `;
+            }
+        });
+    }
+}
+
+
+function renderLineaBoletas() {
+    const tbody = document.getElementById("boletaDetails");
+    if (!tbody) return;
+
+    // Obtener todas las filas actuales
+    const rows = tbody.querySelectorAll(".row");
+
+    // Si ya hay una fila, quitamos el botón de "Agregar" de la última fila
+    if (rows.length > 0) {
+        const lastRow = rows[rows.length - 1];
+        const addButton = lastRow.querySelector(".btn-outline-success");
+        if (addButton) {
+            addButton.remove(); // Eliminar el botón "Agregar" de la última fila
+        }
+    }
+
+    // Crear una nueva fila
+    const nuevaLinea = document.createElement("div");
+    nuevaLinea.classList.add("row");
+
+    // Definir HTML base de la nueva fila
+    nuevaLinea.innerHTML = `
+        <div class="row">
+            <div class="col-md-3">
+                <label class="form-label">Cantidad</label>
+                <input type="number" class="form-control" placeholder="0">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Producto</label>
+                <select class="form-select" name="producto">
+                    <option value="">Cargando productos...</option> <!-- Placeholder mientras carga -->
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Precio Unitario</label>
+                <input type="number" step="0.5" class="form-control" placeholder="0.0">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-sm btn-outline-success me-1" title="Agregar" onclick="renderLineaBoletas()">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger me-1" title="Eliminar" onclick="eliminarUltimaLinea(this)">
+                    <i class="fas fa-remove"></i>
+                </button>
+            </div>
+        </div>
+    `;
+
+    // Agregar la nueva línea al contenedor
+    tbody.appendChild(nuevaLinea);
+
+    // Rellenar el <select> del producto con los datos de la API
+    const selectProducto = nuevaLinea.querySelector('select[name="producto"]');
+    fetch("/api/productos/") // Reemplaza con tu URL de productos
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Error al obtener los productos");
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Limpiar el select antes de agregar los productos
+            selectProducto.innerHTML = `<option value="">Seleccione un producto</option>`;
+
+            // Agregar las opciones obtenidas desde la API
+            data.results.forEach(producto => {
+                const option = document.createElement("option");
+                option.value = producto.id; // Usar el ID del producto como valor
+                option.textContent = producto.name; // Mostrar el nombre del producto
+                selectProducto.appendChild(option); // Agregar opción al select
+            });
+        })
+        .catch(error => {
+            console.error("Error al cargar los productos:", error);
+            selectProducto.innerHTML = `<option value="">Error al cargar productos</option>`;
+        });
+
+    // Ajustar los botones después de agregar una fila
+    ajustarBotones();
+}
+
+// Eliminar la última línea
+function eliminarUltimaLinea(btn) {
+    const parentRow = btn.closest(".row");
+    if (parentRow) {
+        parentRow.remove();
+    }
+}
+
+function showEditBoletaForm(boleta = null) {
+    console.log("Ejecutando showEditBoletaForm()", boleta)
+    const boletasList = document.getElementById("boletas-list")
+    const addBoletaForm = document.getElementById("add-boleta-form")
+    const editBoletaForm = document.getElementById("edit-boleta-form")
+
+    // Ocultar otras vistas
+    if (boletasList) boletasList.style.display = "none"
+    if (addBoletaForm) addBoletaForm.style.display = "none"
+
+    // Mostrar formulario de edición
+    if (editBoletaForm) {
+        editBoletaForm.style.display = "block"
+        console.log("Formulario de edición de boleta mostrado")
+
+        // Cargar pacientes y llenar formulario
+        loadBoletasForSelect().then(() => {
+            if (boleta) {
+                setTimeout(() => {
+                    fillEditBoletaForm(boleta)
+                }, 200)
+            }
+        })
     }
 }
 
@@ -2961,7 +3209,7 @@ function showRecipesList() {
     }
 }
 
-// Función para cargar pacientes para los selects
+// Función para cargar pacientes para el select de recetarios
 async function loadPatientsForSelect() {
     try {
         const response = await fetch(`${PATIENT_API_CONFIG.baseURL}/pacientes/?page_size=1000`, {
@@ -2975,17 +3223,69 @@ async function loadPatientsForSelect() {
         if (response.ok) {
             const data = await response.json()
             const patients = Array.isArray(data) ? data : data.results || []
-            populatePatientSelects(patients)
+            populateRecipePatientSelects(patients)
         } else {
-            console.log("No se pudieron cargar los pacientes")
+            console.log("No se pudieron cargar los pacientes para el select de recetarios")
         }
     } catch (error) {
-        console.error("Error al cargar pacientes:", error)
+        console.error("Error al cargar pacientes para el select de recetarios:", error)
     }
 }
 
-// Función para poblar selects de pacientes
-function populatePatientSelects(patients) {
+async function loadBoletasForSelect() {
+    try {
+        const response = await fetch(`${PATIENT_API_CONFIG.baseURL}/pacientes/?page_size=1000`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+        })
+
+        if (response.ok) {
+            const data = await response.json()
+            const patients = Array.isArray(data) ? data : data.results || []
+            populateBoletaPatientSelects(patients)
+        } else {
+            console.log("No se pudieron cargar los pacientes para el select de recetarios")
+        }
+    } catch (error) {
+        console.error("Error al cargar pacientes para el select de recetarios:", error)
+    }
+}
+
+function populateBoletaPatientSelects(patients) {
+    // Select del formulario de agregar
+    const addSelect = document.getElementById("boletaPatient")
+    if (addSelect) {
+        while (addSelect.children.length > 1) {
+            addSelect.removeChild(addSelect.lastChild)
+        }
+        patients.forEach((patient) => {
+            const option = document.createElement("option")
+            option.value = patient.id
+            option.textContent = `${patient.first_name} ${patient.surname} ${patient.second_surname || ""}`.trim()
+            addSelect.appendChild(option)
+        })
+    }
+
+    // Select del formulario de editar
+    const editSelect = document.getElementById("editBoletaPatient")
+    if (editSelect) {
+        while (editSelect.children.length > 1) {
+            editSelect.removeChild(editSelect.lastChild)
+        }
+        patients.forEach((patient) => {
+            const option = document.createElement("option")
+            option.value = patient.id
+            option.textContent = `${patient.first_name} ${patient.surname} ${patient.second_surname || ""}`.trim()
+            editSelect.appendChild(option)
+        })
+    }
+}
+
+// Función para poblar el select de pacientes en los formularios de recetarios
+function populateRecipePatientSelects(patients) {
     // Select del formulario de agregar
     const addSelect = document.getElementById("recipePatient")
     if (addSelect) {
@@ -3043,6 +3343,90 @@ function buildRecipeApiUrl(page = 1, filters = {}) {
     return url
 }
 
+// Función para construir URL de API de Boletas
+function buildBoletasApiUrl(page = 1, filters = {}) {
+    let url = `${BOLETAS_API_CONFIG.baseURL}${BOLETAS_API_CONFIG.endpoints.recipes}`
+    const params = []
+
+    // Parámetros de paginación
+    params.push(`page=${page}`)
+    params.push(`page_size=${BOLETAS_API_CONFIG.pageSize}`)
+
+    // Filtros
+    if (filters.search && filters.search.trim()) {
+        params.push(`search=${encodeURIComponent(filters.search.trim())}`)
+    }
+    if (filters.status && filters.status.trim()) {
+        params.push(`is_active=${encodeURIComponent(filters.status.trim())}`)
+    }
+    if (filters.date && filters.date.trim()) {
+        params.push(`date_of_issue=${encodeURIComponent(filters.date.trim())}`)
+    }
+
+    if (params.length > 0) {
+        url += "?" + params.join("&")
+    }
+
+    console.log("URL de Boletas construida:", url)
+    return url
+}
+
+async function loadBoletasFromServer(page = 1, filters = currentBoletaFilters) {
+    if (isLoadingBoletas) return
+
+    isLoadingBoletas = true
+    currentBoletaPage = page
+    currentBoletaFilters = {...filters}
+
+    buildBoletasApiUrl()
+
+    try {
+        const apiUrl = buildBoletasApiUrl(page, filters)
+        console.log("Realizando petición AJAX a:", apiUrl)
+
+        const response = await fetch(apiUrl, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+        })
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        console.log("Respuesta de Django API (boletas):", data)
+
+        // Procesar la respuesta igual que productos y pacientes
+        totalBoletaItems = data.total_items || 0
+        totalBoletaPages = data.total_pages || 0
+        currentBoletaPage = data.current_page || 1
+
+        // Mapear los boletas al formato esperado
+        currentBoletas = data.results.map((boleta) => ({
+            id: boleta.id,
+            ballot_number: boleta.ballot_number,
+            patient_name: boleta.name_patient || "N/A",
+            date_of_issue: boleta.date_of_issue,
+            sales_total: `S/.${boleta.sales_total}` || "0.0",
+        }))
+
+        console.log("Boletas:", currentBoletas)
+        console.log("Boletas procesados:", currentBoletas.length)
+        console.log("Página actual:", currentBoletaPage, "de", totalBoletaPages)
+
+        renderBoletas(currentBoletas)
+        renderBoletasPagination(data)
+    } catch (error) {
+        console.error("Error al cargar boletas:", error)
+        showRecipesError(error.message)
+    } finally {
+        isLoadingBoletas = false
+    }
+}
+
 // Función para cargar recetarios desde el servidor
 async function loadRecipesFromServer(page = 1, filters = currentRecipeFilters) {
     if (isLoadingRecipes) return
@@ -3072,24 +3456,22 @@ async function loadRecipesFromServer(page = 1, filters = currentRecipeFilters) {
         const data = await response.json()
         console.log("Respuesta de Django API (recetarios):", data)
 
-        // Procesar la respuesta
+        // Procesar la respuesta igual que productos y pacientes
         totalRecipeItems = data.total_items || 0
         totalRecipePages = data.total_pages || 0
         currentRecipePage = data.current_page || 1
 
         // Mapear los recetarios al formato esperado
-        console.log(data)
         currentRecipes = data.results.map((recipe) => ({
             id: recipe.id,
             prescription_number: recipe.prescription_number,
             patient: recipe.patient,
-            name_patient: recipe.name_patient,
+            patient_name: recipe.name_patient || "N/A",
             date_of_issue: recipe.date_of_issue,
-            is_disabled: recipe.is_disabled,
             is_active: recipe.is_active,
             observation: recipe.observation || "",
             instruction: recipe.instruction || "",
-            // Datos de distancia (lejos)
+            // Datos ópticos
             right_eye_spherical_distance_far: recipe.right_eye_spherical_distance_far,
             right_eye_cylinder_distance_far: recipe.right_eye_cylinder_distance_far,
             right_eye_axis_distance_far: recipe.right_eye_axis_distance_far,
@@ -3097,7 +3479,6 @@ async function loadRecipesFromServer(page = 1, filters = currentRecipeFilters) {
             left_eye_cylinder_distance_far: recipe.left_eye_cylinder_distance_far,
             left_eye_axis_distance_far: recipe.left_eye_axis_distance_far,
             pupillary_distance_far: recipe.pupillary_distance_far,
-            // Datos de cerca
             right_eye_spherical_distance_near: recipe.right_eye_spherical_distance_near,
             right_eye_cylinder_distance_near: recipe.right_eye_cylinder_distance_near,
             right_eye_axis_distance_near: recipe.right_eye_axis_distance_near,
@@ -3139,6 +3520,25 @@ function showRecipesLoading() {
   `
 }
 
+// Función para mostrar loading de Boletas
+// function showBoletasLoading() {
+//     const tbody = document.getElementById("BoletasTableBody")
+//     if (!tbody) return
+//
+//     tbody.innerHTML = `
+//     <tr>
+//       <td colspan="6" class="text-center py-4">
+//         <div class="d-flex justify-content-center align-items-center">
+//           <div class="spinner-border text-red-custom me-3" role="status">
+//             <span class="visually-hidden">Cargando...</span>
+//           </div>
+//           <span class="text-muted">Cargando Boletas...</span>
+//         </div>
+//       </td>
+//     </tr>
+//   `
+// }
+
 // Función para mostrar error de recetarios
 function showRecipesError(message) {
     const tbody = document.getElementById("recipesTableBody")
@@ -3173,7 +3573,7 @@ function renderRecipes(recipes) {
       <tr>
         <td colspan="6" class="text-center py-4">
           <div class="text-muted">
-            <i class="fas fa-prescription fs-2 mb-3"></i>
+            <i class="fas fa-inbox fs-2 mb-3"></i>
             <h5>No hay recetarios</h5>
             <p>No se encontraron recetarios que coincidan con los filtros.</p>
           </div>
@@ -3187,30 +3587,15 @@ function renderRecipes(recipes) {
         const row = document.createElement("tr")
         row.innerHTML = `
       <td>
-        <div class="d-flex align-items-center">
-          <div class="bg-light rounded p-2 me-3">
-            <i class="fas fa-prescription text-red-custom"></i>
-          </div>
-          <div>
-            <div class="fw-semibold">${recipe.prescription_number}</div>
-            <small class="text-muted">Recetario médico</small>
-          </div>
-        </div>
+        <span class="badge bg-secondary">${recipe.prescription_number}</span>
       </td>
       <td>
-        <div class="fw-semibold">${recipe.name_patient}</div>
-        <small class="text-muted">Paciente</small>
+        <div class="fw-semibold">${recipe.patient_name}</div>
       </td>
-      <td>${recipe.date_of_issue ? formatDate(recipe.date_of_issue) : "No especificada"}</td>
+      <td>${formatDate(recipe.date_of_issue)}</td>
+      <td>${getRecipeStatusBadge(recipe.is_active)}</td>
       <td>
-        <span class="badge ${recipe.is_active ? "bg-success" : "bg-secondary"}">
-          ${recipe.is_active ? "Activo" : "Inactivo"}
-        </span>
-      </td>
-      <td>
-        <div class="text-truncate" style="max-width: 200px;" title="${recipe.observation || "Sin observaciones"}">
-          ${recipe.observation || "Sin observaciones"}
-        </div>
+        <small class="text-muted">${recipe.observation || "Sin observaciones"}</small>
       </td>
       <td>
         <button class="btn btn-sm btn-outline-primary me-1" title="Editar" onclick="editRecipe(${recipe.id})">
@@ -3225,9 +3610,78 @@ function renderRecipes(recipes) {
     })
 }
 
-// Función para renderizar paginación de recetarios
+// Función para renderizar recetarios
+function renderBoletas(boletas) {
+    const tbody = document.getElementById("boletasTableBody")
+    if (!tbody) return
+
+    tbody.innerHTML = ""
+
+    if (boletas.length === 0) {
+        tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="text-center py-4">
+          <div class="text-muted">
+            <i class="fas fa-inbox fs-2 mb-3"></i>
+            <h5>No hay recetarios</h5>
+            <p>No se encontraron boletas que coincidan con los filtros.</p>
+          </div>
+        </td>
+      </tr>
+    `
+        return
+    }
+
+    boletas.forEach((boleta) => {
+        const row = document.createElement("tr")
+        row.innerHTML = `
+      <td>
+        <span class="badge bg-secondary">${boleta.ballot_number}</span>
+      </td>
+      <td>
+        <div class="fw-semibold">${boleta.patient_name}</div>
+      </td>
+      <td>${formatDate(boleta.date_of_issue)}</td>
+      <td>
+        <small class="text-muted">${boleta.sales_total || "0.0"}</small>
+      </td>
+      <td>
+        <button class="btn btn-sm btn-outline-primary me-1" title="Editar" onclick="editBoleta(${boleta.id})">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-danger" title="Eliminar" onclick="deleteRecipe(${boleta.id})">
+          <i class="fas fa-trash"></i>
+        </button>
+      </td>
+    `
+        tbody.appendChild(row)
+    })
+}
+
+// Función para formatear fecha
+function formatDate(dateString) {
+    if (!dateString) return "N/A"
+
+    const date = new Date(dateString)
+    return date.toLocaleDateString("es-ES", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+    })
+}
+
+// Función para obtener el badge de estado del recetario
+function getRecipeStatusBadge(isActive) {
+    if (isActive) {
+        return '<span class="badge bg-success">Activo</span>'
+    } else {
+        return '<span class="badge bg-secondary">Inactivo</span>'
+    }
+}
+
+// Función para renderizar la paginación de recetarios
 function renderRecipesPagination(data) {
-    const paginationContainer = document.getElementById("recipesPagination")
+    const paginationContainer = document.querySelector("#recipesPagination")
     if (!paginationContainer) return
 
     paginationContainer.innerHTML = ""
@@ -3389,6 +3843,170 @@ function renderRecipesPagination(data) {
     updateRecipesPaginationInfo(data)
 }
 
+// Función para renderizar la paginación de recetarios
+function renderBoletasPagination(data) {
+    const paginationContainer = document.querySelector("#boletasPagination")
+    if (!paginationContainer) return
+
+    paginationContainer.innerHTML = ""
+
+    const {current_page, total_pages, next_page, previous_page} = data
+
+    // Extraer números de página de las URLs
+    const nextPageNum = next_page ? extractPageNumber(next_page) : null
+    const prevPageNum = previous_page ? extractPageNumber(previous_page) : null
+
+    console.log("Datos de paginación (boletas):", {
+        current_page,
+        total_pages,
+        next_page,
+        previous_page,
+        nextPageNum,
+        prevPageNum,
+    })
+
+    // Botón Anterior
+    const prevLi = document.createElement("li")
+    const canGoPrevious = current_page > 1
+    prevLi.className = `page-item ${!canGoPrevious ? "disabled" : ""}`
+
+    if (canGoPrevious) {
+        const prevLink = document.createElement("a")
+        prevLink.className = "page-link"
+        prevLink.href = "#"
+        prevLink.textContent = "Anterior"
+        prevLink.addEventListener("click", (e) => {
+            e.preventDefault()
+            const targetPage = prevPageNum || current_page - 1
+            console.log("Navegando a página anterior (boletas):", targetPage)
+            loadRecipesFromServer(targetPage)
+        })
+        prevLi.appendChild(prevLink)
+    } else {
+        const prevSpan = document.createElement("span")
+        prevSpan.className = "page-link"
+        prevSpan.textContent = "Anterior"
+        prevSpan.setAttribute("tabindex", "-1")
+        prevLi.appendChild(prevSpan)
+    }
+    paginationContainer.appendChild(prevLi)
+
+    // Lógica para mostrar páginas
+    let startPage = 1
+    let endPage = total_pages
+
+    if (total_pages > 5) {
+        if (current_page <= 3) {
+            endPage = 5
+        } else if (current_page >= total_pages - 2) {
+            startPage = total_pages - 4
+        } else {
+            startPage = current_page - 2
+            endPage = current_page + 2
+        }
+    }
+
+    // Primera página si no está en el rango
+    if (startPage > 1) {
+        const firstLi = document.createElement("li")
+        firstLi.className = "page-item"
+
+        const firstLink = document.createElement("a")
+        firstLink.className = "page-link"
+        firstLink.href = "#"
+        firstLink.textContent = "1"
+        firstLink.addEventListener("click", (e) => {
+            e.preventDefault()
+            loadBoletasFromServer(1)
+        })
+        firstLi.appendChild(firstLink)
+        paginationContainer.appendChild(firstLi)
+
+        if (startPage > 2) {
+            const dotsLi = document.createElement("li")
+            dotsLi.className = "page-item disabled"
+            const dotsSpan = document.createElement("span")
+            dotsSpan.className = "page-link"
+            dotsSpan.textContent = "..."
+            dotsLi.appendChild(dotsSpan)
+            paginationContainer.appendChild(dotsLi)
+        }
+    }
+
+    // Páginas del rango
+    for (let i = startPage; i <= endPage; i++) {
+        const li = document.createElement("li")
+        li.className = `page-item ${i === current_page ? "active" : ""}`
+
+        const link = document.createElement("a")
+        link.className = "page-link"
+        link.href = "#"
+        link.textContent = i.toString()
+        link.addEventListener("click", (e) => {
+            e.preventDefault()
+            loadBoletasFromServer(i)
+        })
+        li.appendChild(link)
+        paginationContainer.appendChild(li)
+    }
+
+    // Última página si no está en el rango
+    if (endPage < total_pages) {
+        if (endPage < total_pages - 1) {
+            const dotsLi = document.createElement("li")
+            dotsLi.className = "page-item disabled"
+            const dotsSpan = document.createElement("span")
+            dotsSpan.className = "page-link"
+            dotsSpan.textContent = "..."
+            dotsLi.appendChild(dotsSpan)
+            paginationContainer.appendChild(dotsLi)
+        }
+
+        const lastLi = document.createElement("li")
+        lastLi.className = "page-item"
+
+        const lastLink = document.createElement("a")
+        lastLink.className = "page-link"
+        lastLink.href = "#"
+        lastLink.textContent = total_pages.toString()
+        lastLink.addEventListener("click", (e) => {
+            e.preventDefault()
+            loadBoletasFromServer(total_pages)
+        })
+        lastLi.appendChild(lastLink)
+        paginationContainer.appendChild(lastLi)
+    }
+
+    // Botón Siguiente
+    const nextLi = document.createElement("li")
+    const canGoNext = current_page < total_pages
+    nextLi.className = `page-item ${!canGoNext ? "disabled" : ""}`
+
+    if (canGoNext) {
+        const nextLink = document.createElement("a")
+        nextLink.className = "page-link"
+        nextLink.href = "#"
+        nextLink.textContent = "Siguiente"
+        nextLink.addEventListener("click", (e) => {
+            e.preventDefault()
+            const targetPage = nextPageNum || current_page + 1
+            console.log("Navegando a página siguiente (boletas):", targetPage)
+            loadRecipesFromServer(targetPage)
+        })
+        nextLi.appendChild(nextLink)
+    } else {
+        const nextSpan = document.createElement("span")
+        nextSpan.className = "page-link"
+        nextSpan.textContent = "Siguiente"
+        nextSpan.setAttribute("tabindex", "-1")
+        nextLi.appendChild(nextSpan)
+    }
+    paginationContainer.appendChild(nextLi)
+
+    // Información de paginación
+    updateBoletasPaginationInfo(data)
+}
+
 // Función para actualizar información de paginación de recetarios
 function updateRecipesPaginationInfo(data) {
     const {current_page, total_items, total_pages} = data
@@ -3403,13 +4021,34 @@ function updateRecipesPaginationInfo(data) {
         infoElement.id = "recipes-pagination-info"
         infoElement.className = "text-muted small mb-3"
 
-        const paginationNav = document.querySelector('nav[aria-label="Paginación de recetarios"]')
+        const paginationNav = document.querySelector('#recipes-list nav[aria-label="Paginación de recetarios"]')
         if (paginationNav) {
             paginationNav.parentNode.insertBefore(infoElement, paginationNav)
         }
     }
-
     infoElement.innerHTML = `Mostrando ${startItem} a ${endItem} de ${total_items} recetarios (Página ${current_page} de ${total_pages})`
+}
+
+// Función para actualizar información de paginación de boletas
+function updateBoletasPaginationInfo(data) {
+    const {current_page, total_items, total_pages} = data
+    const itemsPerPage = BOLETAS_API_CONFIG.pageSize
+    const startItem = (current_page - 1) * itemsPerPage + 1
+    const endItem = Math.min(current_page * itemsPerPage, total_items)
+
+    // Crear o actualizar el elemento de información
+    let infoElement = document.getElementById("boletas-pagination-info")
+    if (!infoElement) {
+        infoElement = document.createElement("div")
+        infoElement.id = "boletas-pagination-info"
+        infoElement.className = "text-muted small mb-3"
+
+        const paginationNav = document.querySelector('#recipes-list nav[aria-label="Paginación de boletas"]')
+        if (paginationNav) {
+            paginationNav.parentNode.insertBefore(infoElement, paginationNav)
+        }
+    }
+    infoElement.innerHTML = `Mostrando ${startItem} a ${endItem} de ${total_items} boletas (Página ${current_page} de ${total_pages})`
 }
 
 // Función para aplicar filtros de recetarios
@@ -3424,7 +4063,7 @@ function applyRecipeFilters() {
         date: dateFilter,
     }
 
-    console.log("Aplicando filtros de recetarios:", filters)
+    console.log("Aplicando filtros (recetarios):", filters)
 
     // Cargar primera página con filtros
     loadRecipesFromServer(1, filters)
@@ -3432,7 +4071,7 @@ function applyRecipeFilters() {
 
 // Función para limpiar filtros de recetarios
 function clearRecipeFilters() {
-    console.log("Limpiando filtros de recetarios")
+    console.log("Limpiando filtros (recetarios)")
     const searchRecipe = document.getElementById("searchRecipe")
     const filterRecipeStatus = document.getElementById("filterRecipeStatus")
     const filterRecipeDate = document.getElementById("filterRecipeDate")
@@ -3489,6 +4128,86 @@ async function editRecipe(id) {
     }
 }
 
+async function editBoleta(id) {
+    console.log("Editando boleta:", id)
+
+    try {
+        // Mostrar loading mientras se carga la boleta
+        const editBtn = document.querySelector(`button[onclick="editBoleta(${id})"]`)
+        const originalContent = editBtn ? editBtn.innerHTML : null
+
+        if (editBtn) {
+            editBtn.disabled = true
+            editBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'
+            editBtn.title = "Cargando..."
+        }
+
+        // Obtener datos del la boleta
+        const boleta = await getBoletaFromServer(id)
+
+        // Mostrar formulario de edición
+        // showEditRecipeForm(boleta)
+        showEditBoletaForm(boleta)
+
+        // Restaurar botón
+        if (editBtn && originalContent) {
+            editBtn.disabled = false
+            editBtn.innerHTML = originalContent
+            editBtn.title = "Editar"
+        }
+    } catch (error) {
+        console.error("Error al cargar la boleta para editar:", error)
+
+        // Mostrar modal de error
+        createErrorModal("Error al Cargar Boleta", "No se pudo cargar la información del la boleta: " + error.message)
+
+        // Restaurar botón
+        const editBtn = document.querySelector(`button[onclick="editBoleta(${id})"]`)
+        if (editBtn) {
+            editBtn.disabled = false
+            editBtn.innerHTML = '<i class="fas fa-edit"></i>'
+            editBtn.title = "Editar"
+        }
+    }
+}
+
+async function getBoletaFromServer(boletaId) {
+    try {
+        console.log("Obteniendo boleta del servidor:", boletaId)
+
+        const response = await fetch(`${BOLETAS_API_CONFIG.baseURL}/boletas/${boletaId}/`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+        })
+
+        console.log("Respuesta del servidor:", response.status, response.statusText)
+
+        if (!response.ok) {
+            let errorMessage = `Error HTTP: ${response.status} - ${response.statusText}`
+
+            try {
+                const errorData = await response.json()
+                console.log("Error del servidor:", errorData)
+                errorMessage = errorData.detail || errorData.message || errorData.error || errorMessage
+            } catch (parseError) {
+                console.log("No se pudo parsear el error como JSON")
+            }
+
+            throw new Error(errorMessage)
+        }
+
+        const recipe = await response.json()
+        console.log("Boleta obtenida exitosamente:", recipe)
+        return recipe
+    } catch (error) {
+        console.error("Error al obtener la boleta:", error)
+        throw error
+    }
+}
+
 // Función para obtener detalle del recetario via AJAX
 async function getRecipeFromServer(recipeId) {
     try {
@@ -3505,7 +4224,7 @@ async function getRecipeFromServer(recipeId) {
         console.log("Respuesta del servidor:", response.status, response.statusText)
 
         if (!response.ok) {
-            let errorMessage = `Error HTTP: ${response.status}`
+            let errorMessage = `Error HTTP: ${response.status} - ${response.statusText}`
 
             try {
                 const errorData = await response.json()
@@ -3527,9 +4246,135 @@ async function getRecipeFromServer(recipeId) {
     }
 }
 
+function fillEditBoletaForm(boleta) {
+    console.log("Llenando formulario de edición de boleta con datos:", boleta);
+
+    // Campos básicos
+    document.getElementById("editBoletaId").value = boleta.id || "";
+    document.getElementById("editBoletaNumber").value = boleta.ballot_number || "";
+    document.getElementById("editBoletaDateOfIssue").value = boleta.date_of_issue || "";
+    document.getElementById("editBoletaObservation").value = boleta.observation || "";
+    document.getElementById("idBoletaTotal").value = boleta.sales_total || "";
+
+    // Paciente
+    const patientSelect = document.getElementById("editBoletaPatient");
+    if (patientSelect && boleta.patient) {
+        const patientId = typeof boleta.patient === "object" ? boleta.patient.id : boleta.patient;
+        console.log("Seleccionando paciente:", patientId);
+
+        for (let i = 0; i < patientSelect.options.length; i++) {
+            if (patientSelect.options[i].value == patientId) {
+                patientSelect.selectedIndex = i;
+                break;
+            }
+        }
+    }
+
+    let lines = boleta.lines || [];
+    const tbody = document.getElementById("editBoletaDetails");
+
+    // Limpiar el contenido existente antes de agregar líneas
+    tbody.innerHTML = "";
+
+    // Generar una fila para los encabezados (labels)
+    const headerRow = document.createElement("div");
+    headerRow.classList.add("row");
+    headerRow.innerHTML = `
+        <div class="col-md-2">
+            <label class="form-label">Codigo</label>
+        </div>
+        <div class="col-md-1">
+            <label class="form-label">Cantidad</label>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Unidad de medida</label>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Producto</label>
+        </div>
+        <div class="col-md-1">
+            <label class="form-label">Precio Unitario</label>
+        </div>
+        <div class="col-md-1">
+            <label class="form-label">Monto Total</label>
+        </div>
+    `;
+
+    // Agregar la fila de encabezados al contenedor
+    tbody.appendChild(headerRow);
+
+    // Generar las filas de datos dinámicamente
+    for (let line of lines) {
+        const nuevaLinea = document.createElement("div");
+        nuevaLinea.classList.add("row");
+        nuevaLinea.style.marginBottom = "15px";
+
+        console.log(line);
+
+        nuevaLinea.innerHTML = `
+            <div class="col-md-2">
+                <input type="text" class="form-control" value="${line['product']['code']}" disabled>
+            </div>
+            <div class="col-md-1">
+                <input type="number" class="form-control" value="${line['quantity']}" disabled>
+            </div>
+            <div class="col-md-2">
+                <input type="text" class="form-control" value="${line['product']['unit_measure']}" disabled>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="producto" disabled>
+                    <option value="">Cargando productos...</option> <!-- Placeholder mientras carga -->
+                </select>
+            </div>
+            <div class="col-md-1">
+                <input type="number" step="0.5" class="form-control" value="${line['unit_price']}" disabled>
+            </div>
+            <div class="col-md-1">
+                <input type="number" step="0.5" class="form-control" value="${line['amount']}" disabled>
+            </div>
+        `;
+
+        // Agregar la nueva línea al contenedor
+        tbody.appendChild(nuevaLinea);
+
+        // Rellenar el <select> del producto con los datos de la API
+        const selectProducto = nuevaLinea.querySelector('select[name="producto"]');
+        fetch("/api/productos/") // Reemplaza con tu URL de productos
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error("Error al obtener los productos");
+                }
+                return response.json();
+            })
+            .then((data) => {
+                // Limpiar el select antes de agregar los productos
+                selectProducto.innerHTML = `<option value="">Seleccione un producto</option>`;
+
+                // Agregar las opciones obtenidas desde la API
+                data.results.forEach((producto) => {
+                    const option = document.createElement("option");
+                    option.value = producto.id; // Usar el ID del producto como valor
+                    option.textContent = producto.name; // Mostrar el nombre del producto
+
+                    // Verificar si el producto coincide con el ID del line['productId']
+                    if (producto.id === line['product_id']) {
+                        option.selected = true; // Marcarlo como seleccionado
+                    }
+
+                    // Agregar opción al select
+                    selectProducto.appendChild(option);
+                });
+            })
+            .catch((error) => {
+                console.error("Error al cargar los productos:", error);
+                selectProducto.innerHTML = `<option value="">Error al cargar productos</option>`;
+            });
+    }
+}
+
 // Función para llenar el formulario de edición con datos del recetario
 function fillEditRecipeForm(recipe) {
-    console.log("Llenando formulario de edición con datos:", recipe)
+    console.log("Llenando formulario de edición de recetario con datos:", recipe)
 
     // Campos básicos
     document.getElementById("editRecipeId").value = recipe.id || ""
@@ -3552,30 +4397,30 @@ function fillEditRecipeForm(recipe) {
         }
     }
 
-    // Datos de distancia (lejos) - Ojo derecho
+    // Datos ópticos - Distancia (Lejos) - Ojo Derecho
     document.getElementById("editRightEyeSphericalDistanceFar").value = recipe.right_eye_spherical_distance_far || ""
     document.getElementById("editRightEyeCylinderDistanceFar").value = recipe.right_eye_cylinder_distance_far || ""
     document.getElementById("editRightEyeAxisDistanceFar").value = recipe.right_eye_axis_distance_far || ""
 
-    // Datos de distancia (lejos) - Ojo izquierdo
+    // Datos ópticos - Distancia (Lejos) - Ojo Izquierdo
     document.getElementById("editLeftEyeSphericalDistanceFar").value = recipe.left_eye_spherical_distance_far || ""
     document.getElementById("editLeftEyeCylinderDistanceFar").value = recipe.left_eye_cylinder_distance_far || ""
     document.getElementById("editLeftEyeAxisDistanceFar").value = recipe.left_eye_axis_distance_far || ""
 
-    // Distancia pupilar (lejos)
+    // Distancia pupilar (Lejos)
     document.getElementById("editPupillaryDistanceFar").value = recipe.pupillary_distance_far || ""
 
-    // Datos de cerca - Ojo derecho
+    // Datos ópticos - Cerca - Ojo Derecho
     document.getElementById("editRightEyeSphericalDistanceNear").value = recipe.right_eye_spherical_distance_near || ""
     document.getElementById("editRightEyeCylinderDistanceNear").value = recipe.right_eye_cylinder_distance_near || ""
     document.getElementById("editRightEyeAxisDistanceNear").value = recipe.right_eye_axis_distance_near || ""
 
-    // Datos de cerca - Ojo izquierdo
+    // Datos ópticos - Cerca - Ojo Izquierdo
     document.getElementById("editLeftEyeSphericalDistanceNear").value = recipe.left_eye_spherical_distance_near || ""
     document.getElementById("editLeftEyeCylinderDistanceNear").value = recipe.left_eye_cylinder_distance_near || ""
     document.getElementById("editLeftEyeAxisDistanceNear").value = recipe.left_eye_axis_distance_near || ""
 
-    // Distancia pupilar (cerca)
+    // Distancia pupilar (Cerca)
     document.getElementById("editPupillaryDistanceNear").value = recipe.pupillary_distance_near || ""
 
     // Estado
@@ -3701,11 +4546,89 @@ async function updateRecipeOnServer(recipeId, recipeData) {
     }
 }
 
+// Función para eliminar recetario
+async function deleteRecipe(id) {
+    console.log("Eliminando recetario:", id)
+
+    // Buscar el recetario en la lista actual para mostrar su número
+    const recipe = currentRecipes.find((r) => r.id === id)
+    const recipeName = recipe ? `Recetario ${recipe.prescription_number}` : `ID ${id}`
+
+    // Crear modal de confirmación personalizado
+    createConfirmationModal(
+        "Confirmar Eliminación",
+        `¿Estás seguro de que deseas eliminar el "<strong>${recipeName}</strong>"?<br><br>Esta acción no se puede deshacer.`,
+        async () => {
+            // Esta función se ejecuta cuando el usuario confirma
+            const deleteBtn = document.querySelector(`button[onclick="deleteRecipe(${id})"]`)
+            const originalContent = deleteBtn ? deleteBtn.innerHTML : null
+
+            try {
+                // Mostrar loading en el botón de la tabla también
+                if (deleteBtn) {
+                    deleteBtn.disabled = true
+                    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'
+                    deleteBtn.title = "Eliminando..."
+                }
+
+                // Eliminar en el servidor usando la nueva API
+                const result = await deleteRecipeOnServer(id)
+
+                // Cerrar modal de confirmación
+                const confirmationModal = document.getElementById("confirmationModal")
+                if (confirmationModal) {
+                    window.bootstrap.Modal.getInstance(confirmationModal).hide()
+                }
+
+                // Mostrar modal de éxito
+                const successMessage = result.message || "Recetario eliminado exitosamente"
+                createSuccessModal("¡Eliminado!", successMessage)
+
+                // Recargar la página actual para reflejar los cambios
+                // Si estamos en la última página y solo queda un elemento, ir a la página anterior
+                if (currentRecipes.length === 1 && currentRecipePage > 1) {
+                    loadRecipesFromServer(currentRecipePage - 1, currentRecipeFilters)
+                } else {
+                    loadRecipesFromServer(currentRecipePage, currentRecipeFilters)
+                }
+            } catch (error) {
+                console.error("Error completo al eliminar:", error)
+
+                // Cerrar modal de confirmación
+                const confirmationModal = document.getElementById("confirmationModal")
+                if (confirmationModal) {
+                    window.bootstrap.Modal.getInstance(confirmationModal).hide()
+                }
+
+                // Mostrar modal de error
+                let errorMessage = "No se pudo eliminar el recetario"
+                if (error.message) {
+                    errorMessage = error.message
+                }
+
+                createErrorModal("Error al Eliminar", errorMessage)
+
+                // Restaurar botón
+                if (deleteBtn && originalContent) {
+                    deleteBtn.disabled = false
+                    deleteBtn.innerHTML = originalContent
+                    deleteBtn.title = "Eliminar"
+                }
+            }
+        },
+        () => {
+            // Esta función se ejecuta cuando el usuario cancela
+            console.log("Eliminación cancelada por el usuario")
+        },
+    )
+}
+
 // Función para eliminar recetario via AJAX
 async function deleteRecipeOnServer(recipeId) {
     try {
         console.log("Eliminando recetario del servidor:", recipeId)
 
+        // Usar el endpoint específico de eliminación
         const deleteUrl = `${RECIPE_API_CONFIG.baseURL}/recetas/${recipeId}/eliminar/`
         console.log("URL de eliminación:", deleteUrl)
 
@@ -3714,6 +4637,7 @@ async function deleteRecipeOnServer(recipeId) {
             headers: {
                 "Content-Type": "application/json",
                 Accept: "application/json",
+                // Agregar CSRF token si es necesario
                 "X-CSRFToken": getCookie("csrftoken"),
             },
         })
@@ -3721,7 +4645,7 @@ async function deleteRecipeOnServer(recipeId) {
         console.log("Respuesta del servidor:", response.status, response.statusText)
 
         if (!response.ok) {
-            let errorMessage = `Error HTTP: ${response.status}`
+            let errorMessage = `Error HTTP: ${response.status} - ${response.statusText}`
 
             try {
                 const errorData = await response.json()
@@ -3729,6 +4653,7 @@ async function deleteRecipeOnServer(recipeId) {
                 errorMessage = errorData.detail || errorData.message || errorData.error || errorMessage
             } catch (parseError) {
                 console.log("No se pudo parsear el error como JSON")
+                // Si no se puede parsear como JSON, usar el texto de respuesta
                 try {
                     const errorText = await response.text()
                     if (errorText) {
@@ -3742,13 +4667,16 @@ async function deleteRecipeOnServer(recipeId) {
             throw new Error(errorMessage)
         }
 
+        // Manejar diferentes tipos de respuesta exitosa
         let result = {success: true, message: "Recetario eliminado exitosamente"}
 
+        // Si la respuesta tiene contenido (no es 204 No Content)
         if (response.status !== 204) {
             try {
                 const responseData = await response.json()
                 result = {...result, ...responseData}
             } catch (parseError) {
+                // Si no se puede parsear como JSON, usar respuesta por defecto
                 console.log("Respuesta exitosa pero no es JSON válido")
             }
         }
@@ -3761,142 +4689,15 @@ async function deleteRecipeOnServer(recipeId) {
     }
 }
 
-// Función para eliminar recetario
-async function deleteRecipe(id) {
-    console.log("Eliminando recetario:", id)
-
-    const recipe = currentRecipes.find((r) => r.id === id)
-    const recipeName = recipe ? recipe.prescription_number : `ID ${id}`
-
-    createConfirmationModal(
-        "Confirmar Eliminación",
-        `¿Estás seguro de que deseas eliminar el recetario "<strong>${recipeName}</strong>"?<br><br>Esta acción no se puede deshacer.`,
-        async () => {
-            const deleteBtn = document.querySelector(`button[onclick="deleteRecipe(${id})"]`)
-            const originalContent = deleteBtn ? deleteBtn.innerHTML : null
-
-            try {
-                if (deleteBtn) {
-                    deleteBtn.disabled = true
-                    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'
-                    deleteBtn.title = "Eliminando..."
-                }
-
-                const result = await deleteRecipeOnServer(id)
-
-                const confirmationModal = document.getElementById("confirmationModal")
-                if (confirmationModal) {
-                    window.bootstrap.Modal.getInstance(confirmationModal).hide()
-                }
-
-                const successMessage = result.message || "Recetario eliminado exitosamente"
-                createSuccessModal("¡Eliminado!", successMessage)
-
-                if (currentRecipes.length === 1 && currentRecipePage > 1) {
-                    loadRecipesFromServer(currentRecipePage - 1, currentRecipeFilters)
-                } else {
-                    loadRecipesFromServer(currentRecipePage, currentRecipeFilters)
-                }
-            } catch (error) {
-                console.error("Error completo al eliminar:", error)
-
-                const confirmationModal = document.getElementById("confirmationModal")
-                if (confirmationModal) {
-                    window.bootstrap.Modal.getInstance(confirmationModal).hide()
-                }
-
-                let errorMessage = "No se pudo eliminar el recetario"
-                if (error.message) {
-                    errorMessage = error.message
-                }
-
-                createErrorModal("Error al Eliminar", errorMessage)
-
-                if (deleteBtn && originalContent) {
-                    deleteBtn.disabled = false
-                    deleteBtn.innerHTML = originalContent
-                    deleteBtn.title = "Eliminar"
-                }
-            }
-        },
-        () => {
-            console.log("Eliminación cancelada por el usuario")
-        },
-    )
-}
-
-// Hacer funciones globales para recetarios
+// Hacer las funciones globales para que funcionen con onclick
 window.showAddRecipeForm = showAddRecipeForm
+window.showAddBoletaForm = showAddBoletaForm
 window.showEditRecipeForm = showEditRecipeForm
+window.showEditBoletaForm = showEditBoletaForm
 window.showRecipesList = showRecipesList
-window.editRecipe = editRecipe
-window.deleteRecipe = deleteRecipe
 window.clearRecipeFilters = clearRecipeFilters
 window.loadRecipesFromServer = loadRecipesFromServer
-
-// Actualizar la función showSection para incluir recetarios
-const originalShowSection = showSection
-showSection = (sectionName) => {
-    console.log("Mostrando sección:", sectionName)
-
-    // Ocultar todas las secciones
-    const sections = document.querySelectorAll(".content-section")
-    sections.forEach((section) => {
-        section.style.display = "none"
-    })
-
-    // Mostrar la sección seleccionada
-    const targetSection = document.getElementById(sectionName + "-section")
-    if (targetSection) {
-        targetSection.style.display = "block"
-        console.log("Sección mostrada:", sectionName)
-
-        // Si es la sección de productos, cargar la primera página
-        if (sectionName === "products") {
-            const productsList = document.getElementById("products-list")
-            const addProductForm = document.getElementById("add-product-form")
-            const editProductForm = document.getElementById("edit-product-form")
-
-            // Asegurar que se muestre la lista y se oculten los formularios
-            if (productsList) productsList.style.display = "block"
-            if (addProductForm) addProductForm.style.display = "none"
-            if (editProductForm) editProductForm.style.display = "none"
-
-            // Cargar productos de la primera página
-            loadProductsFromServer(1)
-        }
-
-        // Si es la sección de clientes/pacientes, cargar la primera página
-        if (sectionName === "clients") {
-            const patientsList = document.getElementById("patients-list")
-            const addPatientForm = document.getElementById("add-patient-form")
-            const editPatientForm = document.getElementById("edit-patient-form")
-
-            // Asegurar que se muestre la lista y se oculten los formularios
-            if (patientsList) patientsList.style.display = "block"
-            if (addPatientForm) addPatientForm.style.display = "none"
-            if (editPatientForm) editPatientForm.style.display = "none"
-
-            // Cargar pacientes de la primera página
-            loadPatientsFromServer(1)
-        }
-
-        // Si es la sección de recetarios, cargar la primera página
-        if (sectionName === "recipes") {
-            const recipesList = document.getElementById("recipes-list")
-            const addRecipeForm = document.getElementById("add-recipe-form")
-            const editRecipeForm = document.getElementById("edit-recipe-form")
-
-            // Asegurar que se muestre la lista y se oculten los formularios
-            if (recipesList) recipesList.style.display = "block"
-            if (addRecipeForm) addRecipeForm.style.display = "none"
-            if (editRecipeForm) editRecipeForm.style.display = "none"
-
-            // Cargar recetarios de la primera página
-            loadRecipesFromServer(1)
-        }
-    }
-}
-
-// Actualizar el array de secciones
-const sections = ["dashboard", "products", "clients", "recipes", "appointments", "sales", "settings"]
+window.loadBoletasFromServer = loadBoletasFromServer
+window.editRecipe = editRecipe
+window.editBoleta = editBoleta
+window.deleteRecipe = deleteRecipe

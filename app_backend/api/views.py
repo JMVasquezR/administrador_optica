@@ -8,12 +8,14 @@ from rest_framework.views import APIView
 from admin_opticas.pagination import CustomPagination
 from .serializers import (
     ProductSerializer, ProductListSerializer, BrandSerializer, CategorySerializer, ProductUpdateSerializer,
-    PatientSerializer, TypeDocumentSerializer, PatientCreateSerializer, RecipeSerializer
+    PatientSerializer, TypeDocumentSerializer, PatientCreateSerializer, RecipeSerializer, BoletaSerializer,
+    SalesTicketSerializer, SalesTicketDetalleSerializer
 )
 from ..filters import ProductFilter, PatientFilter, RecipeFilter
 from ..models.patients import Patient
 from ..models.products import Product, Brand, Category
 from ..models.recipes import Recipe
+from ..models.sales_ticket import SalesTicket
 from ..models.type_document import TypeDocument
 
 
@@ -66,7 +68,6 @@ class ProductUpdateView(UpdateAPIView):
 
 class PatientListView(ListAPIView):
     queryset = Patient.objects.filter(is_active=True).order_by('-id')
-    # queryset = Patient.objects.all().order_by('-id')
     serializer_class = PatientSerializer
     pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend]
@@ -107,6 +108,14 @@ class RecipeListView(generics.ListAPIView):
     filterset_class = RecipeFilter
 
 
+class BoletaListView(generics.ListAPIView):
+    queryset = SalesTicket.objects.all().order_by('-id')
+    serializer_class = BoletaSerializer
+    pagination_class = CustomPagination
+    filter_backends = [DjangoFilterBackend]
+    # filterset_class = RecipeFilter
+
+
 class RecipeCreateView(generics.CreateAPIView):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
@@ -126,3 +135,13 @@ class RecipeDeleteView(generics.DestroyAPIView):
     def perform_destroy(self, instance):
         instance.is_active = False
         instance.save()
+
+
+class SalesTicketCreateAPIView(CreateAPIView):
+    queryset = SalesTicket.objects.all()
+    serializer_class = SalesTicketSerializer
+
+
+class SalesTicketRetrUpdAPIView(generics.RetrieveUpdateAPIView):
+    queryset = SalesTicket.objects.prefetch_related('saleslines_set__product')  # Optimización de relaciones
+    serializer_class = SalesTicketDetalleSerializer
