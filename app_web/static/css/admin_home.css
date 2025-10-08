@@ -385,18 +385,18 @@ footer {
 
 /* Sidebar responsive */
 #sidebarMenu {
-    position: fixed;
-    left: 0;
+    transform: translateX(-100%); /* Oculta el menú lateral */
+    position: absolute; /* Define que se comporte como un elemento flotante móvil */
     top: 0;
+    left: 0;
     height: 100%;
     width: 250px;
     background-color: #fff;
-    z-index: 1050;
-    overflow-y: auto;
-    border-right: 1px solid rgba(0, 0, 0, 0.1);
-    transform: translateX(-100%);
-    transition: transform 0.3s ease-in-out;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Sombra ligera */
+    z-index: 1030;
+    transition: transform 0.3s ease-in-out; /* Da efecto suave */
 }
+
 
 #sidebarMenu:not(.d-none) {
     transform: translateX(0);
@@ -420,23 +420,39 @@ footer {
 
 /* Ajustes para pantallas grandes */
 @media (max-width: 992px) {
+    /* Estilo del botón hamburguesa en vistas pequeñas */
+    .navbar-toggler {
+        display: inline-block !important; /* Forzar su visibilidad */
+        padding: 0.5rem 1rem;
+        font-size: 1.25rem;
+        color: #495057;
+        background-color: transparent;
+        border: none;
+        z-index: 1055; /* Asegura que no lo cubran otros elementos */
+    }
+
+    .navbar-toggler i {
+        font-size: 1.5rem; /* Marca más claro el ícono */
+    }
+
+    /* Sidebar (menú lateral) para pantallas pequeñas */
     #sidebarMenu {
-        transform: translateX(-100%); /* Oculta el menú lateral */
-        position: absolute; /* Para poder desplazarlo dentro de la pantalla */
-        top: 0;
+        position: fixed;
         left: 0;
+        top: 0;
         height: 100%;
-        width: 250px; /* Ajusta el ancho de tu menú lateral */
-        background-color: #fff; /* Fondo del menú */
-        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Sombra ligera */
+        width: 250px;
+        background-color: #fff;
         z-index: 1030;
+        transform: translateX(-100%); /* Oculto */
         transition: transform 0.3s ease-in-out;
     }
 
     #sidebarMenu.menu-visible {
-        transform: translateX(0); /* Hace visible el menú lateral */
+        transform: translateX(0); /* Visible */
     }
 
+    /* Overlay (fondo oscuro detrás del menú lateral) */
     .menu-overlay {
         display: block;
         position: fixed;
@@ -444,12 +460,26 @@ footer {
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.5); /* Oscurece el fondo */
-        z-index: 1020;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1025;
     }
 
     .menu-overlay.d-none {
-        display: none; /* Oculta el overlay */
+        display: none; /* Oculto */
     }
 }
+
+
+@media (max-width: 768px) {
+    sidebar {
+        width: 100%;
+        position: relative;
+    }
+
+    .nav-link-custom {
+        white-space: nowrap;
+        justify-content: center;
+    }
+}
+
 
