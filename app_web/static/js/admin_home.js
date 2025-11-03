@@ -1,3 +1,5 @@
+const URL_CONSTANTE = 'https://administradoroptica-production.up.railway.app/'
+
 document.addEventListener("DOMContentLoaded", function () {
     function toggleSidebar() {
         const sidebar = document.getElementById("sidebarMenu");
@@ -124,7 +126,7 @@ let currentFilters = {
 
 // Configuración de la API Django
 const API_CONFIG = {
-    baseURL: "http://127.0.0.1:8000/api", // Cambia esto por tu URL de API Django
+    baseURL: `${URL_CONSTANTE}api`, // Cambia esto por tu URL de API Django
     endpoints: {
         products: "/productos/", // Endpoint con paginación
         createProduct: "/productos/create/",
@@ -1577,7 +1579,7 @@ let currentPatientFilters = {
 // Configuración API para pacientes
 // Update the PATIENT_API_CONFIG to match your actual endpoints
 const PATIENT_API_CONFIG = {
-    baseURL: "http://127.0.0.1:8000/api",
+    baseURL: `${URL_CONSTANTE}api`,
     endpoints: {
         patients: "/pacientes/",
         createPatient: "/pacientes/crear/",
@@ -2987,7 +2989,7 @@ let currentBoletaFilters = {
 
 // Configuración API para recetarios
 const RECIPE_API_CONFIG = {
-    baseURL: "http://127.0.0.1:8000/api",
+    baseURL: `${URL_CONSTANTE}api`,
     endpoints: {
         recipes: "/recetas/",
         createRecipe: "/recetas/crear/",
@@ -2999,7 +3001,7 @@ const RECIPE_API_CONFIG = {
 
 // Configuración API para recetarios
 const BOLETAS_API_CONFIG = {
-    baseURL: "http://127.0.0.1:8000/api",
+    baseURL: `${URL_CONSTANTE}api`,
     endpoints: {
         recipes: "/boletas/",
         createRecipe: "/boletas/crear/",
