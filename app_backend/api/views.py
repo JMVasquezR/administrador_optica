@@ -1,7 +1,12 @@
+from datetime import timedelta
+
+from django.db.models import Sum
+from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, filters
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from app_backend.models.patients import Patient, TypeDocument
 from app_backend.models.products import Product, Category, Brand
@@ -106,3 +111,33 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class BrandViewSet(viewsets.ModelViewSet):
     queryset = Brand.objects.all().order_by('name')
     serializer_class = BrandSerializer
+
+
+class DashboardStatsAPIView(APIView):
+    def get(self, request):
+        today = timezone.now().date()
+        labels = []
+        data = []
+
+        # Obtenemos ventas de los últimos 7 días
+        for i in range(6, -1, -1):
+            date = today - timedelta(days=i)
+            # Formato de nombre de día corto (Lun, Mar...)
+            labels.append(date.strftime('%a'))
+
+            # Sumamos el total de boletas activas de ese día
+            daily_sum = SalesTicket.objects.filter(
+                date_of_issue=date,
+                is_disabled=False
+            ).aggregate(Sum('sales_total'))['sales_total__sum'] or 0.0
+
+            data.append(daily_sum)
+
+        # Cálculo de ventas de hoy
+        total_today = data[-1]
+
+        return Response({
+            "labels": labels,
+            "data": data,
+            "total_today": total_today
+        })

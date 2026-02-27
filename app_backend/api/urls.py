@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     ProductViewSet, CategoryViewSet, BrandViewSet, PatientViewSet, TypeDocumentViewSet, SalesTicketViewSet,
-    RecipeViewSet
+    RecipeViewSet, DashboardStatsAPIView
 )
 
 app_name = 'api'
@@ -20,5 +20,6 @@ router.register(r'sales-tickets', SalesTicketViewSet)
 router.register(r'recipes', RecipeViewSet)
 
 urlpatterns = [
+    path('api/dashboard/sales-stats/', DashboardStatsAPIView.as_view(), name='api-sales-stats'),
     path('api/', include(router.urls)),
 ]
