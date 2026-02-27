@@ -14,6 +14,7 @@ class Patient(TimeStampedModel):
         verbose_name = 'Paciente'
         verbose_name_plural = 'Pacientes'
         db_table = 'TB_BACKEND_PATIENT'
+        unique_together = ('type_document', 'document_number')
 
     first_name = CharField(max_length=250, verbose_name='Nombre completo')
     surname = CharField(max_length=100, verbose_name='Apellido paterno')

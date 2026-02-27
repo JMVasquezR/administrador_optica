@@ -21,7 +21,7 @@ class SalesTicket(TimeStampedModel):
     sales_total = FloatField(null=True, blank=True, verbose_name='Total de ventas')
     product = ManyToManyField(Product, related_name='product', through='saleslines')
     observation = TextField(null=True, blank=True)
-    is_disabled = BooleanField(default=False, verbose_name='Deshabilitado')
+    is_disabled = BooleanField(default=False, verbose_name='Anulado')
 
     def __str__(self):
         return f'{self.ballot_number}'
@@ -36,18 +36,25 @@ class SalesTicket(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         if not self.ballot_number:
-            # Obtener la última instancia guardada
+            # Obtenemos el último ticket por ID para evitar confusiones de formato
             last_ticket = SalesTicket.objects.all().order_by('id').last()
-            if last_ticket:
-                last_ballot_number = last_ticket.ballot_number
-                prefix, number = last_ballot_number.split('-')
-                number = int(number) + 1
-                new_number = str(number).zfill(6)  # Asegurar que el número tenga 6 dígitos
-            else:
-                prefix = "001"
-                new_number = "000001"
 
-            self.ballot_number = f"{prefix}-{new_number}"
+            prefix = "001"
+            if last_ticket:
+                try:
+                    # Intentamos sacar el número de la última boleta
+                    # Ejemplo: "001-000005" -> parts[1] es "000005"
+                    last_number_str = last_ticket.ballot_number.split('-')[-1]
+                    new_number_int = int(last_number_str) + 1
+                except (ValueError, IndexError, AttributeError):
+                    # Si la última boleta tiene un formato basura (ej: "error", "1", ""),
+                    # contamos cuántos registros hay para no repetir el correlativo
+                    new_number_int = SalesTicket.objects.count() + 1
+
+                self.ballot_number = f"{prefix}-{str(new_number_int).zfill(6)}"
+            else:
+                # Si la tabla está vacía
+                self.ballot_number = f"{prefix}-000001"
 
         super(SalesTicket, self).save(*args, **kwargs)
 
@@ -59,7 +66,7 @@ class SalesLines(TimeStampedModel):
         db_table = 'TB_BACKEND_SALES_LINES'
 
     quantity = IntegerField(verbose_name='Cantidad', default=1)
-    sales_ticket = ForeignKey(SalesTicket, on_delete=CASCADE, verbose_name='Boleta')
+    sales_ticket = ForeignKey(SalesTicket, on_delete=CASCADE, related_name='lines', verbose_name='Boleta')
     product = ForeignKey(Product, on_delete=CASCADE, verbose_name='Producto')
     unit_price = FloatField(verbose_name='Precio unitario', null=True, blank=True)
     amount = FloatField(verbose_name='Importe', null=True, blank=True)

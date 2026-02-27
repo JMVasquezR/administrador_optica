@@ -1,0 +1,42 @@
+<nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+    <div class="text-center mb-4">
+        <i class="fa-solid fa-glasses fa-2x text-white"></i>
+        <h6 class="mt-2 fw-bold text-white">Óptica KyM Lens</h6>
+    </div>
+    <ul class="nav flex-column px-3">
+        <li class="nav-item">
+            <a href="{% url 'app_web:home' %}"
+               class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                <i class="fas fa-home me-2"></i> Dashboard
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="{% url 'app_web:patient_list' %}"
+               class="nav-link {% if request.resolver_match.url_name == 'patient_list' %}active{% endif %}">
+                <i class="fas fa-users me-2"></i> Pacientes
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="{% url 'app_web:recipe_list' %}"
+               class="nav-link {% if request.resolver_match.url_name == 'recipe_list' %}active{% endif %}">
+                <i class="fas fa-file-medical me-2"></i> Recetario
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="{% url 'app_web:sales_ticket_list' %}"
+               class="nav-link {% if request.resolver_match.url_name == 'sales_ticket_list' %}active{% endif %}">
+                <i class="fas fa-file-invoice-dollar me-2"></i> Boletas
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="{% url 'app_web:product_list' %}"
+               class="nav-link {% if request.resolver_match.url_name == 'product_list' %}active{% endif %}">
+                <i class="fas fa-box me-2"></i> Productos
+            </a>
+        </li>
+    </ul>
+</nav>

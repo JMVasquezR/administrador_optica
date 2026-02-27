@@ -1,0 +1,127 @@
+:root {
+    --optica-red: #d90429;
+    --optica-black: #1a1a1a;
+    --optica-white: #ffffff;
+    --optica-gray: #f4f4f4;
+}
+
+body {
+    background-color: var(--optica-gray);
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+/* --- LOADER (ESTRATEGIA DE CARGA INSTANTÁNEA) --- */
+#page-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #ffffff; /* Sólido para ocultar el fondo */
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.4s ease-out, visibility 0.4s;
+}
+
+.loader-hidden {
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+/* --- SIDEBAR --- */
+.sidebar {
+    background-color: var(--optica-black);
+    min-height: 100vh;
+    color: white;
+    padding-top: 20px;
+}
+
+.nav-link {
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 10px;
+    border-radius: 5px;
+    padding: 12px 20px;
+    transition: 0.3s;
+}
+
+.nav-link:hover, .nav-link.active {
+    background-color: var(--optica-red);
+    color: white;
+}
+
+/* --- TARJETAS --- */
+.card-menu {
+    border: none;
+    border-radius: 15px;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.card-menu:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.icon-box {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    color: var(--optica-red);
+}
+
+.header-status {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    border-bottom: 4px solid var(--optica-red);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.table-container {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.thead-custom {
+    background-color: var(--optica-black);
+    color: white;
+}
+
+.badge-dni {
+    background-color: #e9ecef;
+    color: #495057;
+    border: 1px solid #ced4da;
+}
+
+.prescription-code {
+    color: var(--optica-red);
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    background: #fff1f2;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid #ffccd5;
+}
+
+.eye-badge {
+    font-size: 0.7rem;
+    padding: 3px 6px;
+}
+
+.text-ballot {
+    color: var(--optica-red);
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+}
+
+.badge-total {
+    background-color: #f8d7da;
+    color: #d90429;
+    font-weight: bold;
+    font-size: 0.9rem;
+}

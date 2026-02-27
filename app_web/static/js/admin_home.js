@@ -1,4 +1,4 @@
-const URL_CONSTANTE = 'https://administradoroptica-production.up.railway.app/'
+const URL_CONSTANTE = 'http://127.0.0.1:8000/'
 
 document.addEventListener("DOMContentLoaded", function () {
     function toggleSidebar() {
@@ -230,8 +230,6 @@ async function loadProductsFromServer(page = 1, filters = currentFilters) {
             headers: {
                 "Content-Type": "application/json",
                 Accept: "application/json",
-                // Agregar headers de autenticación si es necesario
-                // 'Authorization': 'Bearer ' + token,
             },
         })
 
@@ -267,6 +265,9 @@ async function loadProductsFromServer(page = 1, filters = currentFilters) {
 
         renderProducts(currentProducts)
         renderDjangoPagination(data)
+
+        loadCategories()
+        loadBrands()
     } catch (error) {
         console.error("Error al cargar productos:", error)
         showError(error.message)

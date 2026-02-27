@@ -386,7 +386,7 @@ footer {
 /* Sidebar responsive */
 #sidebarMenu {
     transform: translateX(-100%); /* Oculta el menú lateral */
-    position: absolute; /* Define que se comporte como un elemento flotante móvil */
+    /*position: absolute; !* Define que se comporte como un elemento flotante móvil *!*/
     top: 0;
     left: 0;
     height: 100%;

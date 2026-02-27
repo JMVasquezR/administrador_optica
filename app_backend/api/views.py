@@ -1,147 +1,108 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, status
-from rest_framework.generics import ListAPIView, CreateAPIView, DestroyAPIView, RetrieveAPIView, UpdateAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import viewsets, filters
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
-from admin_opticas.pagination import CustomPagination
+from app_backend.models.patients import Patient, TypeDocument
+from app_backend.models.products import Product, Category, Brand
+from app_backend.models.recipes import Recipe
+from app_backend.models.sales_ticket import SalesTicket
 from .serializers import (
-    ProductSerializer, ProductListSerializer, BrandSerializer, CategorySerializer, ProductUpdateSerializer,
-    PatientSerializer, TypeDocumentSerializer, PatientCreateSerializer, RecipeSerializer, BoletaSerializer,
-    SalesTicketSerializer, SalesTicketDetalleSerializer
+    CategorySerializer, BrandSerializer, ProductSerializer, PatientSerializer, TypeDocumentSerializer,
+    SalesTicketSerializer, RecipeSerializer
 )
-from ..filters import ProductFilter, PatientFilter, RecipeFilter
-from ..models.patients import Patient
-from ..models.products import Product, Brand, Category
-from ..models.recipes import Recipe
-from ..models.sales_ticket import SalesTicket
-from ..models.type_document import TypeDocument
 
 
-class ProductView(generics.RetrieveAPIView):
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-    permission_classes = [IsAuthenticated]
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 5
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+    def get_paginated_response(self, data):
+        return Response({
+            'next': self.get_next_link(),
+            'previous': self.get_previous_link(),
+            'count': self.page.paginator.count,
+            'results': data  # Aquí viaja la lista de productos
+        })
 
 
-class ProductoListView(ListAPIView):
-    queryset = Product.objects.all()
-    serializer_class = ProductListSerializer
-    pagination_class = CustomPagination
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = ProductFilter
+class RecipeViewSet(viewsets.ModelViewSet):
+    queryset = Recipe.objects.all().order_by('-created')
+    serializer_class = RecipeSerializer
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+
+    # Permitir buscar por nombre de paciente o número de receta
+    search_fields = ['prescription_number', 'patient__first_name', 'patient__surname', 'patient__second_surname']
+
+    # Permitir filtrar por fecha de emisión
+    filterset_fields = ['date_of_issue', 'is_active']
 
 
-class ProductCreateView(CreateAPIView):
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
+class SalesTicketViewSet(viewsets.ModelViewSet):
+    queryset = SalesTicket.objects.all().order_by('-created')
+    serializer_class = SalesTicketSerializer
+    # Usamos la paginación que ya definimos para productos/pacientes
+    pagination_class = StandardResultsSetPagination
+
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['is_disabled', 'date_of_issue']
+    # Permite buscar por nro de boleta o nombre/apellido del paciente relacionado
+    search_fields = ['ballot_number', 'patient__first_name', 'patient__surname']
 
 
-class MarcasListView(ListAPIView):
-    queryset = Brand.objects.all()
-    serializer_class = BrandSerializer
-
-
-class CategoriasListView(ListAPIView):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-
-
-class ProductDeleteView(DestroyAPIView):
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-    lookup_field = 'pk'
-
-
-class ProductDetailView(RetrieveAPIView):
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-    lookup_field = 'pk'
-
-
-class ProductUpdateView(UpdateAPIView):
-    queryset = Product.objects.all()
-    serializer_class = ProductUpdateSerializer
-    lookup_field = 'pk'
-
-
-class PatientListView(ListAPIView):
-    queryset = Patient.objects.filter(is_active=True).order_by('-id')
-    serializer_class = PatientSerializer
-    pagination_class = CustomPagination
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = PatientFilter
-
-
-class PatientCreateView(generics.CreateAPIView):
-    serializer_class = PatientCreateSerializer
-
-
-class PatientDetailUpdateView(generics.RetrieveUpdateAPIView):
-    queryset = Patient.objects.all()
-    serializer_class = PatientSerializer
-    lookup_field = 'id'
-
-
-class PatientDeleteView(APIView):
-    def delete(self, request, id):
-        try:
-            patient = Patient.objects.get(id=id)
-            patient.is_active = False
-            patient.save()
-            return Response({'detail': 'Paciente desactivado'}, status=status.HTTP_204_NO_CONTENT)
-        except Patient.DoesNotExist:
-            return Response({'error': 'Paciente no encontrado'}, status=status.HTTP_404_NOT_FOUND)
-
-
-class TypeDocumentListAPIView(ListAPIView):
+class TypeDocumentViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = TypeDocument.objects.all()
     serializer_class = TypeDocumentSerializer
 
 
-class RecipeListView(generics.ListAPIView):
-    queryset = Recipe.objects.all().order_by('-id')
-    serializer_class = RecipeSerializer
-    pagination_class = CustomPagination
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = RecipeFilter
+class PatientViewSet(viewsets.ModelViewSet):
+    queryset = Patient.objects.all().order_by('-created')
+    serializer_class = PatientSerializer
+    pagination_class = StandardResultsSetPagination
+
+    # Configuración de Filtros
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+
+    # Filtro exacto por estado (Activo/Inactivo)
+    filterset_fields = ['is_active']
+
+    # Búsqueda por Nombre, Apellido Paterno y Apellido Materno
+    # El símbolo '^' indica que busque que empiecen por ese texto
+    search_fields = ['first_name', 'surname', 'second_surname', 'document_number']
+
+    # Ordenamiento por nombre o fecha de registro
+    ordering_fields = ['first_name', 'surname', 'created']
 
 
-class BoletaListView(generics.ListAPIView):
-    queryset = SalesTicket.objects.all().order_by('-id')
-    serializer_class = BoletaSerializer
-    pagination_class = CustomPagination
-    filter_backends = [DjangoFilterBackend]
-    # filterset_class = RecipeFilter
+class ProductViewSet(viewsets.ModelViewSet):
+    queryset = Product.objects.all().order_by('name')
+    serializer_class = ProductSerializer
+    pagination_class = StandardResultsSetPagination
+
+    # Filtros para que el buscador del template funcione
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['category', 'brand']
+    search_fields = ['name', 'code']
+    ordering_fields = ['created', 'unit_price', 'initial_stock']
+
+    def perform_create(self, serializer):
+        # Aquí puedes agregar lógica extra antes de guardar si fuera necesario
+        serializer.save()
+
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        # Agregamos un mensaje personalizado a la respuesta JSON
+        response.data['message'] = "Producto de óptica registrado correctamente."
+        return response
 
 
-class RecipeCreateView(generics.CreateAPIView):
-    queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all().order_by('name')
+    serializer_class = CategorySerializer
 
 
-class RecipeRetrieveUpdateView(generics.RetrieveUpdateAPIView):
-    queryset = Recipe.objects.filter(is_active=True)
-    serializer_class = RecipeSerializer
-    lookup_field = 'id'
-
-
-class RecipeDeleteView(generics.DestroyAPIView):
-    queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
-    lookup_field = 'id'
-
-    def perform_destroy(self, instance):
-        instance.is_active = False
-        instance.save()
-
-
-class SalesTicketCreateAPIView(CreateAPIView):
-    queryset = SalesTicket.objects.all()
-    serializer_class = SalesTicketSerializer
-
-
-class SalesTicketRetrUpdAPIView(generics.RetrieveUpdateAPIView):
-    queryset = SalesTicket.objects.prefetch_related('saleslines_set__product')  # Optimización de relaciones
-    serializer_class = SalesTicketDetalleSerializer
+class BrandViewSet(viewsets.ModelViewSet):
+    queryset = Brand.objects.all().order_by('name')
+    serializer_class = BrandSerializer
