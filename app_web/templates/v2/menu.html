@@ -42,9 +42,12 @@
         <hr class="text-white">
 
         <li class="nav-item">
-            <a href="#" class="nav-link text-danger">
-                <i class="fas fa-sign-out-alt me-2"></i> Salir
-            </a>
+            <form action="{% url 'logout' %}" method="post" id="logout-form">
+                {% csrf_token %}
+                <button type="submit" class="nav-link text-danger border-0 bg-transparent w-100 text-start shadow-none">
+                    <i class="fas fa-sign-out-alt me-2"></i> Salir
+                </button>
+            </form>
         </li>
     </ul>
 </nav>

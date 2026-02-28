@@ -1,0 +1,151 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ingreso | Skymlens</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --optica-red: #d90429;
+            --optica-black: #1a1a1a;
+        }
+
+        body {
+            background-color: #f4f4f4;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            max-width: 900px;
+            width: 100%;
+            display: flex;
+        }
+
+        /* Lado Izquierdo: Visual */
+        .login-brand {
+            background: var(--optica-black);
+            color: white;
+            padding: 40px;
+            width: 45%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .brand-logo {
+            font-size: 4rem;
+            color: var(--optica-red);
+            margin-bottom: 20px;
+        }
+
+        /* Lado Derecho: Formulario */
+        .login-form-section {
+            padding: 50px;
+            width: 55%;
+        }
+
+        .btn-login {
+            background-color: var(--optica-red);
+            color: white;
+            border: none;
+            padding: 12px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn-login:hover {
+            background-color: #b80322;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .form-control:focus {
+            border-color: var(--optica-red);
+            box-shadow: 0 0 0 0.25rem rgba(217, 4, 41, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .login-brand {
+                display: none;
+            }
+
+            .login-form-section {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container mx-3">
+    <div class="login-brand">
+        <div class="brand-logo">
+            <i class="fa-solid fa-glasses"></i>
+        </div>
+        <h2 class="fw-bold">Óptica KyM Lens</h2>
+        <p class="opacity-75">Sistema de Gestión Óptica y Control de Recetarios</p>
+    </div>
+
+    <div class="login-form-section">
+        <div class="mb-4">
+            <h3 class="fw-bold text-dark">Bienvenido</h3>
+            <p class="text-muted">Ingresa tus credenciales para continuar</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {% if form.errors %}
+                <div class="alert alert-danger small py-2">
+                    Usuario o contraseña incorrectos.
+                </div>
+            {% endif %}
+
+            <div class="mb-3">
+                <label for="id_username" class="form-label small fw-bold text-muted">Usuario</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-user text-muted"></i></span>
+                    <input type="text" name="username" id="id_username" class="form-control border-start-0 bg-light"
+                           placeholder="Ej: admin_skym" required>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label for="id_password" class="form-label small fw-bold text-muted">Contraseña</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-lock text-muted"></i></span>
+                    <input type="password" name="password" id="id_password" class="form-control border-start-0 bg-light"
+                           placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <div class="d-grid mb-3">
+                <button type="submit" class="btn btn-login rounded-pill shadow-sm">
+                    INICIAR SESIÓN <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </div>
+
+            <div class="text-center">
+                <a href="#" class="text-decoration-none small text-muted">¿Olvidaste tu contraseña?</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

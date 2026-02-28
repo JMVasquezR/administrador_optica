@@ -68,6 +68,14 @@ REST_FRAMEWORK = {
 
 ROOT_URLCONF = 'admin_opticas.urls'
 
+LOGIN_URL = 'login'
+
+# Redirección después de iniciar sesión
+LOGIN_REDIRECT_URL = 'app_web:home'
+
+# Redirección después de cerrar sesión
+LOGOUT_REDIRECT_URL = 'login'
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
