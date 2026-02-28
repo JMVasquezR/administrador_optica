@@ -1,0 +1,37 @@
+<div class="row g-4 mb-5">
+    <div class="col-12 col-md-4">
+        <div class="card card-menu h-100 shadow-sm"
+             onclick="location.href='{% url 'app_web:patient_list' %}'">
+            <div class="card-body text-center p-4">
+                <div class="icon-box"><i class="fas fa-user-injured"></i></div>
+                <h5 class="fw-bold">Pacientes</h5>
+                <p class="text-muted small">Historias clínicas y medidas.</p>
+                <span class="btn btn-outline-danger btn-sm rounded-pill">Gestionar</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-4">
+        <div class="card card-menu h-100 shadow-sm"
+             onclick="location.href='{% url 'app_web:recipe_list' %}'">
+            <div class="card-body text-center p-4">
+                <div class="icon-box"><i class="fas fa-file-medical"></i></div>
+                <h5 class="fw-bold">Recetario</h5>
+                <p class="text-muted small">Consultar medidas de la vista.</p>
+                <span class="btn btn-outline-danger btn-sm rounded-pill">Ver Historial</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-4">
+        <div class="card card-menu h-100 shadow-sm"
+             onclick="location.href='{% url 'app_web:sales_ticket_list' %}'">
+            <div class="card-body text-center p-4">
+                <div class="icon-box"><i class="fas fa-file-invoice-dollar"></i></div>
+                <h5 class="fw-bold">Ventas</h5>
+                <p class="text-muted small">Generar boletas y registros.</p>
+                <span class="btn btn-outline-danger btn-sm rounded-pill">Ver Ventas</span>
+            </div>
+        </div>
+    </div>
+</div>

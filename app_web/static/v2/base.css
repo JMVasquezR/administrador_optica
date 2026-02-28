@@ -125,3 +125,21 @@ body {
     font-weight: bold;
     font-size: 0.9rem;
 }
+
+@media (max-width: 767.98px) {
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1050; /* Por encima del contenido */
+        width: 280px;
+        height: 100vh;
+        background-color: #1a1a1a !important; /* Fondo oscuro sólido */
+        box-shadow: 5px 0 15px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Asegurar que cuando se abra ocupe el espacio correcto */
+    .sidebar.show {
+        display: block !important;
+    }
+}
