@@ -23,7 +23,7 @@ else:
     print(f"⚠️ Advertencia: No se encontró el archivo {ENV_PATH}. Usando variables de entorno del sistema.")
 
 SECRET_KEY = 'django-insecure-e5zg!ez@5ff9ys6eq-z57#s)*8+$g3ce4cy+573lx23cym)%l4'
-DEBUG = os.getenv('DEBUG', 'False') == str(True)
+DEBUG = os.getenv('DEBUG', False) == str(True)
 
 CSRF_TRUSTED_ORIGINS = [
     "https://administradoroptica-production.up.railway.app"
