@@ -1,9 +1,9 @@
 /* ==========================================
    VARIABLES GLOBALES E INICIALIZACIÓN
    ========================================== */
-let recipeModal;       // Modal para Crear
-let detailRecipeModal; // Modal para Ver Detalle
-let confirmAnularModal; // Modal de diseño para anulación
+let recipeModal;
+let detailRecipeModal;
+let confirmAnularModal;
 let idParaAnular = null;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 5. Botón Ejecutar Anulación (Dentro del Modal de confirmación)
+    // 5. Botón Ejecutar Anulación
     const btnExecAnular = document.getElementById('btn-execute-anular-recipe');
     if (btnExecAnular) {
         btnExecAnular.addEventListener('click', () => {
@@ -55,7 +55,10 @@ document.addEventListener('DOMContentLoaded', () => {
         btnOpenNew.addEventListener('click', () => {
             document.getElementById('recipe-form').reset();
             document.getElementById('rec-date').valueAsDate = new Date();
-            loadPatientsForRecipe();
+
+            // IMPORTANTE: Limpiar y reinicializar el buscador de pacientes
+            $('#rec-patient').val(null).trigger('change');
+            initPatientSearch();
         });
     }
 
@@ -65,6 +68,60 @@ document.addEventListener('DOMContentLoaded', () => {
         recipeForm.addEventListener('submit', saveRecipe);
     }
 });
+
+/* ==========================================
+   LÓGICA DEL BUSCADOR DINÁMICO (SELECT2)
+   ========================================== */
+
+const initPatientSearch = async () => {
+    // 1. Martí: Cargamos los 5 pacientes más recientes para que no esté vacío al inicio
+    let initialPatients = [];
+    try {
+        const res = await fetch('/api/patients/?limit=5');
+        const data = await res.json();
+        const results = data.results ? data.results : data;
+
+        initialPatients = results.map(p => ({
+            id: p.id,
+            text: `${p.full_name} (${p.document_number})`
+        }));
+    } catch (err) {
+        console.error("Error cargando pacientes iniciales:", err);
+    }
+
+    // 2. Inicializamos Select2 con esos datos y la búsqueda AJAX activa
+    $('#rec-patient').select2({
+        theme: 'default',
+        width: '100%',
+        dropdownParent: $('#modalRecipe'),
+        placeholder: 'Escriba nombre o documento del paciente...',
+        data: initialPatients, // <--- Aquí se cargan los 5 por defecto
+        minimumInputLength: 0, // <--- Importante: 0 para que muestre la lista sin escribir
+        ajax: {
+            url: '/api/patients/',
+            dataType: 'json',
+            delay: 300,
+            data: function (params) {
+                return {
+                    search: params.term,
+                    page: params.page || 1
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.results.map(p => ({
+                        id: p.id,
+                        text: `${p.full_name} (${p.document_number})`
+                    })),
+                    pagination: {
+                        more: !!data.next
+                    }
+                };
+            },
+            cache: true
+        }
+    });
+};
 
 /* ==========================================
    LÓGICA DEL LISTADO (API)
@@ -80,7 +137,7 @@ const fetchRecipes = async (url = '/api/recipes/') => {
         renderRecipeTable(recipes);
         setupRecipePagination(data);
 
-        const counter = document.getElementById('count-recipes');
+        const counter = document.getElementById('total-count');
         if (counter) counter.innerText = data.count || recipes.length;
 
     } catch (error) {
@@ -124,6 +181,11 @@ const renderRecipeTable = (recipes) => {
                 </td>
                 <td class="text-end pe-4">
                     <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-success" 
+                                onclick="#" 
+                                title="Enviar por WhatsApp">
+                            <i class="fa-brands fa-whatsapp"></i>
+                        </button>
                         <button class="btn btn-sm btn-outline-dark" onclick="viewRecipeDetail(${r.id})" title="Ver Medidas">
                             <i class="fa-solid fa-eye"></i>
                         </button>
@@ -145,27 +207,17 @@ const renderRecipeTable = (recipes) => {
    LÓGICA DE CREACIÓN Y GUARDADO
    ========================================== */
 
-const loadPatientsForRecipe = async () => {
-    try {
-        const response = await fetch('/api/patients/');
-        const data = await response.json();
-        const select = document.getElementById('rec-patient');
-        if (select) {
-            select.innerHTML = '<option value="">Seleccione un paciente...</option>' +
-                data.results.map(p => `<option value="${p.id}">${p.full_name} (${p.document_number})</option>`).join('');
-        }
-    } catch (err) { console.error("Error al cargar pacientes", err); }
-};
-
 const saveRecipe = async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btn-save-recipe');
-    if (btn) { btn.disabled = true; btn.innerText = 'Guardando...'; }
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = 'Guardando...';
+    }
 
     const recipeData = {
         patient: document.getElementById('rec-patient').value,
         date_of_issue: document.getElementById('rec-date').value,
-        // Lejos
         right_eye_spherical_distance_far: document.getElementById('od_sph_far').value || null,
         right_eye_cylinder_distance_far: document.getElementById('od_cyl_far').value || null,
         right_eye_axis_distance_far: document.getElementById('od_axis_far').value || null,
@@ -173,15 +225,13 @@ const saveRecipe = async (e) => {
         left_eye_cylinder_distance_far: document.getElementById('oi_cyl_far').value || null,
         left_eye_axis_distance_far: document.getElementById('oi_axis_far').value || null,
         pupillary_distance_far: document.getElementById('dp_far').value || null,
-        // Cerca
         right_eye_spherical_distance_near: document.getElementById('od_sph_near').value || null,
         right_eye_cylinder_distance_near: document.getElementById('od_cyl_near').value || null,
         right_eye_axis_distance_near: document.getElementById('od_axis_near').value || null,
         left_eye_spherical_distance_near: document.getElementById('oi_sph_near').value || null,
         left_eye_cylinder_distance_near: document.getElementById('oi_cyl_near').value || null,
-        left_eye_axis_distance_near: document.getElementById('oi_axis_near').value || null,
+        left_eye_axis_near: document.getElementById('oi_axis_near').value || null,
         pupillary_distance_near: document.getElementById('dp_near').value || null,
-
         observation: document.getElementById('rec-obs').value,
         instruction: document.getElementById('rec-ins').value,
         is_active: true
@@ -190,7 +240,7 @@ const saveRecipe = async (e) => {
     try {
         const response = await fetch('/api/recipes/', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
             body: JSON.stringify(recipeData)
         });
         if (response.ok) {
@@ -200,12 +250,18 @@ const saveRecipe = async (e) => {
         } else {
             showNotify('Error al guardar la receta', 'danger');
         }
-    } catch (error) { console.error("Error:", error); }
-    finally { if (btn) { btn.disabled = false; btn.innerText = 'Guardar Receta'; } }
+    } catch (error) {
+        console.error("Error:", error);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = 'Guardar Receta';
+        }
+    }
 };
 
 /* ==========================================
-   DETALLE Y ANULACIÓN (CON MODAL)
+   DETALLE Y ANULACIÓN
    ========================================== */
 
 const viewRecipeDetail = async (id) => {
@@ -217,7 +273,6 @@ const viewRecipeDetail = async (id) => {
         document.getElementById('det-patient-name').innerText = r.name_patient;
         document.getElementById('det-date').innerText = r.date_of_issue;
 
-        // Mapeo de campos Lejos
         document.getElementById('det-od-sph-far').innerText = r.right_eye_spherical_distance_far || '0.00';
         document.getElementById('det-od-cyl-far').innerText = r.right_eye_cylinder_distance_far || '0.00';
         document.getElementById('det-od-axis-far').innerText = r.right_eye_axis_distance_far || '0';
@@ -226,7 +281,6 @@ const viewRecipeDetail = async (id) => {
         document.getElementById('det-oi-axis-far').innerText = r.left_eye_axis_distance_far || '0';
         document.getElementById('det-dp-far').innerText = r.pupillary_distance_far || '-';
 
-        // Mapeo de campos Cerca
         document.getElementById('det-od-sph-near').innerText = r.right_eye_spherical_distance_near || '0.00';
         document.getElementById('det-od-cyl-near').innerText = r.right_eye_cylinder_distance_near || '0.00';
         document.getElementById('det-od-axis-near').innerText = r.right_eye_axis_distance_near || '0';
@@ -239,7 +293,9 @@ const viewRecipeDetail = async (id) => {
         document.getElementById('det-instructions').innerText = r.instruction || 'Ninguna.';
 
         detailRecipeModal.show();
-    } catch (error) { showNotify("Error al cargar el detalle", "danger"); }
+    } catch (error) {
+        showNotify("Error al cargar el detalle", "danger");
+    }
 };
 
 const abrirModalAnular = (id, numero) => {
@@ -256,16 +312,17 @@ const ejecutarAnulacion = async (id) => {
     try {
         const response = await fetch(`/api/recipes/${id}/`, {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
-            body: JSON.stringify({ is_active: false })
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+            body: JSON.stringify({is_active: false})
         });
         if (response.ok) {
             confirmAnularModal.hide();
             showNotify('Receta anulada', 'info');
             fetchRecipes();
         }
-    } catch (error) { showNotify('Error al anular', 'danger'); }
-    finally {
+    } catch (error) {
+        showNotify('Error al anular', 'danger');
+    } finally {
         btn.disabled = false;
         btn.innerText = 'Confirmar Anulación';
         idParaAnular = null;
@@ -293,23 +350,16 @@ const setupRecipePagination = (data) => {
     const totalSpan = document.getElementById('total-count');
     const currentSpan = document.getElementById('current-count');
 
-    totalSpan.innerText = data.count;
-    currentSpan.innerText = data.results.length;
+    if (totalSpan) totalSpan.innerText = data.count || 0;
+    if (currentSpan) currentSpan.innerText = data.results ? data.results.length : (data.length || 0);
 
-    // Configurar botón Siguiente
-    if (data.next) {
-        nextBtn.disabled = false;
-        nextBtn.onclick = () => fetchRecipes(data.next);
-    } else {
-        nextBtn.disabled = true;
+    if (nextBtn) {
+        nextBtn.disabled = !data.next;
+        nextBtn.onclick = () => data.next && fetchRecipes(data.next);
     }
-
-    // Configurar botón Anterior
-    if (data.previous) {
-        prevBtn.disabled = false;
-        prevBtn.onclick = () => fetchRecipes(data.previous);
-    } else {
-        prevBtn.disabled = true;
+    if (prevBtn) {
+        prevBtn.disabled = !data.previous;
+        prevBtn.onclick = () => data.previous && fetchRecipes(data.previous);
     }
 };
 
@@ -330,7 +380,15 @@ function getCookie(name) {
 
 function debounce(func, timeout = 300) {
     let timer;
-    return (...args) => { clearTimeout(timer); timer = setTimeout(() => { func.apply(this, args); }, timeout); };
+    return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            func.apply(this, args);
+        }, timeout);
+    };
 }
 
-const printRecipe = (id) => { window.print(); };
+const printRecipe = (id) => {
+    window.print();
+};
+

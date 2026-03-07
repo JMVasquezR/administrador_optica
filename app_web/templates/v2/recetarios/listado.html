@@ -5,8 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recetario Médico | Óptica KyM Lens</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
     <link href="{% static 'v2/base.css' %}" rel="stylesheet">
 </head>
 <body>
@@ -27,34 +29,34 @@
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h3 class="fw-bold"><i class="fas fa-boxes me-2 text-danger"></i>Recetario Médico</h3>
-                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalProduct">
+                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalRecipe">
                     <i class="fas fa-plus me-1"></i> Registrar
                 </button>
             </div>
 
-            <div class="table-container p-3">
-                <div class="table-responsive">
-                    <div class="table-container p-3 mb-4">
-                        <div class="row g-3">
-                            <div class="col-md-5">
-                                <div class="input-group">
+            <div class="table-container p-3 mb-4 bg-white shadow-sm rounded">
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <div class="input-group">
                             <span class="input-group-text bg-white border-end-0"><i
                                     class="fas fa-search text-muted"></i></span>
-                                    <input type="text" id="recipe-search" class="form-control border-start-0"
-                                           placeholder="Buscar por paciente o N° Recetario...">
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <input type="date" id="recipe-date-filter" class="form-control">
-                            </div>
-                            <div class="col-md-3">
-                                <button class="btn btn-outline-dark w-100" id="btn-clear-recipes">
-                                    <i class="fas fa-eraser me-1"></i> Limpiar
-                                </button>
-                            </div>
+                            <input type="text" id="recipe-search" class="form-control border-start-0"
+                                   placeholder="Buscar por paciente o N° Recetario...">
                         </div>
                     </div>
+                    <div class="col-md-4">
+                        <input type="date" id="recipe-date-filter" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-dark w-100" id="btn-clear-recipes">
+                            <i class="fas fa-eraser me-1"></i> Limpiar
+                        </button>
+                    </div>
+                </div>
+            </div>
 
+            <div class="table-container p-3 bg-white shadow-sm rounded">
+                <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead class="thead-custom">
                         <tr>
@@ -67,14 +69,14 @@
                             <th class="text-end pe-4">Acciones</th>
                         </tr>
                         </thead>
-                        <tbody id="recipe-table-body">
-                        </tbody>
+                        <tbody id="recipe-table-body"></tbody>
                     </table>
+
                     <div class="d-flex justify-content-between align-items-center mt-3 px-3">
                         <div class="text-muted small">
-                            Mostrando <span id="current-count">0</span> de <span id="total-count">0</span> productos
+                            Mostrando <span id="current-count">0</span> de <span id="total-count">0</span> registros
                         </div>
-                        <nav aria-label="Navegación de inventario">
+                        <nav aria-label="Navegación">
                             <ul class="pagination mb-0">
                                 <li class="page-item">
                                     <button class="btn btn-outline-dark btn-sm me-2" id="prev-page" disabled>Anterior
@@ -93,11 +95,11 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalRecipeDetail" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalRecipeDetail" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg border-0">
         <div class="modal-content shadow-lg">
             <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title"><i class="fas fa- eye me-2"></i> Recetario N°: <span
+                <h5 class="modal-title"><i class="fas fa-eye me-2"></i> Recetario N°: <span
                         id="det-prescription-number"></span></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
@@ -203,7 +205,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalRecipe" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalRecipe" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
@@ -215,9 +217,12 @@
                     <div class="row g-3 mb-4 border-bottom pb-3">
                         <div class="col-md-8">
                             <label class="form-label fw-bold">Paciente</label>
-                            <select id="rec-patient" class="form-select" required>
-                                <option value="">Seleccione un paciente...</option>
-                            </select>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                <select id="rec-patient" class="form-select" required>
+                                    <option value="">Escriba nombre o documento del paciente...</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Fecha de Emisión</label>
@@ -242,10 +247,9 @@
                                                          class="form-control form-control-sm text-center"></div>
                             <div class="col-md-3"><input type="number" id="od_axis_far"
                                                          class="form-control form-control-sm text-center"></div>
-                            <div class="col-md-2">
-                                <input type="number" id="dp_far" class="form-control form-control-sm text-center"
-                                       placeholder="D.P.">
-                            </div>
+                            <div class="col-md-2"><input type="number" id="dp_far"
+                                                         class="form-control form-control-sm text-center"
+                                                         placeholder="D.P."></div>
                         </div>
                         <div class="row g-2 align-items-center">
                             <div class="col-md-1 text-center">O.I.</div>
@@ -268,10 +272,9 @@
                                                          class="form-control form-control-sm text-center"></div>
                             <div class="col-md-3"><input type="number" id="od_axis_near"
                                                          class="form-control form-control-sm text-center"></div>
-                            <div class="col-md-2">
-                                <input type="number" id="dp_near" class="form-control form-control-sm text-center"
-                                       placeholder="D.P.">
-                            </div>
+                            <div class="col-md-2"><input type="number" id="dp_near"
+                                                         class="form-control form-control-sm text-center"
+                                                         placeholder="D.P."></div>
                         </div>
                         <div class="row g-2 align-items-center">
                             <div class="col-md-1 text-center">O.I.</div>
@@ -308,7 +311,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalConfirmAnular" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalConfirmAnular" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-secondary text-white">
@@ -329,18 +332,29 @@
     </div>
 </div>
 
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100">
+    <div id="liveToast" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive"
+         aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body" id="toast-message"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="{% static 'v2/recetarios/recetarios.js' %}"></script>
+
 <script>
-    // 1. OCULTAR LOADER: Al terminar de cargar todo (incluyendo imágenes)
     window.addEventListener('load', () => {
         const loader = document.getElementById('page-loader');
         setTimeout(() => {
             loader.classList.add('loader-hidden');
-        }, 300); // Retraso mínimo para suavidad
+        }, 300);
     });
 
-    // 2. MOSTRAR LOADER: Al hacer clic en navegación
     document.addEventListener('click', (e) => {
         const link = e.target.closest('a.nav-link, .card-menu');
         if (link && link.href && !link.href.includes('#') && link.target !== '_blank') {
@@ -349,5 +363,4 @@
     });
 </script>
 </body>
-
 </html>

@@ -7,6 +7,7 @@
     <title>Boletas y Recetarios | Óptica KyM Lens</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
     <link href="{% static 'v2/base.css' %}" rel="stylesheet">
 </head>
 <body>
@@ -92,7 +93,8 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalSale" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalSale" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+     aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header bg-dark text-white">
@@ -125,9 +127,11 @@
                         <div class="col-md-8">
                             <label class="form-label fw-bold text-danger"><i class="fas fa-search me-1"></i>Agregar
                                 Producto (Lunas, Monturas, etc.)</label>
-                            <select id="sale-product-search" class="form-select">
-                                <option value="">Seleccione un producto para agregar...</option>
-                            </select>
+                            <div class="input-group">
+                                <select id="sale-product-search" class="form-select">
+                                    <option value="">Seleccione un producto para agregar...</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="col-md-4 d-flex align-items-end">
                             <button type="button" id="btn-add-product" class="btn btn-dark w-100">
@@ -192,7 +196,8 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalViewDetail" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalViewDetail" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+     aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-dark text-white">
@@ -246,7 +251,8 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalConfirmAnular" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalConfirmAnular" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+     aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-secondary text-white">
@@ -268,7 +274,9 @@
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="{% static 'v2/ventas/ventas.js' %}"></script>
 <script>
     // 1. OCULTAR LOADER: Al terminar de cargar todo (incluyendo imágenes)

@@ -13,6 +13,7 @@ from app_backend.models.patients import Patient, TypeDocument
 from app_backend.models.products import Product, Category, Brand
 from app_backend.models.recipes import Recipe
 from app_backend.models.sales_ticket import SalesTicket
+from app_backend.servicios.whatsapp_service import send_whatsapp_template
 from .serializers import (
     CategorySerializer, BrandSerializer, ProductSerializer, PatientSerializer, TypeDocumentSerializer,
     SalesTicketSerializer, RecipeSerializer
