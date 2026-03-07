@@ -26,8 +26,6 @@ admin.site.site_title = _("Opticas")
 admin.site.index_title = _("Bienvenido al Panel de Control")
 
 urlpatterns = [
-                  path('jet/', include('jet.urls', 'jet')),  # Django JET URLS
-                  path('jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),
                   path('admin/', admin.site.urls),
                   path("", include("app_backend.urls", namespace="backend")),
                   path("", include("app_web.urls", namespace="web")),

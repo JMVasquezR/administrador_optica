@@ -32,8 +32,6 @@ CSRF_TRUSTED_ORIGINS = [
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", '').split(",")
 
 INSTALLED_APPS = [
-    'jet.dashboard',
-    'jet',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -130,15 +128,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media') if os.getenv('MEDIA_ROOT') is None 
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'app_web/static'),  # Solo incluir estáticos de la app
-    os.path.join(jet.__path__[0], 'static'),  # Incluir estáticos de Django Jet
 ]
-
-# 🔹 Configuración de WhiteNoise
-if not DEBUG:
-    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
-# 🔹 Configuración de Jet
-JET_INDEX_DASHBOARD = 'app_backend.dashboard.CustomIndexDashboard'
 
 JET_THEMES = [
     {'theme': 'default', 'color': '#47bac1', 'title': 'Default'},
