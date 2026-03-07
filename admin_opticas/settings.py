@@ -123,26 +123,15 @@ USE_TZ = True
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')  # Para producción con collectstatic
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media') if os.getenv('MEDIA_ROOT') is None else os.getenv('MEDIA_ROOT')
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Para producción con collectstatic
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'app_web/static'),  # Solo incluir estáticos de la app
+    os.path.join(BASE_DIR, 'app_web', 'static'),
 ]
 
-JET_THEMES = [
-    {'theme': 'default', 'color': '#47bac1', 'title': 'Default'},
-    {'theme': 'green', 'color': '#44b78b', 'title': 'Green'},
-    {'theme': 'light-green', 'color': '#2faa60', 'title': 'Light Green'},
-    {'theme': 'light-violet', 'color': '#a464c4', 'title': 'Light Violet'},
-    {'theme': 'light-blue', 'color': '#5EADDE', 'title': 'Light Blue'},
-    {'theme': 'light-gray', 'color': '#222', 'title': 'Light Gray'},
-]
-
-JET_SIDE_MENU_COMPACT = True
-X_FRAME_OPTIONS = 'SAMEORIGIN'
-
-JET_SIDE_MENU_ITEMS = None
+# Esto es para que WhiteNoise sea más inteligente con el caché
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
