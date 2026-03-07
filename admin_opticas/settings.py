@@ -23,7 +23,7 @@ else:
     print(f"⚠️ Advertencia: No se encontró el archivo {ENV_PATH}. Usando variables de entorno del sistema.")
 
 SECRET_KEY = 'django-insecure-e5zg!ez@5ff9ys6eq-z57#s)*8+$g3ce4cy+573lx23cym)%l4'
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False') == str(True)
 
 CSRF_TRUSTED_ORIGINS = [
     "https://administradoroptica-production.up.railway.app"
@@ -155,3 +155,16 @@ X_FRAME_OPTIONS = 'SAMEORIGIN'
 JET_SIDE_MENU_ITEMS = None
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+if not DEBUG:
+    # Estas líneas SOLO se ejecutan en Railway (Producción)
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+else:
+    # Estas líneas aseguran que en tu PC todo siga por HTTP normal
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opticas K&M Lens | Especialistas en tu Visión</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --rojo-kym: #d90429;
+            --oscuro-kym: #2b2d42;
+            --gris-claro: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            scroll-padding-top: 70px;
+        }
+
+        /* Navbar */
+        .navbar {
+            background-color: white;
+            border-bottom: 3px solid var(--rojo-kym);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-link {
+            font-weight: 600;
+            color: var(--oscuro-kym) !important;
+        }
+
+        .nav-link:hover {
+            color: var(--rojo-kym) !important;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1511511450040-677116ff389e?auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-position: center;
+            height: 90vh;
+            display: flex;
+            align-items: center;
+            color: white;
+        }
+
+        .btn-rojo {
+            background-color: var(--rojo-kym);
+            color: white;
+            border-radius: 50px;
+            padding: 12px 35px;
+            font-weight: bold;
+            border: none;
+            transition: 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-rojo:hover {
+            background-color: #b10320;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        /* Servicios */
+        .card-servicio {
+            border: none;
+            transition: 0.3s;
+            background: var(--gris-claro);
+            border-radius: 15px;
+        }
+
+        .card-servicio:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .icon-circle {
+            width: 80px;
+            height: 80px;
+            background: var(--rojo-kym);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 35px;
+            margin: 0 auto 20px;
+        }
+
+        /* WhatsApp Flotante */
+        .whatsapp-float {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: #25d366;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 35px;
+            box-shadow: 2px 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .whatsapp-float:hover {
+            transform: scale(1.1);
+            color: white;
+        }
+
+        footer {
+            background-color: #1a1a1a;
+        }
+    </style>
+</head>
+<body>
+
+<a href="https://wa.me/51994225054" class="whatsapp-float" target="_blank">
+    <i class="fab fa-whatsapp"></i>
+</a>
+
+<nav class="navbar navbar-expand-lg sticky-top navbar-light bg-white">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-danger" href="#inicio">
+            <i class="fas fa-glasses me-2"></i>K&M LENS
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="#inicio">Inicio</a></li>
+                <li class="nav-item"><a class="nav-link" href="#servicios">Servicios</a></li>
+                <li class="nav-item"><a class="nav-link" href="#nosotros">Nosotros</a></li>
+                <li class="nav-item"><a class="nav-link" href="#contacto">Contacto</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<header id="inicio" class="hero">
+    <div class="container text-center">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h1 class="display-3 fw-bold mb-4">Especialistas en tu Visión</h1>
+                <p class="lead mb-5 px-md-5">En <strong>Opticas K&M Lens</strong> te ofrecemos la mejor calidad visual
+                    en el Multicentro Santa Clara. Monturas modernas y exámenes computarizados al alcance de todos.</p>
+                <a href="https://wa.me/51994225054" class="btn-rojo">AGENDAR CITA POR WHATSAPP</a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<section id="servicios" class="py-5 bg-white">
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold fs-1">Nuestros Servicios</h2>
+            <div class="bg-danger mx-auto" style="width: 80px; height: 4px; border-radius: 2px;"></div>
+        </div>
+        <div class="row g-4 text-center">
+            <div class="col-md-4">
+                <div class="card card-servicio p-5 shadow-sm h-100">
+                    <div class="icon-circle"><i class="fas fa-laptop-medical"></i></div>
+                    <h4 class="fw-bold">Medida de Vista</h4>
+                    <p class="text-muted">Examen computarizado preciso para detectar miopía, astigmatismo y más.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-servicio p-5 shadow-sm h-100">
+                    <div class="icon-circle"><i class="fas fa-glasses"></i></div>
+                    <h4 class="fw-bold">Lentes de Medida</h4>
+                    <p class="text-muted">Las mejores marcas y cristales (Blue Defense, Antireflex) para tu
+                        comodidad.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-servicio p-5 shadow-sm h-100">
+                    <div class="icon-circle"><i class="fas fa-eye"></i></div>
+                    <h4 class="fw-bold">Lentes de Contacto</h4>
+                    <p class="text-muted">Adaptación de lentes cosméticos y con medida de las mejores marcas.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="nosotros" class="py-5 bg-light">
+    <div class="container py-5">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <img src="https://images.unsplash.com/photo-1574258495973-f010dfbb5371?auto=format&fit=crop&w=800&q=80"
+                     class="img-fluid rounded-4 shadow" alt="Sobre K&M Lens">
+            </div>
+            <div class="col-lg-6 ps-lg-5">
+                <h2 class="fw-bold mb-4">Sobre Opticas K&M Lens</h2>
+                <p class="lead text-muted">Somos un equipo comprometido con la salud ocular de nuestra comunidad en
+                    Santa Clara. Nos enfocamos en brindar soluciones ópticas con estilo y precisión.</p>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><i class="fas fa-check-circle text-danger me-2"></i> Atención personalizada</li>
+                    <li class="mb-2"><i class="fas fa-check-circle text-danger me-2"></i> Equipos de última tecnología
+                    </li>
+                    <li class="mb-2"><i class="fas fa-check-circle text-danger me-2"></i> Garantía en todas tus monturas
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="contacto" class="py-5 bg-dark text-white">
+    <div class="container py-5">
+        <div class="row g-5">
+            <div class="col-lg-6">
+                <h2 class="fw-bold mb-4">Ubícanos en Santa Clara</h2>
+                <p class="fs-5"><i class="fas fa-map-marker-alt text-danger me-3"></i> <strong>Dirección:</strong>
+                    Multicentro Santa Clara, Ate.</p>
+                <p class="fs-5"><i class="fas fa-phone-alt text-danger me-3"></i> <strong>Teléfonos:</strong> 994225054
+                    / 980702060</p>
+                <p class="fs-5"><i class="fas fa-clock text-danger me-3"></i> <strong>Horario:</strong> Lun - Sáb: 9:00
+                    AM - 8:00 PM</p>
+                <div class="mt-4">
+                    <a href="#" class="text-white fs-2 me-4"><i class="fab fa-facebook"></i></a>
+                    <a href="#" class="text-white fs-2"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="bg-white p-4 rounded-4 text-dark shadow-lg">
+                    <h4 class="fw-bold mb-4 text-center">Escríbenos</h4>
+                    <form action="#">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Nombre completo">
+                        </div>
+                        <div class="mb-3">
+                            <input type="number" class="form-control" placeholder="Teléfono / WhatsApp">
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" rows="4" placeholder="¿Cómo podemos ayudarte?"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-danger w-100 fw-bold py-2">ENVIAR CONSULTA</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer class="py-4 text-center text-white-50">
+    <div class="container">
+        <p class="mb-0 small">&copy; 2026 <strong>Opticas K&M Lens</strong>. Todos los derechos reservados.</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Smooth Scroll
+    document.querySelectorAll('a.nav-link, a.navbar-brand').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            const targetId = this.getAttribute('href');
+            if (targetId.startsWith('#')) {
+                e.preventDefault();
+                const targetSection = document.querySelector(targetId);
+                if (targetSection) {
+                    window.scrollTo({
+                        top: targetSection.offsetTop - 70,
+                        behavior: 'smooth'
+                    });
+                    const navbarCollapse = document.querySelector('.navbar-collapse');
+                    if (navbarCollapse.classList.contains('show')) {
+                        new bootstrap.Collapse(navbarCollapse).hide();
+                    }
+                }
+            }
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,6 +1,9 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
+@login_required
+def one_page_view(request):
+    return render(request, 'v2/web/only_page.html')
 
 @login_required
 def home_view(request):

@@ -33,7 +33,7 @@ urlpatterns = [
                   path("", include("app_web.urls", namespace="web")),
 
                   path(
-                      'login/', auth_views.LoginView.as_view(
+                      'gestion-kym-26/login/', auth_views.LoginView.as_view(
                           template_name='v2/login.html', redirect_authenticated_user=True
                       ), name='login'
                   ),
