@@ -6,7 +6,6 @@ import os
 from pathlib import Path
 
 import dj_database_url
-import jet
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -119,7 +118,6 @@ USE_L10N = True
 
 USE_TZ = True
 
-# 🔹 Archivos estáticos y Django Jet
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 
