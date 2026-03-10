@@ -178,3 +178,29 @@ body {
     border-top-left-radius: 0 !important; /* Para que encaje con el icono del usuario */
     border-bottom-left-radius: 0 !important;
 }
+
+/* Efecto de carga suave para la tabla */
+.table-loading {
+    opacity: 0.5;
+    pointer-events: none; /* Evita clics mientras carga */
+    transition: opacity 0.2s ease;
+}
+
+.table-relative {
+    position: relative;
+    min-height: 200px;
+}
+
+/* Opcional: un mini spinner sobre la tabla */
+.table-overlay-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+    display: none;
+}
+
+.table-loading + .table-overlay-spinner {
+    display: block;
+}

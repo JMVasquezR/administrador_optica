@@ -203,15 +203,7 @@
         <script src="{% static 'v2/productos/productos.js' %}"></script>
 
         <script>
-            // 1. OCULTAR LOADER: Al terminar de cargar todo (incluyendo imágenes)
-            window.addEventListener('load', () => {
-                const loader = document.getElementById('page-loader');
-                setTimeout(() => {
-                    loader.classList.add('loader-hidden');
-                }, 300); // Retraso mínimo para suavidad
-            });
-
-            // 2. MOSTRAR LOADER: Al hacer clic en navegación
+            // Solo para mostrar el loader cuando el usuario cambia de página desde el menú lateral
             document.addEventListener('click', (e) => {
                 const link = e.target.closest('a.nav-link, .card-menu');
                 if (link && link.href && !link.href.includes('#') && link.target !== '_blank') {
