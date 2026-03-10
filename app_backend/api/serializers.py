@@ -29,30 +29,31 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class SalesLinesSerializer(serializers.ModelSerializer):
-    # Agregamos el nombre del producto para no ver solo el ID en el detalle
     product_name = serializers.ReadOnlyField(source='product.name')
 
     class Meta:
         model = SalesLines
-        fields = ['product', 'product_name', 'quantity', 'unit_price', 'amount']
+        fields = ['id', 'product', 'product_name', 'quantity', 'unit_price', 'amount']
 
 
 class SalesTicketSerializer(serializers.ModelSerializer):
     name_patient = serializers.ReadOnlyField()
     total_bill = serializers.ReadOnlyField()
-    # Cambiamos lines: ahora funciona para lectura y escritura
+    patient = serializers.PrimaryKeyRelatedField(queryset=Patient.objects.all(), required=False, allow_null=True)
     lines = SalesLinesSerializer(many=True, required=False)
 
     class Meta:
         model = SalesTicket
         fields = [
-            'id', 'ballot_number', 'date_of_issue', 'patient', 'name_patient', 'sales_total', 'total_bill',
-            'observation', 'is_disabled', 'lines'
+            'id', 'ballot_number', 'date_of_issue', 'patient', 'name_patient',
+            'payer_name', 'sales_total', 'total_bill', 'observation',
+            'is_disabled', 'lines'
         ]
         read_only_fields = ['ballot_number']
 
     def create(self, validated_data):
         lines_data = validated_data.pop('lines', [])
+        # validated_data ya incluye payer_name y patient (que puede ser None)
         ticket = SalesTicket.objects.create(**validated_data)
         for line in lines_data:
             SalesLines.objects.create(sales_ticket=ticket, **line)

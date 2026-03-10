@@ -50,7 +50,7 @@ class SalesTicketViewSet(viewsets.ModelViewSet):
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['is_disabled', 'date_of_issue']
-    search_fields = ['ballot_number', 'patient__first_name', 'patient__surname']
+    search_fields = ['ballot_number', 'patient__first_name', 'patient__surname', 'payer_name']
 
 
 class TypeDocumentViewSet(viewsets.ReadOnlyModelViewSet):

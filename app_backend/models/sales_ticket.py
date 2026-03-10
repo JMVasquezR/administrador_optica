@@ -17,7 +17,11 @@ class SalesTicket(TimeStampedModel):
 
     ballot_number = CharField(max_length=10, unique=True, verbose_name='Número de boleta')
     date_of_issue = DateField(verbose_name='Fecha de emisión')
-    patient = ForeignKey(Patient, on_delete=PROTECT, verbose_name='Paciente')
+    patient = ForeignKey(Patient, on_delete=PROTECT, verbose_name='Paciente', null=True, blank=True)
+    payer_name = CharField(
+        max_length=255, null=True, blank=True, verbose_name='Nombre del Pagador/Tutor',
+        help_text='Llenar solo si quien paga NO es el paciente.'
+    )
     sales_total = FloatField(null=True, blank=True, verbose_name='Total de ventas')
     product = ManyToManyField(Product, related_name='product', through='saleslines')
     observation = TextField(null=True, blank=True)
@@ -29,6 +33,13 @@ class SalesTicket(TimeStampedModel):
     @property
     def total_bill(self):
         return f"S/.{self.sales_total if self.sales_total else '0.0'}"
+
+    @property
+    def display_payer(self):
+        """Retorna el nombre del pagador si existe, de lo contrario el del paciente."""
+        if self.payer_name:
+            return self.payer_name
+        return self.patient.full_name
 
     @property
     def name_patient(self):

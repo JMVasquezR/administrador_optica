@@ -61,7 +61,7 @@
                         <tr>
                             <th class="ps-4">N° Boleta</th>
                             <th>Fecha</th>
-                            <th>Paciente</th>
+                            <th>Paciente / Pagador</th>
                             <th class="text-center">Total</th>
                             <th class="text-center">Estado</th>
                             <th class="text-end pe-4">Acciones</th>
@@ -104,22 +104,26 @@
             <div class="modal-body">
                 <form id="sale-form">
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small">Paciente</label>
+                        <div class="col-md-5">
+                            <label class="form-label fw-bold small">Paciente (Opcional)</label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-user"></i></span>
-                                <select id="sale-patient" class="form-select" required>
-                                    <option value="">Buscar paciente...</option>
+                                <select id="sale-patient" class="form-select">
+                                    <option value="">Sin registrar / Cliente genérico</option>
                                 </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-primary">Nombre del Pagador (Opcional)</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-file-signature"></i></span>
+                                <input type="text" id="sale-payer-name" class="form-control"
+                                       placeholder="Ej: Padre, tutor...">
                             </div>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-bold small">Fecha de Emisión</label>
                             <input type="date" id="sale-date" class="form-control" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold small">N° Boleta</label>
-                            <input type="text" class="form-control bg-light" placeholder="Auto-generado" readonly>
                         </div>
 
                         <hr class="my-4">
@@ -207,13 +211,16 @@
             </div>
             <div class="modal-body">
                 <div class="row mb-4">
-                    <div class="col-6">
-                        <label class="small text-muted d-block">Paciente</label>
+                    <div class="col-6 border-end">
+                        <label class="small text-muted d-block">Paciente (Historia Clínica)</label>
                         <h6 id="detail-patient-name" class="fw-bold"></h6>
-                        <label class="small text-muted d-block mt-2">Fecha de Emisión</label>
-                        <h6 id="detail-date"></h6>
+
+                        <label class="small text-muted d-block mt-2">Emitido a nombre de (Pagador):</label>
+                        <h6 id="detail-payer-name" class="text-primary fw-bold mb-0"></h6>
                     </div>
                     <div class="col-6 text-end">
+                        <label class="small text-muted d-block">Fecha de Emisión</label>
+                        <h6 id="detail-date" class="mb-2"></h6>
                         <label class="small text-muted d-block">Estado</label>
                         <span id="detail-status" class="badge"></span>
                         <label class="small text-muted d-block mt-2">Total Pagado</label>
@@ -236,7 +243,7 @@
                     </table>
                 </div>
 
-                <div class="mt-3 p-3 bg-light rounded">
+                <div class="mt-3 p-3 bg-light rounded border-start border-danger border-4">
                     <label class="small fw-bold text-muted">Observaciones / Receta:</label>
                     <p id="detail-observations" class="mb-0 small italic"></p>
                 </div>
@@ -279,15 +286,13 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="{% static 'v2/ventas/ventas.js' %}"></script>
 <script>
-    // 1. OCULTAR LOADER: Al terminar de cargar todo (incluyendo imágenes)
     window.addEventListener('load', () => {
         const loader = document.getElementById('page-loader');
         setTimeout(() => {
             loader.classList.add('loader-hidden');
-        }, 300); // Retraso mínimo para suavidad
+        }, 300);
     });
 
-    // 2. MOSTRAR LOADER: Al hacer clic en navegación
     document.addEventListener('click', (e) => {
         const link = e.target.closest('a.nav-link, .card-menu');
         if (link && link.href && !link.href.includes('#') && link.target !== '_blank') {
