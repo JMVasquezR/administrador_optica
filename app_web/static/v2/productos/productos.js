@@ -63,13 +63,15 @@ const renderTable = (products) => {
                     <i class="fa-solid fa-circle ${product.status ? 'text-success' : 'text-danger'}"></i>
                 </td>
                 <td class="text-end pe-3">
-            <button class="btn btn-sm btn-outline-dark me-1" onclick="editProduct(${product.id})">
-                <i class="fas fa-pen"></i>
-            </button>
-            <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(${product.id})">
-                <i class="fas fa-trash"></i>
-            </button>
-        </td>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-dark" onclick="editProduct(${product.id})">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(${product.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
             </tr>
         `;
     });
