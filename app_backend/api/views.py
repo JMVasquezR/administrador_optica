@@ -81,17 +81,14 @@ class PatientViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='campaign')
     def campaign(self, request):
         hace_11_meses = timezone.now().date() - timedelta(days=330)
-        queryset = self.queryset.filter(is_active=True, last_visit__lte=hace_11_meses).select_related('type_document')
-        query = request.query_params.get('search', None)
 
-        if query:
-            queryset = queryset.filter(
-                models.Q(first_name__icontains=query) |
-                models.Q(surname__icontains=query) |
-                models.Q(document_number__icontains=query)
-            )
+        queryset = Patient.objects.select_related('type_document').filter(
+            is_active=True, last_visit__lte=hace_11_meses
+        ).order_by('last_visit')
 
-        serializer = self.get_serializer(queryset, many=True)
+        filtered_queryset = self.filter_queryset(queryset)
+
+        serializer = self.get_serializer(filtered_queryset, many=True)
         return Response(serializer.data)
 
 
