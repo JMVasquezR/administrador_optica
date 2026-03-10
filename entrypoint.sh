@@ -25,4 +25,8 @@ EOF
 
 # 4. Lanzar el servidor profesional (Gunicorn)
 echo "🚀 Iniciando servidor de Ópticas K&M Lens..."
-exec gunicorn admin_opticas.wsgi:application --bind 0.0.0.0:8000 --workers 3
+exec gunicorn admin_opticas.wsgi:application \
+    --bind 0.0.0.0:8000 \
+    --workers 9 \
+    --threads 4 \
+    --timeout 120
