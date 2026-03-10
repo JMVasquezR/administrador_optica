@@ -99,17 +99,18 @@ class TypeDocumentSerializer(serializers.ModelSerializer):
 
 
 class PatientSerializer(serializers.ModelSerializer):
-    # Campos de solo lectura para el listado
     full_name = serializers.ReadOnlyField()
     full_document = serializers.ReadOnlyField()
     type_document_name = serializers.ReadOnlyField(source='type_document.short_name')
+    months_since_last_visit = serializers.ReadOnlyField()
 
     class Meta:
         model = Patient
         fields = [
             'id', 'first_name', 'surname', 'second_surname', 'date_of_birth',
             'type_document', 'type_document_name', 'document_number', 'full_document',
-            'gender', 'phone_or_cellular', 'direction', 'email', 'is_active', 'full_name'
+            'gender', 'phone_or_cellular', 'direction', 'email', 'is_active',
+            'full_name', 'last_visit', 'months_since_last_visit'
         ]
         validators = [
             UniqueTogetherValidator(

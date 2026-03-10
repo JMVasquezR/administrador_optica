@@ -11,6 +11,7 @@
         <i class="fa-solid fa-glasses fa-2x text-white"></i>
         <h6 class="mt-2 fw-bold text-white">Óptica KyM Lens</h6>
     </div>
+
     <ul class="nav flex-column px-3">
         <li class="nav-item">
             <a href="{% url 'app_web:home' %}"
@@ -38,6 +39,21 @@
                class="nav-link {% if request.resolver_match.url_name == 'sales_ticket_list' %}active{% endif %}">
                 <i class="fas fa-file-invoice-dollar me-2"></i> Boletas
             </a>
+        </li>
+
+        <li class="nav-item mt-2">
+            <small class="text-muted text-uppercase fw-bold px-3" style="font-size: 0.65rem; letter-spacing: 1px;">Marketing</small>
+        </li>
+
+        <li class="nav-item">
+            <a href="{% url 'app_web:marketing_re_examenes' %}"
+               class="nav-link {% if request.resolver_match.url_name == 'marketing_re_examenes' %}active{% endif %}">
+                <i class="fas fa-bullhorn me-2"></i> Campañas / Re-examen
+            </a>
+        </li>
+
+        <li class="nav-item mt-2">
+            <small class="text-muted text-uppercase fw-bold px-3" style="font-size: 0.65rem; letter-spacing: 1px;">Almacén</small>
         </li>
 
         <li class="nav-item">

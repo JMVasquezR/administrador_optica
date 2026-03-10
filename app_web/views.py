@@ -29,3 +29,8 @@ def sales_ticket_list_view(request):
 @login_required
 def recipe_list_view(request):
     return render(request, 'v2/recetarios/listado.html')
+
+
+@login_required
+def marketin_re_examenes_view(request):
+    return render(request, 'v2/marketing/re-examenes.html')

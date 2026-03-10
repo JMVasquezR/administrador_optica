@@ -4,6 +4,7 @@ from django.db.models import Sum
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, filters
+from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -52,6 +53,14 @@ class SalesTicketViewSet(viewsets.ModelViewSet):
     filterset_fields = ['is_disabled', 'date_of_issue']
     search_fields = ['ballot_number', 'patient__first_name', 'patient__surname', 'payer_name']
 
+    def perform_create(self, serializer):
+        ticket = serializer.save()
+
+        if ticket.patient:
+            patient = ticket.patient
+            patient.last_visit = ticket.date_of_issue
+            patient.save()
+
 
 class TypeDocumentViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -68,6 +77,22 @@ class PatientViewSet(viewsets.ModelViewSet):
     filterset_fields = ['is_active']
     search_fields = ['first_name', 'surname', 'second_surname', 'document_number']
     ordering_fields = ['first_name', 'surname', 'created']
+
+    @action(detail=False, methods=['get'], url_path='campaign')
+    def campaign(self, request):
+        hace_11_meses = timezone.now().date() - timedelta(days=330)
+        queryset = self.queryset.filter(is_active=True, last_visit__lte=hace_11_meses).order_by('last_visit')
+        query = request.query_params.get('search', None)
+
+        if query:
+            queryset = queryset.filter(
+                models.Q(first_name__icontains=query) |
+                models.Q(surname__icontains=query) |
+                models.Q(document_number__icontains=query)
+            )
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class ProductViewSet(viewsets.ModelViewSet):

@@ -1,0 +1,125 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campañas y Re-examen | Óptica KyM Lens</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{% static 'v2/base.css' %}" rel="stylesheet">
+</head>
+<body>
+
+<div id="page-loader">
+    <div class="text-center">
+        <div class="spinner-border text-danger" style="width: 3rem; height: 3rem;" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <h6 class="mt-3 fw-bold text-dark">Óptica KyM Lens</h6>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="row">
+        {% include 'v2/menu.html' %}
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-bold m-0">
+                    <i class="fas fa-bullhorn me-2 text-danger"></i>Seguimiento de Re-examen
+                </h3>
+                <span class="badge bg-dark px-3 py-2 rounded-pill shadow-sm">Fidelización de Clientes</span>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 border-start border-warning border-4 h-100">
+                        <div class="card-body">
+                            <h6 class="text-muted small fw-bold text-uppercase">Pendientes por mes</h6>
+                            <h2 class="fw-bold mb-0" id="count-month">0</h2>
+                            <p class="text-warning small mb-0">Cumplen 12 meses este mes</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 border-start border-danger border-4 h-100">
+                        <div class="card-body">
+                            <h6 class="text-muted small fw-bold text-uppercase">Críticos (+14 meses)</h6>
+                            <h2 class="fw-bold mb-0" id="count-critical">0</h2>
+                            <p class="text-danger small mb-0">No asisten hace mucho tiempo</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 border-start border-success border-4 h-100">
+                        <div class="card-body">
+                            <h6 class="text-muted small fw-bold text-uppercase">Contactados hoy</h6>
+                            <h2 class="fw-bold mb-0" id="count-done">0</h2>
+                            <p class="text-success small mb-0">Meta diaria: 10 pacientes</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container p-3 mb-4 bg-white shadow-sm rounded border">
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label class="form-label small fw-bold">Filtrar por tiempo desde última visita</label>
+                        <select id="filter-campaign-period" class="form-select">
+                            <option value="all">Ver todos los vencidos</option>
+                            <option value="month" selected>Vencen este mes (Ideal)</option>
+                            <option value="critical">Vencidos hace +14 meses (Recuperar)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Buscar Paciente</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                            <input type="text" id="campaign-search" class="form-control" placeholder="Nombre o DNI...">
+                        </div>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button class="btn btn-outline-dark w-100 fw-bold" id="btn-refresh">
+                            <i class="fas fa-sync-alt me-1"></i> Actualizar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container p-3 bg-white shadow-sm rounded border">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="thead-custom">
+                        <tr>
+                            <th class="ps-4">Paciente</th>
+                            <th class="text-center">Última Visita</th>
+                            <th class="text-center">Tiempo Transcurrido</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-end pe-4">Acción</th>
+                        </tr>
+                        </thead>
+                        <tbody id="campaign-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'v2/marketing/re-examenes.js' %}"></script>
+
+<script>
+    // Martí: Solo mantenemos el control del loader para la NAVEGACIÓN entre páginas.
+    // El ocultado inicial lo hará la función initCampaignPage() en re-examenes.js
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('a.nav-link, .card-menu');
+        if (link && link.href && !link.href.includes('#') && link.target !== '_blank') {
+            document.getElementById('page-loader').classList.remove('loader-hidden');
+        }
+    });
+</script>
+</body>
+</html>

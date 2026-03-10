@@ -25,6 +25,8 @@ class PatientAdmin(admin.ModelAdmin):
                 'document_number',
                 'direction',
                 ('phone_or_cellular', 'email'),
+                'is_active',
+                'last_visit',
             ]
         }),
     ]

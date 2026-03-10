@@ -27,9 +27,19 @@ class Patient(TimeStampedModel):
     direction = CharField(max_length=500, blank=True, null=True, verbose_name='Dirección')
     email = EmailField(blank=True, null=True, verbose_name='Correo')
     is_active = BooleanField(default=True, verbose_name='Estado')
+    last_visit = DateField(null=True, blank=True, verbose_name="Última Visita")
 
     def __str__(self):
         return f'{self.first_name} {self.surname} {self.second_surname if self.second_surname else ""}'
+
+    @property
+    def months_since_last_visit(self):
+        if not self.last_visit:
+            return None
+        from dateutil.relativedelta import relativedelta
+        from django.utils import timezone
+        diff = relativedelta(timezone.now().date(), self.last_visit)
+        return diff.years * 12 + diff.months
 
     @property
     def full_name(self):
