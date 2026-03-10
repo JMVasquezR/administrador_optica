@@ -24,4 +24,4 @@ RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
 # Comando de inicio con Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "admin_opticas.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "9", "--threads", "4", "admin_opticas.wsgi:application"]
