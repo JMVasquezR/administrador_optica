@@ -46,7 +46,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 class SalesTicketViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
-    queryset = SalesTicket.objects.all().order_by('-created')
+    queryset = SalesTicket.objects.select_related('patient').all().order_by('-created')
     serializer_class = SalesTicketSerializer
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]

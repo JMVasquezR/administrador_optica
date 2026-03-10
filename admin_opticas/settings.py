@@ -99,7 +99,8 @@ BD_DEFAULT = os.getenv('BD_DEFAULT', 'True') == str(True)
 
 if BD_DEFAULT:
     DATABASES = {
-        'default': dj_database_url.config(default=os.getenv("DATABASE_URL"))
+        'default': dj_database_url.config(default=os.getenv("DATABASE_URL")),
+        'CONN_MAX_AGE': 60,
     }
 else:
     DATABASES = {
@@ -129,8 +130,14 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'app_web', 'static'),
 ]
 
-# Esto es para que WhiteNoise sea más inteligente con el caché
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
