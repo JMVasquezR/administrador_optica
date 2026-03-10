@@ -6,8 +6,40 @@ let detailRecipeModal;
 let confirmAnularModal;
 let idParaAnular = null;
 
+// --- 1. Loader Global (Bloqueo Total) ---
+const showGlobalLoader = () => {
+    const loader = document.getElementById('page-loader');
+    if (loader) loader.classList.remove('loader-hidden');
+};
+
+const hideGlobalLoader = () => {
+    const loader = document.getElementById('page-loader');
+    if (loader) {
+        setTimeout(() => loader.classList.add('loader-hidden'), 300);
+    }
+};
+
+// --- 2. Loader Local (Opacidad en Tabla para Filtros) ---
+const showTableLoading = () => {
+    const tableContainer = document.querySelector('.table-responsive');
+    if (tableContainer) {
+        tableContainer.style.opacity = '0.5';
+        tableContainer.style.pointerEvents = 'none';
+        tableContainer.style.cursor = 'wait';
+    }
+};
+
+const hideTableLoading = () => {
+    const tableContainer = document.querySelector('.table-responsive');
+    if (tableContainer) {
+        tableContainer.style.opacity = '1';
+        tableContainer.style.pointerEvents = 'auto';
+        tableContainer.style.cursor = 'default';
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Inicializar Modales de Bootstrap
+    // Inicializar Modales
     const modalEl = document.getElementById('modalRecipe');
     if (modalEl) recipeModal = new bootstrap.Modal(modalEl);
 
@@ -17,10 +49,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const confirmEl = document.getElementById('modalConfirmAnular');
     if (confirmEl) confirmAnularModal = new bootstrap.Modal(confirmEl);
 
-    // 2. Carga inicial de datos
-    fetchRecipes();
+    // Carga inicial pesada
+    initRecipesPage();
 
-    // 3. Eventos de Filtros y Buscador
+    // Eventos de Filtros y Buscador (Carga Ligera)
     const searchInput = document.getElementById('recipe-search');
     if (searchInput) {
         searchInput.addEventListener('input', debounce(() => applyRecipeFilters(), 500));
@@ -31,143 +63,114 @@ document.addEventListener('DOMContentLoaded', () => {
         dateInput.addEventListener('change', () => applyRecipeFilters());
     }
 
-    // 4. Botón Limpiar Filtros
-    const btnClear = document.getElementById('btn-clear-recipes');
-    if (btnClear) {
-        btnClear.addEventListener('click', () => {
-            if (searchInput) searchInput.value = '';
-            if (dateInput) dateInput.value = '';
-            fetchRecipes('/api/recipes/');
-        });
-    }
+    // Botón Limpiar Filtros
+    document.getElementById('btn-clear-recipes')?.addEventListener('click', () => {
+        if (searchInput) searchInput.value = '';
+        if (dateInput) dateInput.value = '';
+        applyRecipeFilters();
+    });
 
-    // 5. Botón Ejecutar Anulación
-    const btnExecAnular = document.getElementById('btn-execute-anular-recipe');
-    if (btnExecAnular) {
-        btnExecAnular.addEventListener('click', () => {
-            if (idParaAnular) ejecutarAnulacion(idParaAnular);
-        });
-    }
+    // Botón Ejecutar Anulación
+    document.getElementById('btn-execute-anular-recipe')?.addEventListener('click', () => {
+        if (idParaAnular) ejecutarAnulacion(idParaAnular);
+    });
 
-    // 6. Preparar Modal de Nueva Receta
-    const btnOpenNew = document.querySelector('[data-bs-target="#modalRecipe"]');
-    if (btnOpenNew) {
-        btnOpenNew.addEventListener('click', () => {
-            document.getElementById('recipe-form').reset();
-            document.getElementById('rec-date').valueAsDate = new Date();
+    // Preparar Modal de Nueva Receta
+    document.querySelector('[data-bs-target="#modalRecipe"]')?.addEventListener('click', () => {
+        document.getElementById('recipe-form').reset();
+        document.getElementById('rec-date').valueAsDate = new Date();
+        $('#rec-patient').val(null).trigger('change');
+        initPatientSearch();
+    });
 
-            // IMPORTANTE: Limpiar y reinicializar el buscador de pacientes
-            $('#rec-patient').val(null).trigger('change');
-            initPatientSearch();
-        });
-    }
-
-    // 7. Evento de Guardado
-    const recipeForm = document.getElementById('recipe-form');
-    if (recipeForm) {
-        recipeForm.addEventListener('submit', saveRecipe);
-    }
+    // Evento de Guardado
+    document.getElementById('recipe-form')?.addEventListener('submit', saveRecipe);
 });
+
+const initRecipesPage = async () => {
+    showGlobalLoader();
+    try {
+        await fetchRecipes();
+    } finally {
+        hideGlobalLoader();
+    }
+};
 
 /* ==========================================
    LÓGICA DEL BUSCADOR DINÁMICO (SELECT2)
    ========================================== */
-
 const initPatientSearch = async () => {
-    // 1. Martí: Cargamos los 5 pacientes más recientes para que no esté vacío al inicio
     let initialPatients = [];
     try {
         const res = await fetch('/api/patients/?limit=5');
         const data = await res.json();
         const results = data.results ? data.results : data;
-
-        initialPatients = results.map(p => ({
-            id: p.id,
-            text: `${p.full_name} (${p.document_number})`
-        }));
+        initialPatients = results.map(p => ({id: p.id, text: `${p.full_name} (${p.document_number})`}));
     } catch (err) {
-        console.error("Error cargando pacientes iniciales:", err);
+        console.error(err);
     }
 
-    // 2. Inicializamos Select2 con esos datos y la búsqueda AJAX activa
     $('#rec-patient').select2({
         theme: 'default',
         width: '100%',
         dropdownParent: $('#modalRecipe'),
         placeholder: 'Escriba nombre o documento del paciente...',
-        data: initialPatients, // <--- Aquí se cargan los 5 por defecto
-        minimumInputLength: 0, // <--- Importante: 0 para que muestre la lista sin escribir
+        data: initialPatients,
+        minimumInputLength: 0,
         ajax: {
             url: '/api/patients/',
             dataType: 'json',
             delay: 300,
-            data: function (params) {
-                return {
-                    search: params.term,
-                    page: params.page || 1
-                };
-            },
-            processResults: function (data) {
-                return {
-                    results: data.results.map(p => ({
-                        id: p.id,
-                        text: `${p.full_name} (${p.document_number})`
-                    })),
-                    pagination: {
-                        more: !!data.next
-                    }
-                };
-            },
+            data: (params) => ({search: params.term, page: params.page || 1}),
+            processResults: (data) => ({
+                results: data.results.map(p => ({id: p.id, text: `${p.full_name} (${p.document_number})`})),
+                pagination: {more: !!data.next}
+            }),
             cache: true
         }
     });
 };
 
 /* ==========================================
-   LÓGICA DEL LISTADO (API)
+   LÓGICA DEL LISTADO Y FILTROS
    ========================================== */
-
 const fetchRecipes = async (url = '/api/recipes/') => {
     try {
         const response = await fetch(url);
         if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
         const data = await response.json();
-
         const recipes = data.results ? data.results : data;
         renderRecipeTable(recipes);
         setupRecipePagination(data);
-
-        const counter = document.getElementById('total-count');
-        if (counter) counter.innerText = data.count || recipes.length;
-
     } catch (error) {
         console.error('Error en fetchRecipes:', error);
     }
 };
 
-const applyRecipeFilters = () => {
+const applyRecipeFilters = async () => {
+    showTableLoading(); // Solo efecto en la tabla
     const searchInput = document.getElementById('recipe-search');
     const dateInput = document.getElementById('recipe-date-filter');
     let params = new URLSearchParams();
-    if (searchInput && searchInput.value) params.append('search', searchInput.value);
-    if (dateInput && dateInput.value) params.append('date_of_issue', dateInput.value);
-    fetchRecipes(`/api/recipes/?${params.toString()}`);
+    if (searchInput?.value) params.append('search', searchInput.value);
+    if (dateInput?.value) params.append('date_of_issue', dateInput.value);
+
+    await fetchRecipes(`/api/recipes/?${params.toString()}`);
+    hideTableLoading();
 };
 
 const renderRecipeTable = (recipes) => {
     const tableBody = document.getElementById('recipe-table-body');
     if (!tableBody) return;
-    let html = '';
 
-    if (!Array.isArray(recipes) || recipes.length === 0) {
+    if (!recipes?.length) {
         tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">No hay registros</td></tr>`;
         return;
     }
 
-    recipes.forEach(r => {
+    tableBody.innerHTML = recipes.map(r => {
         const rowStyle = r.is_active ? '' : 'style="opacity: 0.6; background-color: #f8f9fa;"';
-
-        html += `
+        return `
             <tr ${rowStyle}>
                 <td class="ps-4"><span class="prescription-code">${r.prescription_number}</span></td>
                 <td class="small text-muted">${r.date_of_issue}</td>
@@ -181,39 +184,22 @@ const renderRecipeTable = (recipes) => {
                 </td>
                 <td class="text-end pe-4">
                     <div class="btn-group">
-                        <button class="btn btn-sm btn-outline-success" 
-                                onclick="#" 
-                                title="Enviar por WhatsApp">
-                            <i class="fa-brands fa-whatsapp"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-dark" onclick="viewRecipeDetail(${r.id})" title="Ver Medidas">
-                            <i class="fa-solid fa-eye"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="printRecipe(${r.id})" title="Imprimir Receta">
-                            <i class="fa-solid fa-print"></i>
-                        </button>
-                        ${r.is_active ? `
-                        <button class="btn btn-sm btn-outline-secondary" onclick="abrirModalAnular(${r.id}, '${r.prescription_number}')" title="Anular Receta">
-                            <i class="fa-solid fa-ban"></i>
-                        </button>` : ''}
+                        <button class="btn btn-sm btn-outline-success" onclick="#" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></button>
+                        <button class="btn btn-sm btn-outline-dark" onclick="viewRecipeDetail(${r.id})" title="Ver Medidas"><i class="fa-solid fa-eye"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="printRecipe(${r.id})" title="Imprimir"><i class="fa-solid fa-print"></i></button>
+                        ${r.is_active ? `<button class="btn btn-sm btn-outline-secondary" onclick="abrirModalAnular(${r.id}, '${r.prescription_number}')" title="Anular"><i class="fa-solid fa-ban"></i></button>` : ''}
                     </div>
                 </td>
             </tr>`;
-    });
-    tableBody.innerHTML = html;
+    }).join('');
 };
 
 /* ==========================================
    LÓGICA DE CREACIÓN Y GUARDADO
    ========================================== */
-
 const saveRecipe = async (e) => {
     e.preventDefault();
-    const btn = document.getElementById('btn-save-recipe');
-    if (btn) {
-        btn.disabled = true;
-        btn.innerText = 'Guardando...';
-    }
+    showGlobalLoader();
 
     const recipeData = {
         patient: document.getElementById('rec-patient').value,
@@ -245,26 +231,21 @@ const saveRecipe = async (e) => {
         });
         if (response.ok) {
             recipeModal.hide();
-            fetchRecipes();
+            await fetchRecipes();
             showNotify('Receta guardada con éxito', 'success');
         } else {
-            showNotify('Error al guardar la receta', 'danger');
+            showNotify('Error al guardar', 'danger');
         }
-    } catch (error) {
-        console.error("Error:", error);
     } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.innerText = 'Guardar Receta';
-        }
+        hideGlobalLoader();
     }
 };
 
 /* ==========================================
    DETALLE Y ANULACIÓN
    ========================================== */
-
 const viewRecipeDetail = async (id) => {
+    showGlobalLoader();
     try {
         const response = await fetch(`/api/recipes/${id}/`);
         const r = await response.json();
@@ -293,22 +274,13 @@ const viewRecipeDetail = async (id) => {
         document.getElementById('det-instructions').innerText = r.instruction || 'Ninguna.';
 
         detailRecipeModal.show();
-    } catch (error) {
-        showNotify("Error al cargar el detalle", "danger");
+    } finally {
+        hideGlobalLoader();
     }
 };
 
-const abrirModalAnular = (id, numero) => {
-    idParaAnular = id;
-    document.getElementById('text-recipe-number').innerText = numero;
-    confirmAnularModal.show();
-};
-
 const ejecutarAnulacion = async (id) => {
-    const btn = document.getElementById('btn-execute-anular-recipe');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-
+    showGlobalLoader();
     try {
         const response = await fetch(`/api/recipes/${id}/`, {
             method: 'PATCH',
@@ -318,77 +290,77 @@ const ejecutarAnulacion = async (id) => {
         if (response.ok) {
             confirmAnularModal.hide();
             showNotify('Receta anulada', 'info');
-            fetchRecipes();
+            await fetchRecipes();
         }
-    } catch (error) {
-        showNotify('Error al anular', 'danger');
     } finally {
-        btn.disabled = false;
-        btn.innerText = 'Confirmar Anulación';
         idParaAnular = null;
+        hideGlobalLoader();
     }
 };
 
 /* ==========================================
    UTILIDADES
    ========================================== */
+const setupRecipePagination = (data) => {
+    const nextBtn = document.getElementById('next-page');
+    const prevBtn = document.getElementById('prev-page');
+    document.getElementById('total-count').innerText = data.count || 0;
+    document.getElementById('current-count').innerText = data.results ? data.results.length : 0;
+
+    nextBtn.onclick = async () => {
+        if (data.next) {
+            showTableLoading();
+            await fetchRecipes(data.next);
+            hideTableLoading();
+        }
+    };
+    prevBtn.onclick = async () => {
+        if (data.previous) {
+            showTableLoading();
+            await fetchRecipes(data.previous);
+            hideTableLoading();
+        }
+    };
+    nextBtn.disabled = !data.next;
+    prevBtn.disabled = !data.previous;
+};
+
+const abrirModalAnular = (id, numero) => {
+    idParaAnular = id;
+    document.getElementById('text-recipe-number').innerText = numero;
+    confirmAnularModal.show();
+};
 
 const showNotify = (msg, type) => {
     const toastEl = document.getElementById('liveToast');
     const toastMsg = document.getElementById('toast-message');
-    if (toastEl && toastMsg) {
-        toastEl.classList.remove('bg-success', 'bg-danger', 'bg-info');
-        toastEl.classList.add(`bg-${type}`);
-        toastMsg.innerText = msg;
-        new bootstrap.Toast(toastEl).show();
-    }
+    toastEl.classList.remove('bg-success', 'bg-danger', 'bg-info');
+    toastEl.classList.add(`bg-${type}`);
+    toastMsg.innerText = msg;
+    new bootstrap.Toast(toastEl).show();
 };
 
-const setupRecipePagination = (data) => {
-    const nextBtn = document.getElementById('next-page');
-    const prevBtn = document.getElementById('prev-page');
-    const totalSpan = document.getElementById('total-count');
-    const currentSpan = document.getElementById('current-count');
-
-    if (totalSpan) totalSpan.innerText = data.count || 0;
-    if (currentSpan) currentSpan.innerText = data.results ? data.results.length : (data.length || 0);
-
-    if (nextBtn) {
-        nextBtn.disabled = !data.next;
-        nextBtn.onclick = () => data.next && fetchRecipes(data.next);
-    }
-    if (prevBtn) {
-        prevBtn.disabled = !data.previous;
-        prevBtn.onclick = () => data.previous && fetchRecipes(data.previous);
-    }
-};
-
-function getCookie(name) {
-    let cookieValue = null;
+function getCookie(n) {
+    let v = null;
     if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        const c = document.cookie.split(';');
+        for (let i = 0; i < c.length; i++) {
+            const k = c[i].trim();
+            if (k.substring(0, n.length + 1) === (n + '=')) {
+                v = decodeURIComponent(k.substring(n.length + 1));
                 break;
             }
         }
     }
-    return cookieValue;
+    return v;
 }
 
-function debounce(func, timeout = 300) {
-    let timer;
-    return (...args) => {
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-            func.apply(this, args);
-        }, timeout);
+function debounce(f, t = 300) {
+    let m;
+    return (...a) => {
+        clearTimeout(m);
+        m = setTimeout(() => f.apply(this, a), t);
     };
 }
 
-const printRecipe = (id) => {
-    window.print();
-};
-
+const printRecipe = (id) => window.print();

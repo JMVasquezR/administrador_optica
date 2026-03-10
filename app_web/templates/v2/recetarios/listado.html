@@ -95,7 +95,8 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalRecipeDetail" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalRecipeDetail" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+     aria-hidden="true">
     <div class="modal-dialog modal-lg border-0">
         <div class="modal-content shadow-lg">
             <div class="modal-header bg-dark text-white">
@@ -205,7 +206,8 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalRecipe" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalRecipe" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+     aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
@@ -311,7 +313,8 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalConfirmAnular" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalConfirmAnular" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+     aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-secondary text-white">
@@ -348,13 +351,7 @@
 <script src="{% static 'v2/recetarios/recetarios.js' %}"></script>
 
 <script>
-    window.addEventListener('load', () => {
-        const loader = document.getElementById('page-loader');
-        setTimeout(() => {
-            loader.classList.add('loader-hidden');
-        }, 300);
-    });
-
+    // Solo mostramos el loader cuando el usuario navega a otra página del menú
     document.addEventListener('click', (e) => {
         const link = e.target.closest('a.nav-link, .card-menu');
         if (link && link.href && !link.href.includes('#') && link.target !== '_blank') {
