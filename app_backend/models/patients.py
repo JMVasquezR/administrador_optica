@@ -1,4 +1,5 @@
 from django.db.models import (CharField, DateField, ForeignKey, PROTECT, EmailField, BooleanField)
+from django.utils import timezone
 from model_utils.models import TimeStampedModel
 
 from app_backend.models.type_document import TypeDocument
@@ -27,7 +28,7 @@ class Patient(TimeStampedModel):
     direction = CharField(max_length=500, blank=True, null=True, verbose_name='Dirección')
     email = EmailField(blank=True, null=True, verbose_name='Correo')
     is_active = BooleanField(default=True, verbose_name='Estado')
-    last_visit = DateField(null=True, blank=True, verbose_name="Última Visita")
+    last_visit = DateField(null=True, blank=True, verbose_name="Última Visita", db_index=True)
 
     def __str__(self):
         return f'{self.first_name} {self.surname} {self.second_surname if self.second_surname else ""}'
