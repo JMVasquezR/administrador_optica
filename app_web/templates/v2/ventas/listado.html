@@ -286,13 +286,7 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="{% static 'v2/ventas/ventas.js' %}"></script>
 <script>
-    window.addEventListener('load', () => {
-        const loader = document.getElementById('page-loader');
-        setTimeout(() => {
-            loader.classList.add('loader-hidden');
-        }, 300);
-    });
-
+    // Solo mantenemos la lógica para MOSTRAR el loader al navegar entre páginas del menú
     document.addEventListener('click', (e) => {
         const link = e.target.closest('a.nav-link, .card-menu');
         if (link && link.href && !link.href.includes('#') && link.target !== '_blank') {

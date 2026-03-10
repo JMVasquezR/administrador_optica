@@ -5,14 +5,47 @@ let saleModal, detailModal, confirmAnularModal;
 let idParaAnular = null;
 let selectedProducts = [];
 
+// --- 1. Loader Global (Bloqueo Total para acciones pesadas) ---
+const showGlobalLoader = () => {
+    const loader = document.getElementById('page-loader');
+    if (loader) loader.classList.remove('loader-hidden');
+};
+
+const hideGlobalLoader = () => {
+    const loader = document.getElementById('page-loader');
+    if (loader) {
+        setTimeout(() => loader.classList.add('loader-hidden'), 300);
+    }
+};
+
+// --- 2. Loader Local (Efecto de opacidad para Filtros y Paginación) ---
+const showTableLoading = () => {
+    const tableContainer = document.querySelector('.table-responsive');
+    if (tableContainer) {
+        tableContainer.style.opacity = '0.5';
+        tableContainer.style.pointerEvents = 'none';
+        tableContainer.style.cursor = 'wait';
+    }
+};
+
+const hideTableLoading = () => {
+    const tableContainer = document.querySelector('.table-responsive');
+    if (tableContainer) {
+        tableContainer.style.opacity = '1';
+        tableContainer.style.pointerEvents = 'auto';
+        tableContainer.style.cursor = 'default';
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     saleModal = new bootstrap.Modal(document.getElementById('modalSale'));
     detailModal = new bootstrap.Modal(document.getElementById('modalViewDetail'));
     confirmAnularModal = new bootstrap.Modal(document.getElementById('modalConfirmAnular'));
 
-    fetchSales();
+    // Carga inicial: Loader Global
+    initSales();
 
-    // Eventos de Filtros
+    // Eventos de Filtros: Usan Loader Local
     document.getElementById('ballot-search').addEventListener('input', debounce(() => applyFilters(), 500));
     document.getElementById('patient-search-filter').addEventListener('input', debounce(() => applyFilters(), 500));
     document.getElementById('date-filter').addEventListener('change', () => applyFilters());
@@ -21,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('ballot-search').value = '';
         document.getElementById('patient-search-filter').value = '';
         document.getElementById('date-filter').value = '';
-        fetchSales();
+        applyFilters();
     });
 
     document.getElementById('btn-execute-anular').addEventListener('click', () => {
@@ -47,6 +80,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-add-product').addEventListener('click', addProductRow);
     document.getElementById('sale-form').addEventListener('submit', saveSale);
 });
+
+const initSales = async () => {
+    showGlobalLoader();
+    try {
+        await fetchSales();
+    } finally {
+        hideGlobalLoader();
+    }
+};
 
 /* ==========================================
    LÓGICA SELECT2
@@ -163,14 +205,13 @@ function updateTotal() {
 }
 
 /* ==========================================
-   GUARDADO (PACIENTE OPCIONAL)
+   GUARDADO (PACIENTE OPCIONAL) - USA GLOBAL LOADER
    ========================================== */
 async function saveSale(e) {
     e.preventDefault();
     const patientId = document.getElementById('sale-patient').value;
     const payerName = document.getElementById('sale-payer-name').value.trim();
 
-    // Regla de negocio: O hay paciente, o hay nombre de pagador
     if (!patientId && !payerName) {
         showNotify('Escriba un nombre para la boleta o seleccione un paciente', 'danger');
         return;
@@ -180,8 +221,7 @@ async function saveSale(e) {
         return;
     }
 
-    const btn = document.getElementById('btn-save-sale');
-    btn.disabled = true;
+    showGlobalLoader();
 
     const saleData = {
         patient: patientId || null,
@@ -203,7 +243,7 @@ async function saveSale(e) {
         });
         if (response.ok) {
             saleModal.hide();
-            fetchSales();
+            await fetchSales();
             showNotify('¡Boleta generada!', 'success');
         } else {
             showNotify('Error al guardar la venta', 'danger');
@@ -211,7 +251,7 @@ async function saveSale(e) {
     } catch (e) {
         showNotify('Error de conexión', 'danger');
     } finally {
-        btn.disabled = false;
+        hideGlobalLoader();
     }
 }
 
@@ -258,6 +298,7 @@ const renderSalesTable = (tickets) => {
 };
 
 const viewSaleDetail = async (id) => {
+    showGlobalLoader();
     try {
         const response = await fetch(`/api/sales-tickets/${id}/`);
         const sale = await response.json();
@@ -275,6 +316,27 @@ const viewSaleDetail = async (id) => {
         detailModal.show();
     } catch (e) {
         showNotify("Error al cargar detalle", "danger");
+    } finally {
+        hideGlobalLoader();
+    }
+};
+
+const anularBoleta = async (id) => {
+    showGlobalLoader();
+    try {
+        const response = await fetch(`/api/sales-tickets/${id}/`, {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+            body: JSON.stringify({is_disabled: true})
+        });
+        if (response.ok) {
+            confirmAnularModal.hide();
+            await fetchSales();
+            showNotify('Boleta anulada con éxito', 'success');
+        }
+    } finally {
+        idParaAnular = null;
+        hideGlobalLoader();
     }
 };
 
@@ -314,7 +376,8 @@ function debounce(func, timeout = 300) {
     };
 }
 
-const applyFilters = () => {
+const applyFilters = async () => {
+    showTableLoading();
     const ballot = document.getElementById('ballot-search').value;
     const patient = document.getElementById('patient-search-filter').value;
     const date = document.getElementById('date-filter').value;
@@ -322,18 +385,42 @@ const applyFilters = () => {
     if (ballot) params.append('search', ballot);
     else if (patient) params.append('search', patient);
     if (date) params.append('date_of_issue', date);
-    fetchSales(`/api/sales-tickets/?${params.toString()}`);
+
+    await fetchSales(`/api/sales-tickets/?${params.toString()}`);
+    hideTableLoading();
 };
 
 const setupPagination = (data) => {
     const nextBtn = document.getElementById('next-page');
     const prevBtn = document.getElementById('prev-page');
+
+    document.getElementById('total-count').innerText = data.count;
+    document.getElementById('current-count').innerText = data.results?.length || 0;
+
     if (nextBtn) {
         nextBtn.disabled = !data.next;
-        nextBtn.onclick = () => data.next && fetchSales(data.next);
+        nextBtn.onclick = async () => {
+            if (data.next) {
+                showTableLoading();
+                await fetchSales(data.next);
+                hideTableLoading();
+            }
+        };
     }
     if (prevBtn) {
         prevBtn.disabled = !data.previous;
-        prevBtn.onclick = () => data.previous && fetchSales(data.previous);
+        prevBtn.onclick = async () => {
+            if (data.previous) {
+                showTableLoading();
+                await fetchSales(data.previous);
+                hideTableLoading();
+            }
+        };
     }
 };
+
+function confirmAnular(id, number) {
+    idParaAnular = id;
+    document.getElementById('text-ballot-number').innerText = number;
+    confirmAnularModal.show();
+}
