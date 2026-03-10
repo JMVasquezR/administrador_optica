@@ -56,22 +56,17 @@ const renderPatientTable = (patients) => {
     patients.forEach(p => {
         // Lógica para determinar qué botón mostrar según el estado
         const btnStatus = p.is_active
-            ? `<button class="btn btn-sm btn-outline-danger me-1" onclick="desactivatePatient(${p.id}, '${p.full_name}', true)" title="Desactivar">
+            ? `<button class="btn btn-sm btn-outline-danger" onclick="desactivatePatient(${p.id}, '${p.full_name}', true)" title="Desactivar">
                 <i class="fas fa-user-slash"></i>
                </button>`
-            : `<button class="btn btn-sm btn-outline-success me-1" onclick="desactivatePatient(${p.id}, '${p.full_name}', false)" title="Activar">
+            : `<button class="btn btn-sm btn-outline-success" onclick="desactivatePatient(${p.id}, '${p.full_name}', false)" title="Activar">
                 <i class="fas fa-user-check"></i>
                </button>`;
 
         html += `
             <tr>
-                <td class="ps-4">
-                    <span class="badge badge-dni">${p.full_document}</span>
-                </td>
-                <td>
-                    <div class="fw-bold text-dark">${p.full_name}</div>
-                    <small class="text-muted">${p.email || 'Sin correo'}</small>
-                </td>
+                <td class="ps-4"><span class="badge badge-dni">${p.full_document}</span></td>
+                <td><div class="fw-bold text-dark">${p.full_name}</div></td>
                 <td>
                     <i class="fas fa-phone me-1 text-muted"></i> ${p.phone_or_cellular || '-'}
                 </td>
@@ -82,13 +77,15 @@ const renderPatientTable = (patients) => {
                     </span>
                 </td>
                 <td class="text-end pe-4">
-                    <button class="btn btn-sm btn-outline-dark me-1" onclick="editPatient(${p.id})" title="Editar">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    ${btnStatus}
-                    <button class="btn btn-sm btn-outline-info" onclick="viewHistory(${p.id})" title="Ver Historia">
-                        <i class="fas fa-file-medical"></i>
-                    </button>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-dark" onclick="editPatient(${p.id})" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        ${btnStatus}
+                        <button class="btn btn-sm btn-outline-info" onclick="viewHistory(${p.id})" title="Ver Historia">
+                            <i class="fas fa-file-medical"></i>
+                        </button>
+                    </div>
                 </td>
             </tr>
         `;
