@@ -1,14 +1,14 @@
 #!/bin/sh
 
-# 1. Martí: Esto soluciona el "No directory at: /app/staticfiles/" y los errores 404
+# Salir inmediatamente si un comando falla
+set -e
+
 echo "🔹 Recolectando archivos estáticos (CSS/JS)..."
 python manage.py collectstatic --noinput
 
-# 2. Aplicar los cambios a la base de datos de Railway
 echo "🔹 Aplicando migraciones..."
 python manage.py migrate --noinput
 
-# 3. Crear el superusuario de forma segura mediante un script de Python
 echo "🔹 Verificando usuario administrador..."
 python manage.py shell <<EOF
 try:
@@ -23,10 +23,7 @@ except Exception as e:
     print(f"❌ Error al verificar admin: {e}")
 EOF
 
-# 4. Lanzar el servidor profesional (Gunicorn)
-echo "🚀 Iniciando servidor de Ópticas K&M Lens..."
-exec gunicorn admin_opticas.wsgi:application \
-    --bind 0.0.0.0:8000 \
-    --workers 9 \
-    --threads 4 \
-    --timeout 120
+echo "🚀 Tareas de preparación listas. Pasando el control a Gunicorn..."
+
+# LA LÍNEA MÁGICA: Esto permite que el CMD del Dockerfile se ejecute después
+exec "$@"

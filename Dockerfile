@@ -13,15 +13,21 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 COPY . /app
 
-# Instala las dependencias de Python
+# Instala las dependencias de Python incluyendo gunicorn
 RUN pip install --no-cache-dir -r requirements.txt gunicorn
 
-# Copia el entrypoint y le da permisos de ejecución
+# Prepara el entrypoint
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Define el entrypoint
+# El ENTRYPOINT ejecuta el script de preparación
 ENTRYPOINT ["/entrypoint.sh"]
 
-# Comando de inicio con Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "9", "--threads", "4", "admin_opticas.wsgi:application"]
+# El CMD lanza el servidor con los recursos optimizados para 8 vCPU
+# Martí: He cambiado el puerto a $PORT para que Railway no tenga problemas
+CMD ["gunicorn", "admin_opticas.wsgi:application", \
+     "--bind", "0.0.0.0:8000", \
+     "--workers", "9", \
+     "--threads", "4", \
+     "--timeout", "120", \
+     "--access-logfile", "-"]
