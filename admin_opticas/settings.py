@@ -99,8 +99,11 @@ BD_DEFAULT = os.getenv('BD_DEFAULT', 'True') == str(True)
 
 if BD_DEFAULT:
     DATABASES = {
-        'default': dj_database_url.config(default=os.getenv("DATABASE_URL")),
-        'CONN_MAX_AGE': 60,
+        'default': dj_database_url.config(
+            default=os.getenv("DATABASE_URL"),
+            conn_max_age=60,
+            conn_health_checks=True,
+        )
     }
 else:
     DATABASES = {
