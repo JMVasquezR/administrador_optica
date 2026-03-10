@@ -38,7 +38,7 @@
                     <div class="col-md-6">
                         <div class="input-group">
                             <span class="input-group-text bg-white border-end-0"><i
-                                            class="fas fa-search text-muted"></i></span>
+                                    class="fas fa-search text-muted"></i></span>
                             <input type="text" id="patient-search" class="form-control border-start-0"
                                    placeholder="Buscar por nombre o número de documento...">
                         </div>
@@ -215,15 +215,7 @@
 <script src="{% static 'v2/pacientes/pacientes.js' %}"></script>
 
 <script>
-    // 1. OCULTAR LOADER: Al terminar de cargar todo (incluyendo imágenes)
-    window.addEventListener('load', () => {
-        const loader = document.getElementById('page-loader');
-        setTimeout(() => {
-            loader.classList.add('loader-hidden');
-        }, 300); // Retraso mínimo para suavidad
-    });
-
-    // 2. MOSTRAR LOADER: Al hacer clic en navegación
+    // Solo mostramos el loader rojo cuando el usuario navega a otra página del menú lateral
     document.addEventListener('click', (e) => {
         const link = e.target.closest('a.nav-link, .card-menu');
         if (link && link.href && !link.href.includes('#') && link.target !== '_blank') {

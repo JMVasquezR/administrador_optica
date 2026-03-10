@@ -1,21 +1,91 @@
-// pacientes.js
+/* ==========================================
+   VARIABLES GLOBALES E INICIALIZACIÓN
+   ========================================== */
 let patientModal;
+let desactivarModal;
+let idPacienteParaDesactivar = null;
+
+// --- 1. Loader Global (Bloqueo Total) ---
+const showGlobalLoader = () => {
+    const loader = document.getElementById('page-loader');
+    if (loader) loader.classList.remove('loader-hidden');
+};
+
+const hideGlobalLoader = () => {
+    const loader = document.getElementById('page-loader');
+    if (loader) {
+        setTimeout(() => loader.classList.add('loader-hidden'), 300);
+    }
+};
+
+// --- 2. Loader Local (Opacidad en Tabla para Búsquedas) ---
+const showTableLoading = () => {
+    const tableContainer = document.querySelector('.table-responsive');
+    if (tableContainer) {
+        tableContainer.style.opacity = '0.5';
+        tableContainer.style.pointerEvents = 'none';
+        tableContainer.style.cursor = 'wait';
+    }
+};
+
+const hideTableLoading = () => {
+    const tableContainer = document.querySelector('.table-responsive');
+    if (tableContainer) {
+        tableContainer.style.opacity = '1';
+        tableContainer.style.pointerEvents = 'auto';
+        tableContainer.style.cursor = 'default';
+    }
+};
 
 document.addEventListener('DOMContentLoaded', () => {
-    fetchPatients();
+    // Inicializar Modales
+    patientModal = new bootstrap.Modal(document.getElementById('modalPatient'));
+    desactivarModal = new bootstrap.Modal(document.getElementById('deleteModal'));
 
-    // Escuchar el buscador
-    document.getElementById('patient-search').addEventListener('input', debounce(() => {
-        const query = document.getElementById('patient-search').value;
-        fetchPatients(`/api/patients/?search=${query}`);
-    }, 500));
+    // Carga inicial pesada
+    initPatientsPage();
+
+    // Filtro de búsqueda: Loader Local (Opacidad)
+    const searchInput = document.getElementById('patient-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(() => applyFilters(), 500));
+    }
+
+    // Eventos de formulario
+    document.getElementById('patient-form')?.addEventListener('submit', savePatient);
+
+    const btnConfirmDesactivar = document.getElementById('confirmDelete');
+    if (btnConfirmDesactivar) {
+        btnConfirmDesactivar.addEventListener('click', executeDesactivatePatient);
+    }
+
+    // Resetear para nuevo paciente
+    document.querySelector('[data-bs-target="#modalPatient"]')?.addEventListener('click', () => {
+        const form = document.getElementById('patient-form');
+        form.reset();
+        // Limpiar estados de validación previos
+        form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        document.getElementById('patient-id').value = '';
+        document.getElementById('form-title-patient').innerText = 'Registrar Paciente';
+    });
 });
 
+const initPatientsPage = async () => {
+    showGlobalLoader();
+    try {
+        await Promise.all([fetchPatients(), loadTypeDocuments()]);
+    } finally {
+        hideGlobalLoader();
+    }
+};
+
+/* ==========================================
+   API: LISTADO Y FILTROS
+   ========================================== */
 const fetchPatients = async (url = '/api/patients/') => {
     try {
         const response = await fetch(url);
         const data = await response.json();
-
         renderPatientTable(data.results);
         setupPagination(data);
     } catch (error) {
@@ -23,38 +93,21 @@ const fetchPatients = async (url = '/api/patients/') => {
     }
 };
 
-const setupPagination = (data) => {
-    const nextBtn = document.getElementById('next-page');
-    const prevBtn = document.getElementById('prev-page');
-    const totalSpan = document.getElementById('total-count');
-    const currentSpan = document.getElementById('current-count');
-
-    totalSpan.innerText = data.count;
-    currentSpan.innerText = data.results.length;
-
-    // Configurar botón Siguiente
-    if (data.next) {
-        nextBtn.disabled = false;
-        nextBtn.onclick = () => fetchPatients(data.next);
-    } else {
-        nextBtn.disabled = true;
-    }
-
-    // Configurar botón Anterior
-    if (data.previous) {
-        prevBtn.disabled = false;
-        prevBtn.onclick = () => fetchPatients(data.previous);
-    } else {
-        prevBtn.disabled = true;
-    }
+const applyFilters = async () => {
+    showTableLoading();
+    const query = document.getElementById('patient-search').value;
+    await fetchPatients(`/api/patients/?search=${query}`);
+    hideTableLoading();
 };
 
 const renderPatientTable = (patients) => {
     const tableBody = document.getElementById('patient-table-body');
-    let html = '';
+    if (!patients?.length) {
+        tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No se encontraron pacientes</td></tr>`;
+        return;
+    }
 
-    patients.forEach(p => {
-        // Lógica para determinar qué botón mostrar según el estado
+    tableBody.innerHTML = patients.map(p => {
         const btnStatus = p.is_active
             ? `<button class="btn btn-sm btn-outline-danger" onclick="desactivatePatient(${p.id}, '${p.full_name}', true)" title="Desactivar">
                 <i class="fas fa-user-slash"></i>
@@ -63,16 +116,16 @@ const renderPatientTable = (patients) => {
                 <i class="fas fa-user-check"></i>
                </button>`;
 
-        html += `
-            <tr>
-                <td class="ps-4"><span class="badge badge-dni">${p.full_document}</span></td>
+        return `
+            <tr ${!p.is_active ? 'style="opacity: 0.6; background-color: #f8f9fa;"' : ''}>
+                <td class="ps-4"><span class="badge bg-light text-dark border">${p.full_document || p.document_number}</span></td>
                 <td><div class="fw-bold text-dark">${p.full_name}</div></td>
                 <td>
-                    <i class="fas fa-phone me-1 text-muted"></i> ${p.phone_or_cellular || '-'}
+                    <div class="small"><i class="fas fa-phone me-1 text-muted"></i> ${p.phone_or_cellular || '-'}</div>
                 </td>
                 <td>${p.gender === 'M' ? 'Masc' : 'Fem'}</td>
                 <td class="text-center">
-                    <span class="badge ${p.is_active ? 'bg-success' : 'bg-secondary'}">
+                    <span class="badge ${p.is_active ? 'bg-success' : 'bg-secondary'} rounded-pill">
                         ${p.is_active ? 'Activo' : 'Inactivo'}
                     </span>
                 </td>
@@ -87,65 +140,16 @@ const renderPatientTable = (patients) => {
                         </button>
                     </div>
                 </td>
-            </tr>
-        `;
-    });
-    tableBody.innerHTML = html;
+            </tr>`;
+    }).join('');
 };
 
-// Reutilizar función debounce
-function debounce(func, timeout = 300) {
-    let timer;
-    return (...args) => {
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-            func.apply(this, args);
-        }, timeout);
-    };
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    patientModal = new bootstrap.Modal(document.getElementById('modalPatient'));
-
-    loadTypeDocuments();
-    fetchPatients();
-
-    const patientForm = document.getElementById('patient-form');
-    patientForm.addEventListener('submit', savePatient);
-
-    // Resetear modal al presionar "Nuevo Paciente"
-    document.querySelector('[data-bs-target="#modalPatient"]').addEventListener('click', () => {
-        patientForm.reset();
-        document.getElementById('patient-id').value = '';
-        document.getElementById('form-title-patient').innerText = 'Registrar Paciente';
-    });
-});
-
-// Cargar tipos de documento (DNI, RUC, etc)
-const loadTypeDocuments = async () => {
-    const res = await fetch('/api/type-documents/');
-    const data = await res.json();
-    const select = document.getElementById('type_document');
-    data.forEach(doc => {
-        select.innerHTML += `<option value="${doc.id}">${doc.short_name}</option>`;
-    });
-};
-
-const showNotify = (message, type = 'success') => {
-    const toastEl = document.getElementById('liveToast');
-    const toastMessage = document.getElementById('toast-message');
-
-    // Cambiar color según el tipo (success o danger)
-    toastEl.classList.remove('bg-success', 'bg-danger');
-    toastEl.classList.add(type === 'success' ? 'bg-success' : 'bg-danger');
-
-    toastMessage.innerText = message;
-    const toast = new bootstrap.Toast(toastEl);
-    toast.show();
-};
-
+/* ==========================================
+   ACCIONES (GLOBAL LOADER)
+   ========================================== */
 const savePatient = async (e) => {
     e.preventDefault();
+    showGlobalLoader();
 
     const patientId = document.getElementById('patient-id').value;
     const url = patientId ? `/api/patients/${patientId}/` : '/api/patients/';
@@ -165,6 +169,9 @@ const savePatient = async (e) => {
         is_active: document.getElementById('is_active').checked
     };
 
+    // Limpiar errores previos
+    document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+
     try {
         const response = await fetch(url, {
             method: method,
@@ -179,54 +186,153 @@ const savePatient = async (e) => {
 
         if (response.ok) {
             patientModal.hide();
-            fetchPatients();
+            await fetchPatients();
             showNotify(patientId ? '¡Paciente actualizado!' : '¡Paciente registrado con éxito!');
         } else {
-            // MANEJO DE ERRORES ESPECÍFICOS (Duplicados, validaciones de Django)
             if (response.status === 400) {
-                // Si el error es el UniqueTogetherValidator (duplicado)
                 if (result.non_field_errors) {
                     showNotify(result.non_field_errors[0], 'danger');
                     document.getElementById('document_number').classList.add('is-invalid');
                 }
-
-                // Errores por campos individuales (ej: email inválido)
                 Object.keys(result).forEach(key => {
                     const input = document.getElementById(key);
-                    if (input) {
-                        input.classList.add('is-invalid');
-                    }
+                    if (input) input.classList.add('is-invalid');
                 });
             } else {
-                showNotify('Ocurrió un error inesperado en el servidor', 'danger');
+                showNotify('Error en el servidor', 'danger');
             }
         }
     } catch (error) {
-        console.error('Error al guardar paciente:', error);
+        console.error('Error:', error);
+    } finally {
+        hideGlobalLoader();
     }
 };
 
-// Función para editar (se llama desde el botón de la tabla)
 const editPatient = async (id) => {
-    const res = await fetch(`/api/patients/${id}/`);
-    const p = await res.json();
+    showGlobalLoader();
+    try {
+        const res = await fetch(`/api/patients/${id}/`);
+        const p = await res.json();
 
-    document.getElementById('form-title-patient').innerText = 'Editar Paciente';
-    document.getElementById('patient-id').value = p.id;
+        document.getElementById('form-title-patient').innerText = 'Editar Paciente';
+        document.getElementById('patient-id').value = p.id;
+        document.getElementById('type_document').value = p.type_document;
+        document.getElementById('document_number').value = p.document_number;
+        document.getElementById('first_name').value = p.first_name;
+        document.getElementById('surname').value = p.surname;
+        document.getElementById('second_surname').value = p.second_surname || '';
+        document.getElementById('date_of_birth').value = p.date_of_birth;
+        document.getElementById('gender').value = p.gender;
+        document.getElementById('phone_or_cellular').value = p.phone_or_cellular;
+        document.getElementById('email').value = p.email;
+        document.getElementById('direction').value = p.direction;
+        document.getElementById('is_active').checked = p.is_active;
 
-    document.getElementById('type_document').value = p.type_document;
-    document.getElementById('document_number').value = p.document_number;
-    document.getElementById('first_name').value = p.first_name;
-    document.getElementById('surname').value = p.surname;
-    document.getElementById('second_surname').value = p.second_surname;
-    document.getElementById('date_of_birth').value = p.date_of_birth;
-    document.getElementById('gender').value = p.gender;
-    document.getElementById('phone_or_cellular').value = p.phone_or_cellular;
-    document.getElementById('email').value = p.email;
-    document.getElementById('direction').value = p.direction;
-    document.getElementById('is_active').checked = p.is_active;
+        patientModal.show();
+    } finally {
+        hideGlobalLoader();
+    }
+};
 
-    patientModal.show();
+/* ==========================================
+   ACTIVACIÓN / DESACTIVACIÓN
+   ========================================== */
+const desactivatePatient = (id, nombre, estadoActual) => {
+    idPacienteParaDesactivar = id;
+    const accion = estadoActual ? 'desactivar' : 'activar';
+    const color = estadoActual ? 'text-danger' : 'text-success';
+
+    document.getElementById('deleteModalLabel').innerText = estadoActual ? 'Desactivar Paciente' : 'Activar Paciente';
+    document.getElementById('delete-modal-body').innerHTML = `
+        ¿Estás seguro de que deseas <b class="${color}">${accion}</b> al paciente <b>${nombre}</b>?<br>
+        <small class="text-muted">Esto afectará su visibilidad en las citas actuales.</small>
+    `;
+
+    const btnConfirm = document.getElementById('confirmDelete');
+    btnConfirm.className = `btn ${estadoActual ? 'btn-danger' : 'btn-success'}`;
+    btnConfirm.innerText = estadoActual ? 'Sí, desactivar' : 'Sí, activar';
+
+    desactivarModal.show();
+};
+
+const executeDesactivatePatient = async () => {
+    if (!idPacienteParaDesactivar) return;
+    showGlobalLoader();
+
+    try {
+        const res = await fetch(`/api/patients/${idPacienteParaDesactivar}/`);
+        const p = await res.json();
+        const nuevoEstado = !p.is_active;
+
+        const response = await fetch(`/api/patients/${idPacienteParaDesactivar}/`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({is_active: nuevoEstado})
+        });
+
+        if (response.ok) {
+            desactivarModal.hide();
+            await fetchPatients();
+            showNotify(nuevoEstado ? 'Paciente activado' : 'Paciente desactivado', 'success');
+        }
+    } finally {
+        idPacienteParaDesactivar = null;
+        hideGlobalLoader();
+    }
+};
+
+/* ==========================================
+   UTILIDADES
+   ========================================== */
+const loadTypeDocuments = async () => {
+    try {
+        const res = await fetch('/api/type-documents/');
+        const data = await res.json();
+        const select = document.getElementById('type_document');
+        select.innerHTML = '<option value="">Seleccione...</option>';
+        data.forEach(doc => {
+            select.innerHTML += `<option value="${doc.id}">${doc.short_name}</option>`;
+        });
+    } catch (e) {
+        console.error("Error cargando documentos", e);
+    }
+};
+
+const setupPagination = (data) => {
+    const nextBtn = document.getElementById('next-page');
+    const prevBtn = document.getElementById('prev-page');
+    document.getElementById('total-count').innerText = data.count || 0;
+    document.getElementById('current-count').innerText = data.results?.length || 0;
+
+    nextBtn.onclick = async () => {
+        if (data.next) {
+            showTableLoading();
+            await fetchPatients(data.next);
+            hideTableLoading();
+        }
+    };
+    prevBtn.onclick = async () => {
+        if (data.previous) {
+            showTableLoading();
+            await fetchPatients(data.previous);
+            hideTableLoading();
+        }
+    };
+    nextBtn.disabled = !data.next;
+    prevBtn.disabled = !data.previous;
+};
+
+const showNotify = (message, type = 'success') => {
+    const toastEl = document.getElementById('liveToast');
+    const toastMsg = document.getElementById('toast-message');
+    toastEl.classList.remove('bg-success', 'bg-danger');
+    toastEl.classList.add(type === 'success' ? 'bg-success' : 'bg-danger');
+    toastMsg.innerText = message;
+    new bootstrap.Toast(toastEl).show();
 };
 
 function getCookie(name) {
@@ -244,75 +350,13 @@ function getCookie(name) {
     return cookieValue;
 }
 
-let idPacienteParaDesactivar = null;
-let desactivarModal;
+function debounce(func, timeout = 300) {
+    let timer;
+    return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => func.apply(this, args), timeout);
+    };
+}
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Inicializar el modal de confirmación de desactivación
-    desactivarModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-
-    // Escuchar el clic en el botón de confirmación del modal
-    const btnConfirmDesactivar = document.getElementById('confirmDelete');
-    if (btnConfirmDesactivar) {
-        btnConfirmDesactivar.addEventListener('click', executeDesactivatePatient);
-    }
-});
-
-/**
- * 1. Prepara la desactivación y muestra el modal
- */
-const desactivatePatient = (id, nombre, estadoActual) => {
-    idPacienteParaDesactivar = id;
-    const accion = estadoActual ? 'desactivar' : 'activar';
-    const color = estadoActual ? 'text-danger' : 'text-success';
-
-    // Personalizamos el mensaje del modal de confirmación
-    document.getElementById('deleteModalLabel').innerText = estadoActual ? 'Desactivar Paciente' : 'Activar Paciente';
-    document.getElementById('delete-modal-body').innerHTML = `
-        ¿Estás seguro de que deseas <b class="${color}">${accion}</b> al paciente <b>${nombre}</b>?<br>
-        <small class="text-muted">Esto afectará su visibilidad en las citas actuales.</small>
-    `;
-
-    // Cambiamos el color del botón de confirmación según la acción
-    const btnConfirm = document.getElementById('confirmDelete');
-    btnConfirm.className = `btn ${estadoActual ? 'btn-danger' : 'btn-success'}`;
-    btnConfirm.innerText = estadoActual ? 'Sí, desactivar' : 'Sí, activar';
-
-    desactivarModal.show();
-};
-
-/**
- * 2. Ejecuta el PATCH a la API
- */
-const executeDesactivatePatient = async () => {
-    if (!idPacienteParaDesactivar) return;
-
-    // Primero obtenemos el estado actual del paciente para invertirlo
-    try {
-        const res = await fetch(`/api/patients/${idPacienteParaDesactivar}/`);
-        const p = await res.json();
-        const nuevoEstado = !p.is_active;
-
-        const response = await fetch(`/api/patients/${idPacienteParaDesactivar}/`, {
-            method: 'PATCH', // Usamos PATCH para actualización parcial
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify({is_active: nuevoEstado})
-        });
-
-        if (response.ok) {
-            desactivarModal.hide();
-            fetchPatients(); // Recargar la tabla
-            showNotify(nuevoEstado ? 'Paciente activado' : 'Paciente desactivado', 'success');
-        } else {
-            showNotify('No se pudo cambiar el estado del paciente', 'danger');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showNotify('Error de conexión', 'danger');
-    } finally {
-        idPacienteParaDesactivar = null;
-    }
+const viewHistory = (id) => { /* Implementar según sea necesario */
 };
