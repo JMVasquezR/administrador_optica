@@ -35,11 +35,9 @@ class Patient(TimeStampedModel):
     @property
     def months_since_last_visit(self):
         if not self.last_visit:
-            return None
-        from dateutil.relativedelta import relativedelta
-        from django.utils import timezone
-        diff = relativedelta(timezone.now().date(), self.last_visit)
-        return diff.years * 12 + diff.months
+            return 0
+        today = timezone.now().date()
+        return (today.year - self.last_visit.year) * 12 + today.month - self.last_visit.month
 
     @property
     def full_name(self):

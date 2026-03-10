@@ -70,7 +70,7 @@ class TypeDocumentViewSet(viewsets.ReadOnlyModelViewSet):
 
 class PatientViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
-    queryset = Patient.objects.all().order_by('-created')
+    queryset = Patient.objects.select_related('type_document').all().order_by('-created')
     serializer_class = PatientSerializer
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -81,7 +81,7 @@ class PatientViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='campaign')
     def campaign(self, request):
         hace_11_meses = timezone.now().date() - timedelta(days=330)
-        queryset = self.queryset.filter(is_active=True, last_visit__lte=hace_11_meses).order_by('last_visit')
+        queryset = self.queryset.filter(is_active=True, last_visit__lte=hace_11_meses).select_related('type_document')
         query = request.query_params.get('search', None)
 
         if query:
