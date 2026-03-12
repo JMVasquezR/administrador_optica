@@ -94,12 +94,12 @@ class PatientViewSet(viewsets.ModelViewSet):
 
 class ProductViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
-    queryset = Product.objects.all().order_by('name')
+    queryset = Product.objects.select_related('brand', 'category').order_by('name')
     serializer_class = ProductSerializer
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['category', 'brand']
-    search_fields = ['name', 'code']
+    search_fields = ['name', 'code', 'brand__name']
     ordering_fields = ['created', 'unit_price', 'initial_stock']
 
     def perform_create(self, serializer):
