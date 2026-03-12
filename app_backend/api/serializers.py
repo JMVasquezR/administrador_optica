@@ -29,11 +29,21 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class SalesLinesSerializer(serializers.ModelSerializer):
-    product_name = serializers.ReadOnlyField(source='product.name')
+    product_name = serializers.SerializerMethodField()
 
     class Meta:
         model = SalesLines
         fields = ['id', 'product', 'product_name', 'quantity', 'unit_price', 'amount']
+
+    def get_product_name(self, obj):
+        # Usamos getattr por si acaso el objeto product no está cargado correctamente
+        product = obj.product
+        brand = getattr(product, 'brand', None)
+
+        if brand and hasattr(brand, 'name'):
+            return f"{product.name} {brand.name}"
+
+        return product.name
 
 
 class SalesTicketSerializer(serializers.ModelSerializer):
@@ -45,9 +55,8 @@ class SalesTicketSerializer(serializers.ModelSerializer):
     class Meta:
         model = SalesTicket
         fields = [
-            'id', 'ballot_number', 'date_of_issue', 'patient', 'name_patient',
-            'payer_name', 'sales_total', 'total_bill', 'observation',
-            'is_disabled', 'lines'
+            'id', 'ballot_number', 'date_of_issue', 'patient', 'name_patient', 'payer_name', 'sales_total',
+            'total_bill', 'observation', 'is_disabled', 'lines'
         ]
         read_only_fields = ['ballot_number']
 

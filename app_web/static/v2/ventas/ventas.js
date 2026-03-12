@@ -117,9 +117,15 @@ const loadPatientsAndProducts = async () => {
                     url: '/api/products/', dataType: 'json', delay: 300,
                     data: (params) => ({search: params.term, page: params.page || 1}),
                     processResults: (data) => ({
-                        results: data.results.map(p => ({
-                            id: p.id, text: `${p.name} - S/.${parseFloat(p.unit_price).toFixed(2)}`, price: p.unit_price
-                        })),
+                        results: data.results.map(p => {
+                            const displayName = p.brand_name ? `${p.name} ${p.brand_name}` : p.name;
+
+                            return {
+                                id: p.id,
+                                text: `${displayName} - S/.${parseFloat(p.unit_price).toFixed(2)}`,
+                                price: p.unit_price
+                            };
+                        }),
                         pagination: {more: !!data.next}
                     })
                 }
@@ -311,7 +317,12 @@ const viewSaleDetail = async (id) => {
 
         const itemsBody = document.getElementById('detail-items-body');
         itemsBody.innerHTML = sale.lines.map(item => `
-            <tr><td>${item.product_name}</td><td class="text-center">${item.quantity}</td><td class="text-end">S/. ${item.unit_price.toFixed(2)}</td><td class="text-end fw-bold">S/. ${item.amount.toFixed(2)}</td></tr>
+            <tr>
+                <td>${item.product_name}</td>
+                <td class="text-center">${item.quantity}</td>
+                <td class="text-end">S/. ${item.unit_price.toFixed(2)}</td>
+                <td class="text-end fw-bold">S/. ${item.amount.toFixed(2)}</td>
+            </tr>
         `).join('');
         detailModal.show();
     } catch (e) {
