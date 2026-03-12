@@ -13,8 +13,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = [
-            'id', 'prescription_number', 'patient', 'name_patient',
-            'date_of_issue', 'is_active',
+            'id', 'prescription_number', 'patient', 'name_patient', 'date_of_issue', 'is_active',
             # Campos Lejos
             'right_eye_spherical_distance_far', 'right_eye_cylinder_distance_far', 'right_eye_axis_distance_far',
             'left_eye_spherical_distance_far', 'left_eye_cylinder_distance_far', 'left_eye_axis_distance_far',

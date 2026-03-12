@@ -43,6 +43,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
     search_fields = ['prescription_number', 'patient__first_name', 'patient__surname', 'patient__second_surname']
     filterset_fields = ['date_of_issue', 'is_active']
 
+    def perform_create(self, serializer):
+        ticket = serializer.save()
+
+        if ticket.patient:
+            patient = ticket.patient
+            patient.last_visit = ticket.date_of_issue
+            patient.save()
+
 
 class SalesTicketViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -53,13 +61,7 @@ class SalesTicketViewSet(viewsets.ModelViewSet):
     filterset_fields = ['is_disabled', 'date_of_issue']
     search_fields = ['ballot_number', 'patient__first_name', 'patient__surname', 'payer_name']
 
-    def perform_create(self, serializer):
-        ticket = serializer.save()
 
-        if ticket.patient:
-            patient = ticket.patient
-            patient.last_visit = ticket.date_of_issue
-            patient.save()
 
 
 class TypeDocumentViewSet(viewsets.ReadOnlyModelViewSet):
