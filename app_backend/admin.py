@@ -1,7 +1,7 @@
 from django.contrib import admin
 from app_backend.models.sales_ticket import SalesTicket, SalesLines
 from app_backend.models.patients import Patient
-from app_backend.models.products import Brand
+from app_backend.models.products import Brand, Category
 
 
 @admin.register(Brand)
@@ -51,3 +51,9 @@ class SalesTicketAdmin(admin.ModelAdmin):
             ]
         }),
     ]
+
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    search_fields = ['name']
