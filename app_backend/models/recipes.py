@@ -18,30 +18,30 @@ class Recipe(TimeStampedModel):
     date_of_issue = DateField(verbose_name='Fecha de emisión')
 
     # Distancia ojo derecho
-    right_eye_spherical_distance_far = FloatField(null=True, blank=True, verbose_name='O.D. Esferico')
-    right_eye_cylinder_distance_far = FloatField(null=True, blank=True, verbose_name='O.D. Cilindro')
-    right_eye_axis_distance_far = FloatField(null=True, blank=True, verbose_name='O.D. Eje')
+    right_eye_spherical_distance_far = CharField(max_length=6, null=True, blank=True, verbose_name='O.D. Esferico')
+    right_eye_cylinder_distance_far = CharField(max_length=6, blank=True, verbose_name='O.D. Cilindro')
+    right_eye_axis_distance_far = CharField(max_length=6, blank=True, verbose_name='O.D. Eje')
 
     # Distancia ojo izquierdo
-    left_eye_spherical_distance_far = FloatField(null=True, blank=True, verbose_name='O.I. Esferico')
-    left_eye_cylinder_distance_far = FloatField(null=True, blank=True, verbose_name='O.I. Cilindro')
-    left_eye_axis_distance_far = FloatField(null=True, blank=True, verbose_name='O.I. Eje')
+    left_eye_spherical_distance_far = CharField(max_length=6, null=True, blank=True, verbose_name='O.I. Esferico')
+    left_eye_cylinder_distance_far = CharField(max_length=6, null=True, blank=True, verbose_name='O.I. Cilindro')
+    left_eye_axis_distance_far = CharField(max_length=6, null=True, blank=True, verbose_name='O.I. Eje')
 
     # Distancia - Distancia pupílar
-    pupillary_distance_far = FloatField(null=True, blank=True, verbose_name='Distancia pupilar')
+    pupillary_distance_far = CharField(max_length=6, null=True, blank=True, verbose_name='Distancia pupilar')
 
     # Cerca ojo derecha
-    right_eye_spherical_distance_near = FloatField(null=True, blank=True, verbose_name='O.D. Esferico')
-    right_eye_cylinder_distance_near = FloatField(null=True, blank=True, verbose_name='O.D. Cilindro')
-    right_eye_axis_distance_near = FloatField(null=True, blank=True, verbose_name='O.D. Eje')
+    right_eye_spherical_distance_near = CharField(max_length=6, null=True, blank=True, verbose_name='O.D. Esferico')
+    right_eye_cylinder_distance_near = CharField(max_length=6, null=True, blank=True, verbose_name='O.D. Cilindro')
+    right_eye_axis_distance_near = CharField(max_length=6, null=True, blank=True, verbose_name='O.D. Eje')
 
     # Cerca ojo izquierdo
-    left_eye_spherical_distance_near = FloatField(null=True, blank=True, verbose_name='O.I. Esferico')
-    left_eye_cylinder_distance_near = FloatField(null=True, blank=True, verbose_name='O.I. Cilindro')
-    left_eye_axis_distance_near = FloatField(null=True, blank=True, verbose_name='O.I. Eje')
+    left_eye_spherical_distance_near = CharField(max_length=6, null=True, blank=True, verbose_name='O.I. Esferico')
+    left_eye_cylinder_distance_near = CharField(max_length=6, null=True, blank=True, verbose_name='O.I. Cilindro')
+    left_eye_axis_distance_near = CharField(max_length=6, null=True, blank=True, verbose_name='O.I. Eje')
 
     # Cerca - Distancia pupílar
-    pupillary_distance_near = FloatField(null=True, blank=True, verbose_name='Distancia pupilar')
+    pupillary_distance_near = CharField(max_length=6, null=True, blank=True, verbose_name='Distancia pupilar')
 
     observation = TextField(null=True, blank=True, verbose_name='Observaciones')
     instruction = TextField(null=True, blank=True, verbose_name='Instrucciones')

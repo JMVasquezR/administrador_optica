@@ -22,8 +22,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             # Campos Cerca
             'right_eye_spherical_distance_near', 'right_eye_cylinder_distance_near', 'right_eye_axis_distance_near',
             'left_eye_spherical_distance_near', 'left_eye_cylinder_distance_near', 'left_eye_axis_distance_near',
-            'pupillary_distance_near',
-            'observation', 'instruction'
+            'pupillary_distance_near',  'observation', 'instruction'
         ]
         read_only_fields = ['prescription_number']
 

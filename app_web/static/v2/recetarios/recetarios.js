@@ -216,7 +216,7 @@ const saveRecipe = async (e) => {
         right_eye_axis_distance_near: document.getElementById('od_axis_near').value || null,
         left_eye_spherical_distance_near: document.getElementById('oi_sph_near').value || null,
         left_eye_cylinder_distance_near: document.getElementById('oi_cyl_near').value || null,
-        left_eye_axis_near: document.getElementById('oi_axis_near').value || null,
+        left_eye_axis_distance_near: document.getElementById('oi_axis_near').value || null,
         pupillary_distance_near: document.getElementById('dp_near').value || null,
         observation: document.getElementById('rec-obs').value,
         instruction: document.getElementById('rec-ins').value,
@@ -267,7 +267,7 @@ const viewRecipeDetail = async (id) => {
         document.getElementById('det-od-axis-near').innerText = r.right_eye_axis_distance_near || '0';
         document.getElementById('det-oi-sph-near').innerText = r.left_eye_spherical_distance_near || '0.00';
         document.getElementById('det-oi-cyl-near').innerText = r.left_eye_cylinder_distance_near || '0.00';
-        document.getElementById('det-oi-axis-near').innerText = r.left_eye_axis_near || '0';
+        document.getElementById('det-oi-axis-near').innerText = r.left_eye_axis_distance_near || '0';
         document.getElementById('det-dp-near').innerText = r.pupillary_distance_near || '-';
 
         document.getElementById('det-observations').innerText = r.observation || 'Sin observaciones.';
