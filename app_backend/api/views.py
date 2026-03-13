@@ -10,13 +10,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from app_backend.models.appointment import Appointment
 from app_backend.models.patients import Patient, TypeDocument
 from app_backend.models.products import Product, Category, Brand
 from app_backend.models.recipes import Recipe
 from app_backend.models.sales_ticket import SalesTicket
 from .serializers import (
     CategorySerializer, BrandSerializer, ProductSerializer, PatientSerializer, TypeDocumentSerializer,
-    SalesTicketSerializer, RecipeSerializer
+    SalesTicketSerializer, RecipeSerializer, AppointmentSerializer
 )
 
 
@@ -60,8 +61,6 @@ class SalesTicketViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['is_disabled', 'date_of_issue']
     search_fields = ['ballot_number', 'patient__first_name', 'patient__surname', 'payer_name']
-
-
 
 
 class TypeDocumentViewSet(viewsets.ReadOnlyModelViewSet):
@@ -146,3 +145,16 @@ class DashboardStatsAPIView(APIView):
         total_today = data[-1]
 
         return Response({"labels": labels, "data": data, "total_today": total_today})
+
+
+class AppointmentViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    queryset = Appointment.objects.select_related('patient').all().order_by('date', 'time')
+    serializer_class = AppointmentSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['status', 'date']
+    search_fields = ['patient__first_name', 'patient__surname', 'reason']
+    ordering_fields = ['date', 'time']
+
+    def get_queryset(self):
+        return self.queryset

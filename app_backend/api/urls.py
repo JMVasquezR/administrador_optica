@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     ProductViewSet, CategoryViewSet, BrandViewSet, PatientViewSet, TypeDocumentViewSet, SalesTicketViewSet,
-    RecipeViewSet, DashboardStatsAPIView
+    RecipeViewSet, DashboardStatsAPIView, AppointmentViewSet
 )
 
 app_name = 'api'
@@ -19,6 +19,8 @@ router.register(r'type-documents', TypeDocumentViewSet)
 router.register(r'sales-tickets', SalesTicketViewSet)
 
 router.register(r'recipes', RecipeViewSet)
+
+router.register(r'appointments', AppointmentViewSet, basename='appointments')
 
 urlpatterns = [
     path('api/dashboard/sales-stats/', DashboardStatsAPIView.as_view(), name='api-sales-stats'),

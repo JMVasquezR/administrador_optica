@@ -34,3 +34,8 @@ def recipe_list_view(request):
 @login_required
 def marketin_re_examenes_view(request):
     return render(request, 'v2/marketing/re-examenes.html')
+
+
+@login_required
+def agenda_citas_view(request):
+    return render(request, 'v2/agenda_citas/agenda_citas.html')

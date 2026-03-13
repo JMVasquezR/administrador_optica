@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
+from app_backend.models.appointment import Appointment
 from app_backend.models.patients import Patient, TypeDocument
 from app_backend.models.products import Product, Category, Brand
 from app_backend.models.recipes import Recipe
@@ -21,7 +22,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             # Campos Cerca
             'right_eye_spherical_distance_near', 'right_eye_cylinder_distance_near', 'right_eye_axis_distance_near',
             'left_eye_spherical_distance_near', 'left_eye_cylinder_distance_near', 'left_eye_axis_distance_near',
-            'pupillary_distance_near',  'observation', 'instruction'
+            'pupillary_distance_near', 'observation', 'instruction'
         ]
         read_only_fields = ['prescription_number']
 
@@ -126,3 +127,20 @@ class PatientSerializer(serializers.ModelSerializer):
                 message="Ya existe un paciente registrado con este tipo y número de documento."
             )
         ]
+
+
+class AppointmentSerializer(serializers.ModelSerializer):
+    patient_name = serializers.ReadOnlyField(source='patient.full_name')
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    medium_display = serializers.CharField(source='get_medium_display', read_only=True)
+
+    class Meta:
+        model = Appointment
+        fields = [
+            'id', 'patient', 'patient_name', 'date', 'time', 'reason', 'notes', 'status', 'status_display', 'medium',
+            'medium_display', 'created_at'
+        ]
+
+    def create(self, validated_data):
+        validated_data['created_by'] = self.context['request'].user
+        return super().create(validated_data)
