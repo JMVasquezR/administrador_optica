@@ -84,10 +84,16 @@ class PatientViewSet(viewsets.ModelViewSet):
         hace_11_meses = timezone.now().date() - timedelta(days=330)
 
         queryset = Patient.objects.select_related('type_document').filter(
-            is_active=True, last_visit__lte=hace_11_meses
+            is_active=True,
+            last_visit__lte=hace_11_meses
         ).order_by('last_visit')
 
         filtered_queryset = self.filter_queryset(queryset)
+        page = self.paginate_queryset(filtered_queryset)
+
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(filtered_queryset, many=True)
         return Response(serializer.data)
