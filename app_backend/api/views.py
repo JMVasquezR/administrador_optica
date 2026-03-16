@@ -21,6 +21,10 @@ from .serializers import (
 )
 
 
+class SmallHistoryPagination(PageNumberPagination):
+    page_size = 5
+
+
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'page_size'
@@ -37,7 +41,7 @@ class StandardResultsSetPagination(PageNumberPagination):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
-    queryset = Recipe.objects.all().order_by('-created')
+    queryset = Recipe.objects.select_related('patient').all().order_by('-created')
     serializer_class = RecipeSerializer
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
@@ -85,20 +89,17 @@ class PatientViewSet(viewsets.ModelViewSet):
         hace_11_meses = hoy - timedelta(days=330)
         hace_14_meses = hoy - timedelta(days=420)
 
-        contactado_hoy_subquery = CampaignContact.objects.filter(
-            patient=OuterRef('pk'),
-            created__date=hoy
-        )
+        contactado_hoy_subquery = CampaignContact.objects.filter(patient=OuterRef('pk'), created__date=hoy)
 
         queryset = Patient.objects.select_related('type_document').filter(
-            is_active=True,
-            last_visit__lte=hace_11_meses
+            is_active=True, last_visit__lte=hace_11_meses
         ).annotate(
             already_contacted_today=Exists(contactado_hoy_subquery)
         ).order_by('already_contacted_today', 'last_visit')
 
         filtered_queryset = self.filter_queryset(queryset)
         period = request.query_params.get('period')
+
         if period == 'month':
             filtered_queryset = filtered_queryset.filter(last_visit__gt=hace_14_meses)
         elif period == 'critical':
@@ -110,8 +111,8 @@ class PatientViewSet(viewsets.ModelViewSet):
         )
 
         count_done_today = CampaignContact.objects.filter(created__date=hoy).values('patient').distinct().count()
-
         page = self.paginate_queryset(filtered_queryset)
+
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             response = self.get_paginated_response(serializer.data)
@@ -123,6 +124,7 @@ class PatientViewSet(viewsets.ModelViewSet):
             return response
 
         serializer = self.get_serializer(filtered_queryset, many=True)
+
         return Response({
             'results': serializer.data,
             'count_month': metrics['total_month'],
@@ -140,6 +142,24 @@ class PatientViewSet(viewsets.ModelViewSet):
             return Response({'status': 'ok'}, status=status.HTTP_201_CREATED)
 
         return Response({'status': 'ya registrado'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get'])
+    def history(self, request, pk=None):
+        patient = self.get_object()
+        recipes = patient.recipe_set.all().order_by('-prescription_number')
+
+        paginator = SmallHistoryPagination()
+        page = paginator.paginate_queryset(recipes, request)
+
+        serializer = RecipeSerializer(page, many=True)
+
+        return Response({
+            'full_name': patient.full_name,
+            'document_number': patient.document_number,
+            'phone_or_cellular': patient.phone_or_cellular,
+            'last_visit': patient.last_visit,
+            'recipes': paginator.get_paginated_response(serializer.data).data
+        })
 
 
 class ProductViewSet(viewsets.ModelViewSet):

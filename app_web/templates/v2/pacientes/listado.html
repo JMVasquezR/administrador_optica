@@ -4,10 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pacientes | Óptica KyM Lenss</title>
+    <title>Pacientes | Óptica KyM Lens</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="{% static 'v2/base.css' %}" rel="stylesheet">
+    <style>
+        .x-small {
+            font-size: 0.75rem;
+        }
+
+        .bg-detail {
+            background-color: #ffffff;
+            border-left: 4px solid #dc3545;
+        }
+    </style>
 </head>
 <body>
 
@@ -44,7 +54,6 @@
                         </div>
                     </div>
                 </div>
-                {#                </div>#}
             </div>
 
             <div class="table-container p-3 bg-white shadow-sm rounded">
@@ -60,14 +69,13 @@
                             <th class="text-end pe-4">Acciones</th>
                         </tr>
                         </thead>
-                        <tbody id="patient-table-body">
-                        </tbody>
+                        <tbody id="patient-table-body"></tbody>
                     </table>
                     <div class="d-flex justify-content-between align-items-center mt-3 px-3">
                         <div class="text-muted small">
-                            Mostrando <span id="current-count">0</span> de <span id="total-count">0</span> productos
+                            Mostrando <span id="current-count">0</span> de <span id="total-count">0</span> pacientes
                         </div>
-                        <nav aria-label="Navegación de inventario">
+                        <nav aria-label="Navegación">
                             <ul class="pagination mb-0">
                                 <li class="page-item">
                                     <button class="btn btn-outline-dark btn-sm me-2" id="prev-page" disabled>Anterior
@@ -86,126 +94,127 @@
     </div>
 </div>
 
-<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100">
-    <div id="liveToast" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive"
-         aria-atomic="true">
-        <div class="d-flex">
-            <div class="toast-body" id="toast-message">
-            </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="modal"
-                    aria-label="Close"></button>
-        </div>
-    </div>
-</div>
-
 <div class="modal fade" id="modalPatient" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
      aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title" id="modalPatientLabel">
-                    <i class="fas fa-user-plus me-2 text-danger"></i> <span
-                        id="form-title-patient">Registrar Paciente</span>
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
+                <h5 class="modal-title" id="modalPatientLabel"><i class="fas fa-user-plus me-2 text-danger"></i> <span
+                        id="form-title-patient">Registrar Paciente</span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="patient-form">
                     <input type="hidden" id="patient-id">
                     <div class="row g-3">
                         <div class="col-12"><h6 class="text-danger fw-bold border-bottom pb-2">Identificación</h6></div>
-
-                        <div class="col-md-5">
-                            <label class="form-label fw-bold small">Tipo de Documento</label>
-                            <select id="type_document" class="form-select" required>
-                                <option value="">Seleccione...</option>
-                            </select>
-                        </div>
-                        <div class="col-md-7">
-                            <label class="form-label fw-bold small">Número de Documento</label>
-                            <input type="text" id="document_number" class="form-control" placeholder="Ingrese número"
-                                   required>
-                            <div class="invalid-feedback">
-                                Este documento ya está registrado o es inválido.
-                            </div>
-                        </div>
-
+                        <div class="col-md-5"><label class="form-label fw-bold small">Tipo de Documento</label><select
+                                id="type_document" class="form-select" required>
+                            <option value="">Seleccione...</option>
+                        </select></div>
+                        <div class="col-md-7"><label class="form-label fw-bold small">Número de Documento</label><input
+                                type="text" id="document_number" class="form-control" required></div>
                         <div class="col-12 mt-4"><h6 class="text-danger fw-bold border-bottom pb-2">Datos
                             Personales</h6></div>
-
+                        <div class="col-md-4"><label class="form-label fw-bold small">Nombre Completo</label><input
+                                type="text" id="first_name" class="form-control" required></div>
+                        <div class="col-md-4"><label class="form-label fw-bold small">Apellido Paterno</label><input
+                                type="text" id="surname" class="form-control" required></div>
+                        <div class="col-md-4"><label class="form-label fw-bold small">Apellido Materno</label><input
+                                type="text" id="second_surname" class="form-control"></div>
+                        <div class="col-md-4"><label class="form-label fw-bold small">Fecha de Nacimiento</label><input
+                                type="date" id="date_of_birth" class="form-control"></div>
+                        <div class="col-md-4"><label class="form-label fw-bold small">Género</label><select id="gender"
+                                                                                                            class="form-select"
+                                                                                                            required>
+                            <option value="M">Masculino</option>
+                            <option value="F">Femenino</option>
+                        </select></div>
                         <div class="col-md-4">
-                            <label class="form-label fw-bold small">Nombre Completo</label>
-                            <input type="text" id="first_name" class="form-control" required>
+                            <div class="form-check form-switch mt-4"><input class="form-check-input" type="checkbox"
+                                                                            id="is_active" checked><label
+                                    class="form-check-label fw-bold small" for="is_active">Paciente Activo</label></div>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold small">Apellido Paterno</label>
-                            <input type="text" id="surname" class="form-control" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold small">Apellido Materno</label>
-                            <input type="text" id="second_surname" class="form-control">
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold small">Fecha de Nacimiento</label>
-                            <input type="date" id="date_of_birth" class="form-control">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold small">Género</label>
-                            <select id="gender" class="form-select" required>
-                                <option value="M">Masculino</option>
-                                <option value="F">Femenino</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-check form-switch mt-4">
-                                <input class="form-check-input" type="checkbox" id="is_active" checked>
-                                <label class="form-check-label fw-bold small" for="is_active">Paciente Activo</label>
-                            </div>
-                        </div>
-
-                        <div class="col-12 mt-4"><h6 class="text-danger fw-bold border-bottom pb-2">Contacto y
-                            Ubicación</h6></div>
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small">Teléfono / Celular</label>
-                            <input type="text" id="phone_or_cellular" class="form-control" placeholder="Ej: 987654321">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small">Correo Electrónico</label>
-                            <input type="email" id="email" class="form-control" placeholder="ejemplo@correo.com">
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label fw-bold small">Dirección</label>
-                            <input type="text" id="direction" class="form-control" placeholder="Av. Principal 123...">
+                        <div class="col-12 mt-4"><h6 class="text-danger fw-bold border-bottom pb-2">Contacto</h6></div>
+                        <div class="col-md-6"><label class="form-label fw-bold small">Teléfono / Celular</label><input
+                                type="text" id="phone_or_cellular" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label fw-bold small">Correo Electrónico</label><input
+                                type="email" id="email" class="form-control"></div>
+                        <div class="col-12"><label class="form-label fw-bold small">Dirección</label><input type="text"
+                                                                                                            id="direction"
+                                                                                                            class="form-control">
                         </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer bg-light">
                 <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" form="patient-form" class="btn btn-danger px-4">
-                    <i class="fas fa-save me-1"></i> Guardar Paciente
+                <button type="submit" form="patient-form" class="btn btn-danger px-4"><i class="fas fa-save me-1"></i>
+                    Guardar Paciente
                 </button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="deleteModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-     aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+<div class="modal fade" id="modalHistory" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">Confirmar Acción</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title"><i class="fas fa-notes-medical me-2 text-danger"></i>Historia Clínica: <span
+                        id="history-patient-name"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="delete-modal-body">
+            <div class="modal-body bg-light">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
+                            <h6 class="fw-bold text-danger border-bottom pb-2">Datos Actuales</h6>
+                            <label class="x-small text-muted d-block">DNI</label>
+                            <p class="small fw-bold mb-2" id="hist-dni">---</p>
+                            <label class="x-small text-muted d-block">Celular</label>
+                            <p class="small fw-bold mb-2" id="hist-phone">---</p>
+                            <label class="x-small text-muted d-block">Última Visita</label>
+                            <p class="small fw-bold mb-0" id="hist-last-visit">---</p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-9">
+                        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-3">
+                            <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                                <h6 class="m-0 fw-bold">Historial de Medidas</h6>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-0 table-hover">
+                                    <thead class="table-light x-small text-uppercase">
+                                    <tr>
+                                        <th class="ps-3">Fecha</th>
+                                        <th>Nro Receta</th>
+                                        <th>O.D. (Esf/Cil)</th>
+                                        <th>O.I. (Esf/Cil)</th>
+                                        <th class="text-end pe-3">Acción</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="history-table-body" class="small"></tbody>
+                                </table>
+                            </div>
+                            <div class="card-footer bg-white border-0 d-flex justify-content-between align-items-center py-2">
+                                <span class="x-small text-muted">Página <span id="history-current-page">1</span></span>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-outline-dark btn-sm" id="btn-history-prev"
+                                            disabled><i class="fas fa-chevron-left"></i></button>
+                                    <button type="button" class="btn btn-outline-dark btn-sm" id="btn-history-next"
+                                            disabled><i class="fas fa-chevron-right"></i></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="recipe-quick-view-container"></div>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-danger" id="confirmDelete">Confirmar</button>
+                <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
@@ -215,7 +224,6 @@
 <script src="{% static 'v2/pacientes/pacientes.js' %}"></script>
 
 <script>
-    // Solo mostramos el loader rojo cuando el usuario navega a otra página del menú lateral
     document.addEventListener('click', (e) => {
         const link = e.target.closest('a.nav-link, .card-menu');
         if (link && link.href && !link.href.includes('#') && link.target !== '_blank') {

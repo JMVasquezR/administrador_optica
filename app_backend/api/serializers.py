@@ -9,7 +9,7 @@ from app_backend.models.sales_ticket import SalesTicket, SalesLines
 
 
 class RecipeSerializer(serializers.ModelSerializer):
-    name_patient = serializers.ReadOnlyField()
+    name_patient = serializers.CharField(source='patient.full_name', read_only=True)
 
     class Meta:
         model = Recipe

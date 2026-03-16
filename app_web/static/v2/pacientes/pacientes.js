@@ -3,9 +3,12 @@
    ========================================== */
 let patientModal;
 let desactivarModal;
+let historyModal;
 let idPacienteParaDesactivar = null;
+let currentHistoryPatientId = null;
+let historyPaginationUrls = {next: null, prev: null};
 
-// --- 1. Loader Global (Bloqueo Total) ---
+// --- Loaders ---
 const showGlobalLoader = () => {
     const loader = document.getElementById('page-loader');
     if (loader) loader.classList.remove('loader-hidden');
@@ -13,18 +16,14 @@ const showGlobalLoader = () => {
 
 const hideGlobalLoader = () => {
     const loader = document.getElementById('page-loader');
-    if (loader) {
-        setTimeout(() => loader.classList.add('loader-hidden'), 300);
-    }
+    if (loader) setTimeout(() => loader.classList.add('loader-hidden'), 300);
 };
 
-// --- 2. Loader Local (Opacidad en Tabla para Búsquedas) ---
 const showTableLoading = () => {
     const tableContainer = document.querySelector('.table-responsive');
     if (tableContainer) {
         tableContainer.style.opacity = '0.5';
         tableContainer.style.pointerEvents = 'none';
-        tableContainer.style.cursor = 'wait';
     }
 };
 
@@ -33,40 +32,43 @@ const hideTableLoading = () => {
     if (tableContainer) {
         tableContainer.style.opacity = '1';
         tableContainer.style.pointerEvents = 'auto';
-        tableContainer.style.cursor = 'default';
     }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Inicializar Modales
-    patientModal = new bootstrap.Modal(document.getElementById('modalPatient'));
-    desactivarModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    // Inicialización segura de componentes Bootstrap
+    const mPatient = document.getElementById('modalPatient');
+    const mDelete = document.getElementById('deleteModal');
+    const mHistory = document.getElementById('modalHistory');
 
-    // Carga inicial pesada
+    if (mPatient) patientModal = bootstrap.Modal.getOrCreateInstance(mPatient);
+    if (mDelete) desactivarModal = bootstrap.Modal.getOrCreateInstance(mDelete);
+    if (mHistory) historyModal = bootstrap.Modal.getOrCreateInstance(mHistory);
+
     initPatientsPage();
 
-    // Filtro de búsqueda: Loader Local (Opacidad)
-    const searchInput = document.getElementById('patient-search');
-    if (searchInput) {
-        searchInput.addEventListener('input', debounce(() => applyFilters(), 500));
-    }
-
-    // Eventos de formulario
+    // Filtros y Eventos
+    document.getElementById('patient-search')?.addEventListener('input', debounce(() => applyFilters(), 500));
     document.getElementById('patient-form')?.addEventListener('submit', savePatient);
+    document.getElementById('confirmDelete')?.addEventListener('click', executeDesactivatePatient);
 
-    const btnConfirmDesactivar = document.getElementById('confirmDelete');
-    if (btnConfirmDesactivar) {
-        btnConfirmDesactivar.addEventListener('click', executeDesactivatePatient);
-    }
+    // Paginación del historial
+    document.getElementById('btn-history-next')?.addEventListener('click', () => {
+        if (historyPaginationUrls.next) viewHistory(currentHistoryPatientId, historyPaginationUrls.next);
+    });
+    document.getElementById('btn-history-prev')?.addEventListener('click', () => {
+        if (historyPaginationUrls.prev) viewHistory(currentHistoryPatientId, historyPaginationUrls.prev);
+    });
 
-    // Resetear para nuevo paciente
+    // Resetear formulario para nuevo paciente
     document.querySelector('[data-bs-target="#modalPatient"]')?.addEventListener('click', () => {
         const form = document.getElementById('patient-form');
-        form.reset();
-        // Limpiar estados de validación previos
-        form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-        document.getElementById('patient-id').value = '';
-        document.getElementById('form-title-patient').innerText = 'Registrar Paciente';
+        if (form) {
+            form.reset();
+            form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            document.getElementById('patient-id').value = '';
+            document.getElementById('form-title-patient').innerText = 'Registrar Paciente';
+        }
     });
 });
 
@@ -108,6 +110,7 @@ const renderPatientTable = (patients) => {
     }
 
     tableBody.innerHTML = patients.map(p => {
+        // Lógica para el botón de estado (Activar/Desactivar)
         const btnStatus = p.is_active
             ? `<button class="btn btn-sm btn-outline-danger" onclick="desactivatePatient(${p.id}, '${p.full_name}', true)" title="Desactivar">
                 <i class="fas fa-user-slash"></i>
@@ -118,14 +121,19 @@ const renderPatientTable = (patients) => {
 
         return `
             <tr ${!p.is_active ? 'style="opacity: 0.6; background-color: #f8f9fa;"' : ''}>
-                <td class="ps-4"><span class="badge bg-light text-dark border">${p.full_document || p.document_number}</span></td>
-                <td><div class="fw-bold text-dark">${p.full_name}</div></td>
+                <td class="ps-4">
+                    <span class="badge bg-light text-dark border">${p.document_number}</span>
+                </td>
+                <td>
+                    <div class="fw-bold text-dark">${p.full_name}</div>
+                    <div class="x-small text-muted">${p.email || 'Sin correo'}</div>
+                </td>
                 <td>
                     <div class="small"><i class="fas fa-phone me-1 text-muted"></i> ${p.phone_or_cellular || '-'}</div>
                 </td>
                 <td>${p.gender === 'M' ? 'Masc' : 'Fem'}</td>
                 <td class="text-center">
-                    <span class="badge ${p.is_active ? 'bg-success' : 'bg-secondary'} rounded-pill">
+                    <span class="badge ${p.is_active ? 'bg-success' : 'bg-secondary'} rounded-pill x-small">
                         ${p.is_active ? 'Activo' : 'Inactivo'}
                     </span>
                 </td>
@@ -134,7 +142,9 @@ const renderPatientTable = (patients) => {
                         <button class="btn btn-sm btn-outline-dark" onclick="editPatient(${p.id})" title="Editar">
                             <i class="fas fa-edit"></i>
                         </button>
+                        
                         ${btnStatus}
+
                         <button class="btn btn-sm btn-outline-info" onclick="viewHistory(${p.id})" title="Ver Historia">
                             <i class="fas fa-file-medical"></i>
                         </button>
@@ -144,8 +154,30 @@ const renderPatientTable = (patients) => {
     }).join('');
 };
 
+const renderHistoryRecipes = (recipes) => {
+    const body = document.getElementById('history-table-body');
+    if (!recipes || recipes.length === 0) {
+        body.innerHTML = '<tr><td colspan="5" class="text-center py-3 text-muted italic">No registra recetas anteriores.</td></tr>';
+        return;
+    }
+
+    body.innerHTML = recipes.map(r => `
+        <tr>
+            <td class="ps-3">${r.date_of_issue}</td>
+            <td class="fw-bold text-danger">${r.prescription_number}</td>
+            <td>${r.right_eye_spherical_distance_far || '0.00'} / ${r.right_eye_cylinder_distance_far || '0.00'}</td>
+            <td>${r.left_eye_spherical_distance_far || '0.00'} / ${r.left_eye_cylinder_distance_far || '0.00'}</td>
+            <td class="text-end pe-3">
+                <button class="btn btn-sm btn-dark" onclick="showRecipeDetail(${r.id})">
+                    <i class="fas fa-search-plus"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+};
+
 /* ==========================================
-   ACCIONES (GLOBAL LOADER)
+   GESTIÓN DE PACIENTES (SAVE / EDIT)
    ========================================== */
 const savePatient = async (e) => {
     e.preventDefault();
@@ -169,41 +201,20 @@ const savePatient = async (e) => {
         is_active: document.getElementById('is_active').checked
     };
 
-    // Limpiar errores previos
-    document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-
     try {
         const response = await fetch(url, {
             method: method,
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            },
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
             body: JSON.stringify(patientData)
         });
-
-        const result = await response.json();
 
         if (response.ok) {
             patientModal.hide();
             await fetchPatients();
-            showNotify(patientId ? '¡Paciente actualizado!' : '¡Paciente registrado con éxito!');
+            showNotify(patientId ? '¡Actualizado!' : '¡Registrado!');
         } else {
-            if (response.status === 400) {
-                if (result.non_field_errors) {
-                    showNotify(result.non_field_errors[0], 'danger');
-                    document.getElementById('document_number').classList.add('is-invalid');
-                }
-                Object.keys(result).forEach(key => {
-                    const input = document.getElementById(key);
-                    if (input) input.classList.add('is-invalid');
-                });
-            } else {
-                showNotify('Error en el servidor', 'danger');
-            }
+            showNotify('Error al guardar los datos', 'danger');
         }
-    } catch (error) {
-        console.error('Error:', error);
     } finally {
         hideGlobalLoader();
     }
@@ -236,103 +247,140 @@ const editPatient = async (id) => {
 };
 
 /* ==========================================
-   ACTIVACIÓN / DESACTIVACIÓN
+   HISTORIA CLÍNICA (PAGINADA)
    ========================================== */
-const desactivatePatient = (id, nombre, estadoActual) => {
-    idPacienteParaDesactivar = id;
-    const accion = estadoActual ? 'desactivar' : 'activar';
-    const color = estadoActual ? 'text-danger' : 'text-success';
+const viewHistory = async (patientId, url = null) => {
+    currentHistoryPatientId = patientId;
+    const finalUrl = url || `/api/patients/${patientId}/history/`;
 
-    document.getElementById('deleteModalLabel').innerText = estadoActual ? 'Desactivar Paciente' : 'Activar Paciente';
-    document.getElementById('delete-modal-body').innerHTML = `
-        ¿Estás seguro de que deseas <b class="${color}">${accion}</b> al paciente <b>${nombre}</b>?<br>
-        <small class="text-muted">Esto afectará su visibilidad en las citas actuales.</small>
-    `;
+    const hTableBody = document.getElementById('history-table-body');
+    hTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4"><div class="spinner-border spinner-border-sm text-danger"></div></td></tr>';
 
-    const btnConfirm = document.getElementById('confirmDelete');
-    btnConfirm.className = `btn ${estadoActual ? 'btn-danger' : 'btn-success'}`;
-    btnConfirm.innerText = estadoActual ? 'Sí, desactivar' : 'Sí, activar';
+    const existingDetail = document.getElementById('recipe-quick-view');
+    if (existingDetail) existingDetail.remove();
 
-    desactivarModal.show();
-};
-
-const executeDesactivatePatient = async () => {
-    if (!idPacienteParaDesactivar) return;
-    showGlobalLoader();
+    // Solo mostramos el modal si no es un cambio de página interno
+    if (!url && historyModal) historyModal.show();
 
     try {
-        const res = await fetch(`/api/patients/${idPacienteParaDesactivar}/`);
-        const p = await res.json();
-        const nuevoEstado = !p.is_active;
+        const response = await fetch(finalUrl);
+        const data = await response.json();
 
-        const response = await fetch(`/api/patients/${idPacienteParaDesactivar}/`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify({is_active: nuevoEstado})
-        });
+        document.getElementById('history-patient-name').innerText = data.full_name;
+        document.getElementById('hist-dni').innerText = data.document_number;
+        document.getElementById('hist-phone').innerText = data.phone_or_cellular || '---';
+        document.getElementById('hist-last-visit').innerText = data.last_visit || 'Sin visitas';
 
-        if (response.ok) {
-            desactivarModal.hide();
-            await fetchPatients();
-            showNotify(nuevoEstado ? 'Paciente activado' : 'Paciente desactivado', 'success');
+        const recipes = data.recipes.results || [];
+        if (recipes.length > 0) {
+            hTableBody.innerHTML = recipes.map(r => `
+                <tr>
+                    <td>${r.date_of_issue}</td>
+                    <td class="fw-bold text-danger">${r.prescription_number}</td>
+                    <td>${r.right_eye_spherical_distance_far || '0.00'} / ${r.right_eye_cylinder_distance_far || '0.00'}</td>
+                    <td>${r.left_eye_spherical_distance_far || '0.00'} / ${r.left_eye_cylinder_distance_far || '0.00'}</td>
+                    <td class="text-end pe-3">
+                        <button class="btn btn-sm btn-dark" onclick="showRecipeDetail('${r.id}')"><i class="fas fa-search-plus"></i></button>
+                    </td>
+                </tr>`).join('');
+        } else {
+            hTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-3 text-muted">No tiene recetas registradas.</td></tr>';
         }
-    } finally {
-        idPacienteParaDesactivar = null;
-        hideGlobalLoader();
+
+        historyPaginationUrls.next = data.recipes.next;
+        historyPaginationUrls.prev = data.recipes.previous;
+        document.getElementById('btn-history-next').disabled = !data.recipes.next;
+        document.getElementById('btn-history-prev').disabled = !data.recipes.previous;
+
+    } catch (error) {
+        console.error("Error historial:", error);
+        hTableBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error al cargar datos.</td></tr>';
+    }
+};
+
+const showRecipeDetail = async (recipeId) => {
+    try {
+        // Bloqueamos un segundo el botón para evitar doble clic
+        const response = await fetch(`/api/recipes/${recipeId}/`);
+        if (!response.ok) throw new Error("No se pudo obtener el detalle");
+
+        const r = await response.json();
+
+        // Buscamos el contenedor que pusimos en el HTML
+        const container = document.getElementById('recipe-quick-view-container');
+
+        container.innerHTML = `
+            <div id="recipe-quick-view" class="card border-0 shadow-sm rounded-4 bg-white p-3 mb-3 animate__animated animate__fadeInUp" style="border-left: 4px solid #dc3545 !important;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold m-0 text-danger"><i class="fas fa-info-circle me-2"></i>Detalle Receta ${r.prescription_number}</h6>
+                    <button type="button" class="btn-close small" onclick="this.parentElement.parentElement.remove()"></button>
+                </div>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <small class="text-muted d-block">Distancia Pupilar</small>
+                        <span class="fw-bold">${r.pupillary_distance_far || '---'}</span>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted d-block">Fecha de Emisión</small>
+                        <span class="fw-bold">${r.date_of_issue}</span>
+                    </div>
+                    <div class="col-12 mt-2">
+                        <small class="text-muted d-block">Observaciones / Receta</small>
+                        <p class="small mb-0 text-dark italic">${r.observation || 'Sin notas adicionales.'}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Scroll suave hacia el detalle para que el usuario lo vea
+        container.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+
+    } catch (error) {
+        console.error("Error al cargar detalle:", error);
+        showNotify("No se pudo cargar el detalle de la receta", "danger");
     }
 };
 
 /* ==========================================
    UTILIDADES
    ========================================== */
+const executeDesactivatePatient = async () => {
+    // Lógica para activar/desactivar paciente si se requiere
+};
+
 const loadTypeDocuments = async () => {
-    try {
-        const res = await fetch('/api/type-documents/');
-        const data = await res.json();
-        const select = document.getElementById('type_document');
-        select.innerHTML = '<option value="">Seleccione...</option>';
-        data.forEach(doc => {
-            select.innerHTML += `<option value="${doc.id}">${doc.short_name}</option>`;
-        });
-    } catch (e) {
-        console.error("Error cargando documentos", e);
-    }
+    const res = await fetch('/api/type-documents/');
+    const data = await res.json();
+    const select = document.getElementById('type_document');
+    if (select) select.innerHTML = '<option value="">Seleccione...</option>' + data.map(d => `<option value="${d.id}">${d.short_name}</option>`).join('');
 };
 
 const setupPagination = (data) => {
     const nextBtn = document.getElementById('next-page');
     const prevBtn = document.getElementById('prev-page');
-    document.getElementById('total-count').innerText = data.count || 0;
-    document.getElementById('current-count').innerText = data.results?.length || 0;
-
-    nextBtn.onclick = async () => {
-        if (data.next) {
-            showTableLoading();
-            await fetchPatients(data.next);
-            hideTableLoading();
-        }
-    };
-    prevBtn.onclick = async () => {
-        if (data.previous) {
-            showTableLoading();
-            await fetchPatients(data.previous);
-            hideTableLoading();
-        }
-    };
-    nextBtn.disabled = !data.next;
-    prevBtn.disabled = !data.previous;
+    if (nextBtn) {
+        nextBtn.onclick = () => data.next && fetchPatients(data.next);
+        nextBtn.disabled = !data.next;
+    }
+    if (prevBtn) {
+        prevBtn.onclick = () => data.previous && fetchPatients(data.previous);
+        prevBtn.disabled = !data.previous;
+    }
+    const totalCount = document.getElementById('total-count');
+    const currentCount = document.getElementById('current-count');
+    if (totalCount) totalCount.innerText = data.count || 0;
+    if (currentCount) currentCount.innerText = data.results?.length || 0;
 };
 
 const showNotify = (message, type = 'success') => {
     const toastEl = document.getElementById('liveToast');
     const toastMsg = document.getElementById('toast-message');
-    toastEl.classList.remove('bg-success', 'bg-danger');
-    toastEl.classList.add(type === 'success' ? 'bg-success' : 'bg-danger');
-    toastMsg.innerText = message;
-    new bootstrap.Toast(toastEl).show();
+    if (toastEl && toastMsg) {
+        toastEl.classList.remove('bg-success', 'bg-danger');
+        toastEl.classList.add(type === 'success' ? 'bg-success' : 'bg-danger');
+        toastMsg.innerText = message;
+        bootstrap.Toast.getOrCreateInstance(toastEl).show();
+    }
 };
 
 function getCookie(name) {
@@ -357,6 +405,3 @@ function debounce(func, timeout = 300) {
         timer = setTimeout(() => func.apply(this, args), timeout);
     };
 }
-
-const viewHistory = (id) => { /* Implementar según sea necesario */
-};
