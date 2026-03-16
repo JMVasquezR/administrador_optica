@@ -1,6 +1,9 @@
+import uuid
+
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.db import models
-from django.db.models import (CharField, DateField, ForeignKey, TimeField, TextField)
+from django.db.models import (CharField, DateField, ForeignKey, TimeField, TextField, UUIDField)
 
 from app_backend.models.patients import Patient
 
@@ -40,3 +43,28 @@ class Appointment(models.Model):
 
     def __str__(self):
         return f"{self.date} {self.time} - {self.patient.full_name} ({self.get_status_display()})"
+
+
+class CampaignContact(models.Model):
+    id = UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    patient = models.ForeignKey(
+        Patient, on_delete=models.CASCADE, related_name='campaign_contacts', verbose_name="Paciente"
+    )
+    user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name='contacts_performed',
+        verbose_name="Personal que contactó"
+    )
+    created = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de contacto")
+    medium = models.CharField(max_length=20, default='whatsapp', verbose_name="Medio")
+    recipe = models.ForeignKey(
+        'Recipe', on_delete=models.SET_NULL, null=True, blank=True, related_name='campaign_conversions'
+    )
+    is_converted = models.BooleanField(default=False, verbose_name="¿Generó venta?")
+
+    class Meta:
+        verbose_name = "Contacto de Campaña"
+        verbose_name_plural = "Contactos de Campaña"
+        ordering = ['-created']
+
+    def __str__(self):
+        return f"{self.patient.full_name} - {self.created.strftime('%d/%m/%Y')}"

@@ -1,7 +1,14 @@
 from django.contrib import admin
-from app_backend.models.sales_ticket import SalesTicket, SalesLines
+
+from app_backend.models.appointment import CampaignContact
 from app_backend.models.patients import Patient
 from app_backend.models.products import Brand, Category
+from app_backend.models.sales_ticket import SalesTicket
+
+
+@admin.register(CampaignContact)
+class CampaignContactAdmin(admin.ModelAdmin):
+    list_display = ('id', 'medium', 'recipe', 'patient', 'user', 'is_converted', 'created')
 
 
 @admin.register(Brand)

@@ -70,17 +70,15 @@ const fetchCampaignData = async (url = API_URL) => {
         if (!response.ok) throw new Error('Error al obtener datos');
 
         const data = await response.json();
-
-        // Estructura DRF: data.results contiene la lista
         const patients = data.results || (Array.isArray(data) ? data : []);
 
         renderCampaignTable(patients);
-        updateCampaignMetrics(data); // 🔸 CORRECCIÓN: Ahora sí pintamos las tarjetas
+        updateCampaignMetrics(data);
         setupPagination(data);
     } catch (error) {
         console.error('Error detallado:', error);
         document.getElementById('campaign-table-body').innerHTML =
-            `<tr><td colspan="5" class="text-center py-4 text-danger">Error de conexión.</td></tr>`;
+            `<tr><td colspan="5" class="text-center py-4 text-danger">Error de conexión al servidor.</td></tr>`;
     }
 };
 
@@ -114,40 +112,52 @@ const renderCampaignTable = (patients) => {
         const months = p.months_since_last_visit || 0;
         const isCritical = months >= 14;
 
+        // 🔸 Detectamos si ya fue contactado según lo que envía Django
+        const alreadyDone = p.already_contacted_today;
+
         return `
-            <tr>
-                <td class="ps-4">
-                    <div class="fw-bold text-dark">${p.full_name}</div>
-                    <small class="text-muted">DNI: ${p.document_number} | Cel: ${p.phone_or_cellular || '---'}</small>
-                </td>
-                <td class="text-center text-muted small">${p.last_visit || 'Sin registro'}</td>
-                <td class="text-center">
-                    <span class="badge bg-light text-dark border">${months} meses</span>
-                </td>
-                <td class="text-center">
-                    <span class="badge ${isCritical ? 'bg-danger' : 'bg-warning text-dark'} rounded-pill small" style="font-size: 0.7rem;">
-                        ${isCritical ? 'CRÍTICO' : 'POR VENCER'}
-                    </span>
-                </td>
-                <td class="text-end pe-4">
+        <tr ${alreadyDone ? 'style="opacity: 0.7; background-color: #f8f9fa;"' : ''}>
+            <td class="ps-4">
+                <div class="fw-bold text-dark">${p.full_name}</div>
+                <small class="text-muted">DNI: ${p.document_number}</small>
+            </td>
+            <td class="text-center text-muted small">${p.last_visit || 'Sin registro'}</td>
+            <td class="text-center">
+                <span class="badge bg-light text-dark border">${months} meses</span>
+            </td>
+            <td class="text-center">
+                <span class="badge ${isCritical ? 'bg-danger' : 'bg-warning text-dark'} rounded-pill small">
+                    ${isCritical ? 'CRÍTICO' : 'POR VENCER'}
+                </span>
+            </td>
+            <td class="text-end pe-4">
+                ${alreadyDone ? `
+                    <button class="btn btn-outline-success btn-sm disabled shadow-none">
+                        <i class="fas fa-check-circle me-1"></i> Contactado
+                    </button>
+                ` : `
                     <button class="btn btn-success btn-sm shadow-sm" 
-                            onclick="sendWhatsApp('${p.phone_or_cellular}', '${p.first_name}')">
+                            onclick="sendWhatsApp('${p.phone_or_cellular}', '${p.first_name}', '${p.id}')">
                         <i class="fab fa-whatsapp me-1"></i> Notificar
                     </button>
-                </td>
-            </tr>`;
+                `}
+            </td>
+        </tr>`;
     }).join('');
 };
 
 const updateCampaignMetrics = (data) => {
-    // 🔸 Leemos los campos inyectados desde el ViewSet de Django
     const countMonth = document.getElementById('count-month');
     const countCritical = document.getElementById('count-critical');
-    const totalCount = document.getElementById('total-count');
+    const countDone = document.getElementById('count-done'); // El contador de hoy
 
-    if (countMonth) countMonth.innerText = data.count_month !== undefined ? data.count_month : '0';
-    if (countCritical) countCritical.innerText = data.count_critical !== undefined ? data.count_critical : '0';
-    if (totalCount) totalCount.innerText = data.count || 0;
+    if (countMonth) countMonth.innerText = data.count_month || 0;
+    if (countCritical) countCritical.innerText = data.count_critical || 0;
+
+    // 🔸 Esto es lo que evita que se pierda al actualizar
+    if (countDone) {
+        countDone.innerText = data.count_done !== undefined ? data.count_done : 0;
+    }
 };
 
 /* ==========================================
@@ -158,7 +168,6 @@ const setupPagination = (data) => {
     const prevBtn = document.getElementById('prev-page');
     const currentCount = document.getElementById('current-count');
 
-    // Actualizar números de la página actual
     if (currentCount) currentCount.innerText = data.results ? data.results.length : 0;
 
     nextBtn.onclick = async () => {
@@ -184,27 +193,58 @@ const setupPagination = (data) => {
 };
 
 /* ==========================================
-   ACCIÓN: WHATSAPP
+   ACCIÓN: WHATSAPP Y REGISTRO
    ========================================== */
-const sendWhatsApp = (phone, name) => {
+const sendWhatsApp = async (phone, name, patientId) => {
     if (!phone || phone === 'null' || phone === '') {
-        alert("El paciente no tiene un número de celular registrado.");
+        alert("El paciente no tiene un número registrado en KyM Lens.");
         return;
     }
 
-    const msg = `Hola ${name}, te saluda Martí de Óptica KyM Lens. 👋 Te escribimos porque ya pasó un año desde tu último examen de vista. Es importante verificar tu medida para cuidar tu salud visual. ¿Te gustaría agendar un control gratuito esta semana?`;
-
+    // 1. Abrir WhatsApp en pestaña nueva
+    const msg = `Hola ${name}, te saluda Martí de Óptica KyM Lens. 👋 Te escribimos porque ya pasó un año desde tu último examen. Es importante verificar tu medida para cuidar tu salud visual. ¿Te gustaría agendar un control gratuito esta semana?`;
     const cleanPhone = phone.replace(/\D/g, '');
     const whatsappUrl = `https://wa.me/51${cleanPhone}?text=${encodeURIComponent(msg)}`;
     window.open(whatsappUrl, '_blank');
 
-    const countDone = document.getElementById('count-done');
-    if (countDone) countDone.innerText = parseInt(countDone.innerText) + 1;
+    // 2. Registrar el contacto en la base de datos de forma asíncrona
+    try {
+        const response = await fetch(`/api/patients/${patientId}/register-contact/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            // Actualizar el contador visual de "Contactados hoy"
+            await fetchCampaignData();
+            showNotify('Contacto registrado correctamente', 'success');
+        }
+    } catch (error) {
+        console.error("Error al registrar el contacto en la BD:", error);
+    }
 };
 
 /* ==========================================
    UTILIDADES
    ========================================== */
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 function debounce(func, timeout = 300) {
     let timer;
     return (...args) => {

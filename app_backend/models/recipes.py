@@ -1,17 +1,11 @@
-from django.db.models import (ForeignKey, CharField, FloatField, PROTECT, TextField, DateField, BooleanField, Max)
+from django.db.models import (ForeignKey, CharField, PROTECT, TextField, DateField, BooleanField, Max)
+from django.utils import timezone
 from model_utils.models import TimeStampedModel
 
 from app_backend.models.patients import Patient
 
 
 class Recipe(TimeStampedModel):
-    class Meta:
-        verbose_name = 'Recetario'
-        verbose_name_plural = 'Recetarios'
-
-    def __str__(self):
-        return f'{self.prescription_number}'
-
     prescription_number = CharField(max_length=6, unique=True, verbose_name='Número de recetario')
 
     patient = ForeignKey(Patient, on_delete=PROTECT, verbose_name='Paciente')
@@ -48,13 +42,32 @@ class Recipe(TimeStampedModel):
 
     is_active = BooleanField(default=True, verbose_name='Estado')
 
-    @property
-    def name_patient(self):
-        return self.patient.full_name
-
     def save(self, *args, **kwargs):
         if not self.prescription_number:
             last_number = Recipe.objects.aggregate(max_number=Max('prescription_number'))['max_number']
             new_number = int(last_number) + 1 if last_number and last_number.isdigit() else 1
             self.prescription_number = f'{new_number:06d}'
+
         super().save(*args, **kwargs)
+
+        if self.patient:
+            self.patient.last_visit = self.date_of_issue
+            self.patient.save()
+
+        from app_backend.models.appointment import CampaignContact
+        from datetime import timedelta
+
+        hace_30_dias = timezone.now() - timedelta(days=30)
+
+        CampaignContact.objects.filter(
+            patient=self.patient, created__gte=hace_30_dias, is_converted=False
+        ).update(
+            is_converted=True, recipe=self
+        )
+
+    class Meta:
+        verbose_name = 'Recetario'
+        verbose_name_plural = 'Recetarios'
+
+    def __str__(self):
+        return f'{self.prescription_number}'

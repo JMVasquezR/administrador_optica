@@ -1,17 +1,16 @@
 from datetime import timedelta
 
-from django.db.models import Count, Q
-from django.db.models import Sum
+from django.db.models import Count, Q, OuterRef, Exists, Sum
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, filters
+from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from app_backend.models.appointment import Appointment
+from app_backend.models.appointment import Appointment, CampaignContact
 from app_backend.models.patients import Patient, TypeDocument
 from app_backend.models.products import Product, Category, Brand
 from app_backend.models.recipes import Recipe
@@ -82,51 +81,65 @@ class PatientViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='campaign')
     def campaign(self, request):
-        hoy = timezone.now().date()
+        hoy = timezone.localtime(timezone.now()).date()
         hace_11_meses = hoy - timedelta(days=330)
         hace_14_meses = hoy - timedelta(days=420)
 
-        # 1. Queryset base para la campaña
+        contactado_hoy_subquery = CampaignContact.objects.filter(
+            patient=OuterRef('pk'),
+            created__date=hoy
+        )
+
         queryset = Patient.objects.select_related('type_document').filter(
             is_active=True,
             last_visit__lte=hace_11_meses
+        ).annotate(
+            already_contacted_today=Exists(contactado_hoy_subquery)
         ).order_by('last_visit')
 
-        # 2. Aplicar filtros de búsqueda (SearchFilter)
         filtered_queryset = self.filter_queryset(queryset)
-
-        # 3. Filtrado por periodo (opcional si lo mandas desde el JS)
         period = request.query_params.get('period')
         if period == 'month':
-            # Entre 11 y 13 meses
             filtered_queryset = filtered_queryset.filter(last_visit__gt=hace_14_meses)
         elif period == 'critical':
-            # Más de 14 meses
             filtered_queryset = filtered_queryset.filter(last_visit__lte=hace_14_meses)
 
-        # 4. Calcular métricas globales (sobre el queryset base de campaña)
-        # Pendientes: entre 11 y 13 meses | Críticos: >= 14 meses
         metrics = queryset.aggregate(
             total_month=Count('id', filter=Q(last_visit__gt=hace_14_meses)),
             total_critical=Count('id', filter=Q(last_visit__lte=hace_14_meses))
         )
 
-        # 5. Paginación
+        count_done_today = CampaignContact.objects.filter(created__date=hoy).values('patient').distinct().count()
+
         page = self.paginate_queryset(filtered_queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             response = self.get_paginated_response(serializer.data)
-            # Inyectamos las métricas en la respuesta paginada
-            response.data['count_month'] = metrics['total_month']
-            response.data['count_critical'] = metrics['total_critical']
+            response.data.update({
+                'count_month': metrics['total_month'],
+                'count_critical': metrics['total_critical'],
+                'count_done': count_done_today
+            })
             return response
 
         serializer = self.get_serializer(filtered_queryset, many=True)
         return Response({
             'results': serializer.data,
             'count_month': metrics['total_month'],
-            'count_critical': metrics['total_critical']
+            'count_critical': metrics['total_critical'],
+            'count_done': count_done_today
         })
+
+    @action(detail=True, methods=['post'], url_path='register-contact')
+    def register_contact(self, request, pk=None):
+        patient = self.get_object()
+        hoy = timezone.now().date()
+
+        if not CampaignContact.objects.filter(patient=patient, created__date=hoy).exists():
+            CampaignContact.objects.create(patient=patient, user=request.user)
+            return Response({'status': 'ok'}, status=status.HTTP_201_CREATED)
+
+        return Response({'status': 'ya registrado'}, status=status.HTTP_200_OK)
 
 
 class ProductViewSet(viewsets.ModelViewSet):
