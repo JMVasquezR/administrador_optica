@@ -95,7 +95,7 @@ class PatientViewSet(viewsets.ModelViewSet):
             last_visit__lte=hace_11_meses
         ).annotate(
             already_contacted_today=Exists(contactado_hoy_subquery)
-        ).order_by('last_visit')
+        ).order_by('already_contacted_today', 'last_visit')
 
         filtered_queryset = self.filter_queryset(queryset)
         period = request.query_params.get('period')
