@@ -41,7 +41,7 @@ class StandardResultsSetPagination(PageNumberPagination):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
-    queryset = Recipe.objects.select_related('patient').all().order_by('-created')
+    queryset = Recipe.objects.select_related('patient').all().order_by('-date_of_issue')
     serializer_class = RecipeSerializer
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
