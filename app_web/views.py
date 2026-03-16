@@ -38,7 +38,7 @@ def home_view(request):
 
     meta_total = 10000
     ventas_mes = SalesTicket.objects.filter(
-        date_of_issue__month=hoy.month, is_disabled=False
+        date_of_issue__month=hoy.month, date_of_issue__year=hoy.year, is_disabled=False
     ).aggregate(total=Sum('sales_total'))['total'] or 0
 
     meta_porcentaje = min(int((ventas_mes / meta_total) * 100), 100) if meta_total > 0 else 0
