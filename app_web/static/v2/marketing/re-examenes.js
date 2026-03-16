@@ -66,19 +66,21 @@ const initCampaignPage = async () => {
    ========================================== */
 const fetchCampaignData = async (url = API_URL) => {
     try {
-        console.log("Solicitando datos a:", url); // Depuración
         const response = await fetch(url);
+        if (!response.ok) throw new Error('Error al obtener datos');
+
         const data = await response.json();
-        console.log("Datos recibidos del servidor:", data); // Depuración
 
-        // Verificamos si la data viene en 'results' o es el array directo
-        const patients = data.results ? data.results : (Array.isArray(data) ? data : []);
+        // Estructura DRF: data.results contiene la lista
+        const patients = data.results || (Array.isArray(data) ? data : []);
 
-        console.log("Pacientes a procesar:", patients);
         renderCampaignTable(patients);
+        updateCampaignMetrics(data); // 🔸 CORRECCIÓN: Ahora sí pintamos las tarjetas
         setupPagination(data);
     } catch (error) {
         console.error('Error detallado:', error);
+        document.getElementById('campaign-table-body').innerHTML =
+            `<tr><td colspan="5" class="text-center py-4 text-danger">Error de conexión.</td></tr>`;
     }
 };
 
@@ -90,7 +92,7 @@ const applyCampaignFilters = async () => {
 
     let params = new URLSearchParams();
     if (search) params.append('search', search);
-    if (period && period !== 'all') params.append('period', period); // Enviamos el filtro al backend
+    if (period && period !== 'all') params.append('period', period);
 
     await fetchCampaignData(`${API_URL}?${params.toString()}`);
 
@@ -104,7 +106,7 @@ const renderCampaignTable = (patients) => {
     const tableBody = document.getElementById('campaign-table-body');
 
     if (!patients || patients.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">No hay pacientes que requieran re-examen bajo este filtro.</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">No hay pacientes que requieran re-examen.</td></tr>`;
         return;
     }
 
@@ -138,15 +140,14 @@ const renderCampaignTable = (patients) => {
 };
 
 const updateCampaignMetrics = (data) => {
-    // Si el backend envía las métricas en la respuesta (recomendado), úsalas.
-    // Si no, las calculamos del total si no hay paginación, o mostramos el conteo del backend.
-    if (data.count_month !== undefined) {
-        document.getElementById('count-month').innerText = data.count_month;
-        document.getElementById('count-critical').innerText = data.count_critical;
-    } else {
-        // Fallback: Si el backend no envía los contadores específicos aún
-        document.getElementById('total-count').innerText = data.count || 0;
-    }
+    // 🔸 Leemos los campos inyectados desde el ViewSet de Django
+    const countMonth = document.getElementById('count-month');
+    const countCritical = document.getElementById('count-critical');
+    const totalCount = document.getElementById('total-count');
+
+    if (countMonth) countMonth.innerText = data.count_month !== undefined ? data.count_month : '0';
+    if (countCritical) countCritical.innerText = data.count_critical !== undefined ? data.count_critical : '0';
+    if (totalCount) totalCount.innerText = data.count || 0;
 };
 
 /* ==========================================
@@ -156,13 +157,10 @@ const setupPagination = (data) => {
     const nextBtn = document.getElementById('next-page');
     const prevBtn = document.getElementById('prev-page');
     const currentCount = document.getElementById('current-count');
-    const totalCount = document.getElementById('total-count');
 
-    // Actualizar números
-    totalCount.innerText = data.count || 0;
-    currentCount.innerText = data.results ? data.results.length : 0;
+    // Actualizar números de la página actual
+    if (currentCount) currentCount.innerText = data.results ? data.results.length : 0;
 
-    // Configurar botones
     nextBtn.onclick = async () => {
         if (data.next) {
             showTableLoading();
@@ -190,21 +188,18 @@ const setupPagination = (data) => {
    ========================================== */
 const sendWhatsApp = (phone, name) => {
     if (!phone || phone === 'null' || phone === '') {
-        alert("El paciente no tiene un número de celular registrado en KyM Lens.");
+        alert("El paciente no tiene un número de celular registrado.");
         return;
     }
 
-    // Mensaje profesional para Óptica KyM Lens
-    const msg = `Hola ${name}, te saluda Martí de Óptica KyM Lens. 👋 Te escribimos porque ya pasó un año desde tu último examen. Es importante verificar tu medida para cuidar tu salud visual. ¿Te gustaría agendar un control gratuito esta semana?`;
+    const msg = `Hola ${name}, te saluda Martí de Óptica KyM Lens. 👋 Te escribimos porque ya pasó un año desde tu último examen de vista. Es importante verificar tu medida para cuidar tu salud visual. ¿Te gustaría agendar un control gratuito esta semana?`;
 
-    // Limpiar el teléfono (quitar espacios o guiones si los hay)
     const cleanPhone = phone.replace(/\D/g, '');
     const whatsappUrl = `https://wa.me/51${cleanPhone}?text=${encodeURIComponent(msg)}`;
     window.open(whatsappUrl, '_blank');
 
-    // Incrementar contador de contactados hoy (visual)
     const countDone = document.getElementById('count-done');
-    countDone.innerText = parseInt(countDone.innerText) + 1;
+    if (countDone) countDone.innerText = parseInt(countDone.innerText) + 1;
 };
 
 /* ==========================================

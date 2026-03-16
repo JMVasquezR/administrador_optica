@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.db.models import Count, Q
 from django.db.models import Sum
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
@@ -81,22 +82,51 @@ class PatientViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='campaign')
     def campaign(self, request):
-        hace_11_meses = timezone.now().date() - timedelta(days=330)
+        hoy = timezone.now().date()
+        hace_11_meses = hoy - timedelta(days=330)
+        hace_14_meses = hoy - timedelta(days=420)
 
+        # 1. Queryset base para la campaña
         queryset = Patient.objects.select_related('type_document').filter(
             is_active=True,
             last_visit__lte=hace_11_meses
         ).order_by('last_visit')
 
+        # 2. Aplicar filtros de búsqueda (SearchFilter)
         filtered_queryset = self.filter_queryset(queryset)
-        page = self.paginate_queryset(filtered_queryset)
 
+        # 3. Filtrado por periodo (opcional si lo mandas desde el JS)
+        period = request.query_params.get('period')
+        if period == 'month':
+            # Entre 11 y 13 meses
+            filtered_queryset = filtered_queryset.filter(last_visit__gt=hace_14_meses)
+        elif period == 'critical':
+            # Más de 14 meses
+            filtered_queryset = filtered_queryset.filter(last_visit__lte=hace_14_meses)
+
+        # 4. Calcular métricas globales (sobre el queryset base de campaña)
+        # Pendientes: entre 11 y 13 meses | Críticos: >= 14 meses
+        metrics = queryset.aggregate(
+            total_month=Count('id', filter=Q(last_visit__gt=hace_14_meses)),
+            total_critical=Count('id', filter=Q(last_visit__lte=hace_14_meses))
+        )
+
+        # 5. Paginación
+        page = self.paginate_queryset(filtered_queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
+            response = self.get_paginated_response(serializer.data)
+            # Inyectamos las métricas en la respuesta paginada
+            response.data['count_month'] = metrics['total_month']
+            response.data['count_critical'] = metrics['total_critical']
+            return response
 
         serializer = self.get_serializer(filtered_queryset, many=True)
-        return Response(serializer.data)
+        return Response({
+            'results': serializer.data,
+            'count_month': metrics['total_month'],
+            'count_critical': metrics['total_critical']
+        })
 
 
 class ProductViewSet(viewsets.ModelViewSet):
