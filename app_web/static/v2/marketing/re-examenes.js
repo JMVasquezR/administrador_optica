@@ -167,6 +167,7 @@ const setupPagination = (data) => {
     const nextBtn = document.getElementById('next-page');
     const prevBtn = document.getElementById('prev-page');
     const currentCount = document.getElementById('current-count');
+    document.getElementById('total-count').innerText = data.count || 0;
 
     if (currentCount) currentCount.innerText = data.results ? data.results.length : 0;
 
