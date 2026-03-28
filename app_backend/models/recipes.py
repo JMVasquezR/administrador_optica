@@ -1,11 +1,14 @@
-from django.db.models import (ForeignKey, CharField, PROTECT, TextField, DateField, BooleanField, Max)
+from django.db.models import (ForeignKey, CharField, PROTECT, TextField, DateField, BooleanField, Max, CASCADE)
 from django.utils import timezone
 from model_utils.models import TimeStampedModel
 
+from app_backend.models.opticas import Optica
 from app_backend.models.patients import Patient
 
 
 class Recipe(TimeStampedModel):
+    optica = ForeignKey(Optica, on_delete=CASCADE, related_name='recetarios', default=1)
+
     prescription_number = CharField(max_length=6, unique=True, verbose_name='Número de recetario')
 
     patient = ForeignKey(Patient, on_delete=PROTECT, verbose_name='Paciente')

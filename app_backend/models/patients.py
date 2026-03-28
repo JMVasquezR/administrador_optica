@@ -1,7 +1,8 @@
-from django.db.models import (CharField, DateField, ForeignKey, PROTECT, EmailField, BooleanField)
+from django.db.models import (CharField, DateField, ForeignKey, PROTECT, EmailField, BooleanField, CASCADE)
 from django.utils import timezone
 from model_utils.models import TimeStampedModel
 
+from app_backend.models.opticas import Optica
 from app_backend.models.type_document import TypeDocument
 
 GENDER = (
@@ -17,6 +18,7 @@ class Patient(TimeStampedModel):
         db_table = 'TB_BACKEND_PATIENT'
         unique_together = ('type_document', 'document_number')
 
+    optica = ForeignKey(Optica, on_delete=CASCADE, related_name='pacientes', default=1)
     first_name = CharField(max_length=250, verbose_name='Nombre completo')
     surname = CharField(max_length=100, verbose_name='Apellido paterno')
     second_surname = CharField(max_length=100, blank=True, null=True, verbose_name='Apellido materno')

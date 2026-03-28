@@ -7,7 +7,7 @@ let idCitaParaEstado = null;
 let idCitaParaEditar = null;
 const API_URL = '/api/appointments/';
 
-// --- 1. Loader Global (Bloqueo Total) ---
+// --- Loaders ---
 const showGlobalLoader = () => {
     const loader = document.getElementById('page-loader');
     if (loader) loader.classList.remove('loader-hidden');
@@ -15,18 +15,14 @@ const showGlobalLoader = () => {
 
 const hideGlobalLoader = () => {
     const loader = document.getElementById('page-loader');
-    if (loader) {
-        setTimeout(() => loader.classList.add('loader-hidden'), 300);
-    }
+    if (loader) setTimeout(() => loader.classList.add('loader-hidden'), 300);
 };
 
-// --- 2. Loader Local (Efecto en Tabla para Filtros) ---
 const showTableLoading = () => {
     const tableContainer = document.querySelector('.table-responsive');
     if (tableContainer) {
         tableContainer.style.opacity = '0.5';
         tableContainer.style.pointerEvents = 'none';
-        tableContainer.style.cursor = 'wait';
     }
 };
 
@@ -35,75 +31,49 @@ const hideTableLoading = () => {
     if (tableContainer) {
         tableContainer.style.opacity = '1';
         tableContainer.style.pointerEvents = 'auto';
-        tableContainer.style.cursor = 'default';
     }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Inicializar Modales
+    // Inicializar Modales Bootstrap
     const modalEl = document.getElementById('modalAddAppointment');
     if (modalEl) appointmentModal = new bootstrap.Modal(modalEl);
 
     const statusEl = document.getElementById('modalChangeStatus');
     if (statusEl) statusModal = new bootstrap.Modal(statusEl);
 
-    // Carga inicial
     initAppointmentsPage();
 
-    // Eventos de Filtros con Debounce
-    const searchInput = document.getElementById('appointment-search');
-    if (searchInput) {
-        searchInput.addEventListener('input', debounce(() => applyAppointmentFilters(), 500));
-    }
+    // Filtros
+    document.getElementById('appointment-search')?.addEventListener('input', debounce(() => applyAppointmentFilters(), 500));
+    document.getElementById('date-filter')?.addEventListener('change', () => applyAppointmentFilters());
+    document.getElementById('status-filter')?.addEventListener('change', () => applyAppointmentFilters());
 
-    const dateInput = document.getElementById('date-filter');
-    if (dateInput) {
-        dateInput.addEventListener('change', () => applyAppointmentFilters());
-    }
-
-    const statusSelect = document.getElementById('status-filter');
-    if (statusSelect) {
-        statusSelect.addEventListener('change', () => applyAppointmentFilters());
-    }
-
-    // Botón Limpiar Filtros
     document.getElementById('btn-clear-filters')?.addEventListener('click', () => {
-        if (searchInput) searchInput.value = '';
-        if (dateInput) dateInput.value = '';
-        if (statusSelect) statusSelect.value = '';
+        document.getElementById('appointment-search').value = '';
+        document.getElementById('date-filter').value = '';
+        document.getElementById('status-filter').value = '';
         applyAppointmentFilters();
     });
 
-    // Preparar Modal para NUEVA Cita
-    document.querySelector('[data-bs-target="#modalAddAppointment"]')?.addEventListener('click', () => {
-        idCitaParaEditar = null;
-        document.getElementById('appointment-form').reset();
-        document.querySelector('#modalAddAppointment .modal-title').innerHTML =
-            '<i class="fas fa-calendar-plus me-2 text-danger"></i>Agendar Nueva Cita';
+    // Evento Botón Nueva Cita
+    const btnNuevo = document.querySelector('[data-bs-target="#modalAddAppointment"]');
+    if (btnNuevo) {
+        btnNuevo.addEventListener('click', () => {
+            idCitaParaEditar = null;
+            document.getElementById('appointment-form').reset();
+            $('#appointment-patient').val(null).trigger('change');
+            initPatientSearch();
+        });
+    }
 
-        const today = new Date().toISOString().split('T')[0];
-        document.querySelector('#appointment-form input[type="date"]').value = today;
+    document.getElementById('appointment-form')?.addEventListener('submit', saveAppointment);
 
-        $('#appointment-patient').val(null).trigger('change');
-        initPatientSearch();
-    });
-
-    // Botones del modal de cambio de estado
     document.querySelectorAll('.btn-status').forEach(btn => {
         btn.addEventListener('click', function () {
             const nuevoEstado = this.getAttribute('data-status');
-            if (idCitaParaEstado && nuevoEstado) {
-                ejecutarCambioEstado(idCitaParaEstado, nuevoEstado);
-            }
+            if (idCitaParaEstado && nuevoEstado) ejecutarCambioEstado(idCitaParaEstado, nuevoEstado);
         });
-    });
-
-    // Evento de Guardado
-    document.getElementById('appointment-form')?.addEventListener('submit', saveAppointment);
-
-    // Limpiar rastro al cerrar
-    document.getElementById('modalAddAppointment')?.addEventListener('hidden.bs.modal', () => {
-        idCitaParaEditar = null;
     });
 });
 
@@ -117,14 +87,14 @@ const initAppointmentsPage = async () => {
 };
 
 /* ==========================================
-   LÓGICA DEL BUSCADOR DINÁMICO (SELECT2)
+   LÓGICA DEL BUSCADOR DE PACIENTES (SELECT2)
    ========================================== */
 const initPatientSearch = () => {
     $('#appointment-patient').select2({
         theme: 'default',
         width: '100%',
         dropdownParent: $('#modalAddAppointment'),
-        placeholder: 'Escriba nombre o documento...',
+        placeholder: 'Buscar paciente...',
         ajax: {
             url: '/api/patients/',
             dataType: 'json',
@@ -140,72 +110,19 @@ const initPatientSearch = () => {
 };
 
 /* ==========================================
-   LÓGICA DEL LISTADO Y RESUMEN
+   LISTADO Y RENDERIZADO
    ========================================== */
 const fetchAppointments = async (url = API_URL) => {
     try {
         const response = await fetch(url);
         const data = await response.json();
         const results = data.results ? data.results : data;
-
         renderAppointmentTable(results);
         renderTodaySummary(results);
         setupPagination(data);
     } catch (error) {
-        console.error('Error en fetchAppointments:', error);
+        console.error('Error:', error);
     }
-};
-
-const applyAppointmentFilters = async () => {
-    showTableLoading();
-    const search = document.getElementById('appointment-search')?.value;
-    const date = document.getElementById('date-filter')?.value;
-    const status = document.getElementById('status-filter')?.value;
-
-    let params = new URLSearchParams();
-    if (search) params.append('search', search);
-    if (date) params.append('date', date);
-    if (status) params.append('status', status);
-
-    await fetchAppointments(`${API_URL}?${params.toString()}`);
-    hideTableLoading();
-};
-
-const renderTodaySummary = (appointments) => {
-    const todayContainer = document.querySelector('.list-group-flush');
-    const todayCountBadge = document.querySelector('.card-header .badge');
-    if (!todayContainer) return;
-
-    const todayStr = new Date().toISOString().split('T')[0];
-    const todayApps = appointments.filter(app => app.date === todayStr && app.status !== 'cancelled');
-
-    if (todayCountBadge) todayCountBadge.innerText = `${todayApps.length} Cita${todayApps.length !== 1 ? 's' : ''}`;
-
-    if (todayApps.length === 0) {
-        todayContainer.innerHTML = `<div class="p-4 text-center text-muted small">No hay citas para hoy.</div>`;
-        return;
-    }
-
-    const statusBadge = {'pending': 'bg-warning text-dark', 'confirmed': 'bg-success', 'completed': 'bg-info'};
-
-    todayContainer.innerHTML = todayApps.map(app => {
-        const hora = app.time ? app.time.substring(0, 5) : '--:--';
-        const periodo = app.time && parseInt(app.time.substring(0, 2)) >= 12 ? 'PM' : 'AM';
-        return `
-            <div class="list-group-item list-group-item-action d-flex align-items-center py-3">
-                <div class="me-4 text-center" style="width: 80px;">
-                    <div class="h5 mb-0 fw-bold text-dark">${hora}</div>
-                    <div class="small text-muted">${periodo}</div>
-                </div>
-                <div class="flex-grow-1">
-                    <h6 class="mb-1 fw-bold text-dark">${app.patient_name}</h6>
-                    <p class="mb-0 text-muted small"><i class="fas fa-search me-1 text-danger"></i>${app.reason}</p>
-                </div>
-                <div class="text-end">
-                    <span class="badge ${statusBadge[app.status]} rounded-pill mb-2">${app.status_display}</span>
-                </div>
-            </div>`;
-    }).join('');
 };
 
 const renderAppointmentTable = (appointments) => {
@@ -213,7 +130,7 @@ const renderAppointmentTable = (appointments) => {
     if (!tableBody) return;
 
     if (!appointments?.length) {
-        tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">No se encontraron citas.</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">No hay citas.</td></tr>`;
         return;
     }
 
@@ -232,92 +149,138 @@ const renderAppointmentTable = (appointments) => {
 
     tableBody.innerHTML = appointments.map(app => {
         const isCancelled = app.status === 'cancelled';
-        const rowStyle = isCancelled ? 'style="opacity: 0.6; background-color: #f8f9fa;"' : '';
-        const fechaFormateada = app.date.split('-').reverse().join('/');
-        const horaMostrada = app.time ? app.time.substring(0, 5) : '<span class="text-muted small">Sin hora</span>';
+        let actionButtons = '';
+
+        if (typeof USER_ROL !== 'undefined' && USER_ROL !== 'OPTOMETRISTA') {
+            if (!isCancelled) {
+                actionButtons = `
+                    <button class="btn btn-sm btn-outline-info" onclick="abrirModalEstado(${app.id})"><i class="fa-solid fa-sync-alt"></i></button>
+                    <button class="btn btn-sm btn-outline-dark" onclick="editAppointment(${app.id})"><i class="fa-solid fa-edit"></i></button>
+                `;
+            } else {
+                actionButtons = `<span class="text-muted small">Anulada</span>`;
+            }
+        } else {
+            actionButtons = `<span class="badge bg-light text-dark border">Solo lectura</span>`;
+        }
 
         return `
-            <tr ${rowStyle}>
-                <td class="ps-4">${fechaFormateada}</td>
-                <td>${horaMostrada}</td>
-                <td><div class="fw-bold text-dark">${app.patient_name}</div></td>
+            <tr ${isCancelled ? 'style="opacity: 0.6;"' : ''}>
+                <td class="ps-4">${app.date.split('-').reverse().join('/')}</td>
+                <td>${app.time ? app.time.substring(0, 5) : '--:--'}</td>
+                <td><div class="fw-bold">${app.patient_name}</div></td>
                 <td><small>${app.reason}</small></td>
-                <td class="text-center"><span class="badge ${statusBadge[app.status]} rounded-pill" style="font-size: 0.7rem;">${app.status_display}</span></td>
-                <td class="text-center"><i class="${mediumIcon[app.medium]} fa-lg"></i></td>
-                <td class="text-end pe-4">
-                    <div class="btn-group">
-                        ${!isCancelled ? `
-                            <button class="btn btn-sm btn-outline-info" onclick="abrirModalEstado(${app.id})" title="Cambiar Estado"><i class="fa-solid fa-sync-alt"></i></button>
-                            <button class="btn btn-sm btn-outline-dark" onclick="editAppointment(${app.id})" title="Editar Cita"><i class="fa-solid fa-edit"></i></button>
-                        ` : `
-                            <span class="text-muted small px-2"><i class="fas fa-lock me-1"></i> Anulada</span>
-                        `}
-                    </div>
-                </td>
+                <td class="text-center"><span class="badge ${statusBadge[app.status]} rounded-pill x-small">${app.status_display}</span></td>
+                <td class="text-center"><i class="${mediumIcon[app.medium] || 'fas fa-calendar'} fa-lg"></i></td>
+                <td class="text-end pe-4"><div class="btn-group">${actionButtons}</div></td>
             </tr>`;
     }).join('');
 };
 
+const renderTodaySummary = (appointments) => {
+    const todayContainer = document.querySelector('.list-group-flush');
+    const todayCountBadge = document.getElementById('today-count-badge');
+
+    if (!todayContainer) return;
+
+    // 1. Filtrar las citas de hoy (que no estén canceladas)
+    // Usamos el formato YYYY-MM-DD local para comparar con la API
+    const today = new Date();
+    const todayStr = today.getFullYear() + '-' +
+        String(today.getMonth() + 1).padStart(2, '0') + '-' +
+        String(today.getDate()).padStart(2, '0');
+
+    const todayApps = appointments.filter(app => app.date === todayStr && app.status !== 'cancelled');
+
+    // 2. Actualizar el Badge (Burbuja Roja) dinámicamente
+    if (todayCountBadge) {
+        const total = todayApps.length;
+        todayCountBadge.innerText = `${total} Cita${total !== 1 ? 's' : ''}`;
+    }
+
+    // 3. Renderizar el listado en el Card
+    if (todayApps.length === 0) {
+        todayContainer.innerHTML = `
+            <div class="p-4 text-center text-muted small">
+                <i class="fas fa-calendar-check d-block mb-2 opacity-50 fa-2x"></i>
+                No hay citas programadas para hoy.
+            </div>`;
+        return;
+    }
+
+    todayContainer.innerHTML = todayApps.map(app => {
+        const hora = app.time ? app.time.substring(0, 5) : '--:--';
+        return `
+            <div class="list-group-item list-group-item-action d-flex align-items-center py-3">
+                <div class="me-4 text-center" style="width: 60px;">
+                    <div class="fw-bold text-dark">${hora}</div>
+                </div>
+                <div class="flex-grow-1">
+                    <h6 class="mb-0 fw-bold small text-dark">${app.patient_name}</h6>
+                    <p class="mb-0 x-small text-muted">${app.reason}</p>
+                </div>
+                <div class="text-end">
+                    <i class="fas fa-chevron-right text-light"></i>
+                </div>
+            </div>`;
+    }).join('');
+};
+
 /* ==========================================
-   LÓGICA DE GUARDADO (CREAR / EDITAR)
+   ACCIONES (CORRECCIÓN DE ÍNDICES AQUÍ)
    ========================================== */
 const saveAppointment = async (e) => {
     e.preventDefault();
+    if (USER_ROL === 'OPTOMETRISTA') return;
+
+    const patientId = $('#appointment-patient').val();
+    if (!patientId) {
+        showNotify('Seleccione un paciente', 'danger');
+        return;
+    }
+
     showGlobalLoader();
     const form = e.target;
-    const timeVal = form.querySelector('input[type="time"]').value;
+    const selects = form.querySelectorAll('select');
 
-    const appointmentData = {
-        patient: document.getElementById('appointment-patient').value,
+    const data = {
+        patient: patientId,
         date: form.querySelector('input[type="date"]').value,
-        time: timeVal === "" ? null : timeVal,
-        reason: form.querySelectorAll('select')[1].value,
-        medium: form.querySelectorAll('select')[2].value.toLowerCase()
+        time: form.querySelector('input[type="time"]').value || null,
+        // ÍNDICES CORREGIDOS:
+        reason: selects[1].value, // Toma el valor del combo "Motivo"
+        medium: selects[2].value.toLowerCase(), // Toma el valor del combo "Medio"
     };
-
-    if (!idCitaParaEditar) appointmentData.status = 'pending';
 
     const url = idCitaParaEditar ? `${API_URL}${idCitaParaEditar}/` : API_URL;
     const method = idCitaParaEditar ? 'PUT' : 'POST';
 
     try {
-        const response = await fetch(url, {
+        const res = await fetch(url, {
             method: method,
             headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
-            body: JSON.stringify(appointmentData)
+            body: JSON.stringify(data)
         });
-        if (response.ok) {
+        if (res.ok) {
             appointmentModal.hide();
-            idCitaParaEditar = null;
             await fetchAppointments();
-            showNotify(method === 'POST' ? 'Cita agendada' : 'Cita actualizada', 'success');
+            showNotify('Guardado correctamente', 'success');
         } else {
-            showNotify('Error al procesar', 'danger');
+            const errorData = await res.json();
+            console.error(errorData);
+            showNotify('Error al guardar', 'danger');
         }
-    } catch (err) {
-        showNotify('Error de conexión', 'danger');
     } finally {
         hideGlobalLoader();
     }
 };
 
-/* ==========================================
-   LÓGICA DE EDICIÓN Y ESTADO
-   ========================================== */
-const editAppointment = async (id) => {
+window.editAppointment = async (id) => {
     showGlobalLoader();
     try {
         const response = await fetch(`${API_URL}${id}/`);
         const app = await response.json();
-
-        if (app.status === 'cancelled') {
-            showNotify('No se puede editar una cita anulada', 'danger');
-            return;
-        }
-
         idCitaParaEditar = id;
-        document.querySelector('#modalAddAppointment .modal-title').innerHTML =
-            '<i class="fas fa-edit me-2 text-danger"></i>Editar Cita';
 
         document.querySelector('#appointment-form input[type="date"]').value = app.date;
         document.querySelector('#appointment-form input[type="time"]').value = app.time || "";
@@ -326,19 +289,17 @@ const editAppointment = async (id) => {
         selects[1].value = app.reason;
         selects[2].value = app.medium;
 
-        const patientSelect = $('#appointment-patient');
+        initPatientSearch();
         const newOption = new Option(app.patient_name, app.patient, true, true);
-        patientSelect.append(newOption).trigger('change');
+        $('#appointment-patient').append(newOption).trigger('change');
 
         appointmentModal.show();
-    } catch (error) {
-        showNotify('Error al cargar datos', 'danger');
     } finally {
         hideGlobalLoader();
     }
 };
 
-const abrirModalEstado = (id) => {
+window.abrirModalEstado = (id) => {
     idCitaParaEstado = id;
     statusModal.show();
 };
@@ -346,22 +307,15 @@ const abrirModalEstado = (id) => {
 const ejecutarCambioEstado = async (id, estado) => {
     showGlobalLoader();
     try {
-        const response = await fetch(`${API_URL}${id}/`, {
+        await fetch(`${API_URL}${id}/`, {
             method: 'PATCH',
             headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
             body: JSON.stringify({status: estado})
         });
-        if (response.ok) {
-            statusModal.hide();
-            showNotify('Estado actualizado', 'success');
-            await fetchAppointments();
-        } else {
-            showNotify('Error al actualizar', 'danger');
-        }
-    } catch (error) {
-        showNotify('Error de conexión', 'danger');
+        statusModal.hide();
+        await fetchAppointments();
+        showNotify('Estado actualizado', 'success');
     } finally {
-        idCitaParaEstado = null;
         hideGlobalLoader();
     }
 };
@@ -369,26 +323,36 @@ const ejecutarCambioEstado = async (id, estado) => {
 /* ==========================================
    UTILIDADES
    ========================================== */
+const applyAppointmentFilters = async () => {
+    showTableLoading();
+    const search = document.getElementById('appointment-search')?.value;
+    const date = document.getElementById('date-filter')?.value;
+    const status = document.getElementById('status-filter')?.value;
+    let params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (date) params.append('date', date);
+    if (status) params.append('status', status);
+    await fetchAppointments(`${API_URL}?${params.toString()}`);
+    hideTableLoading();
+};
+
 const setupPagination = (data) => {
     const nextBtn = document.getElementById('next-page');
     const prevBtn = document.getElementById('prev-page');
-    document.getElementById('total-count').innerText = data.count || 0;
-    document.getElementById('current-count').innerText = data.results ? data.results.length : 0;
-
-    nextBtn.onclick = async () => {
-        if (data.next) await fetchAppointments(data.next);
-    };
-    prevBtn.onclick = async () => {
-        if (data.previous) await fetchAppointments(data.previous);
-    };
-    nextBtn.disabled = !data.next;
-    prevBtn.disabled = !data.previous;
+    if (nextBtn) {
+        nextBtn.onclick = () => data.next && fetchAppointments(data.next);
+        nextBtn.disabled = !data.next;
+    }
+    if (prevBtn) {
+        prevBtn.onclick = () => data.previous && fetchAppointments(data.previous);
+        prevBtn.disabled = !data.previous;
+    }
 };
 
 const showNotify = (msg, type) => {
     const toastEl = document.getElementById('liveToast');
     const toastMsg = document.getElementById('toast-message');
-    toastEl.classList.remove('bg-success', 'bg-danger', 'bg-info');
+    toastEl.classList.remove('bg-success', 'bg-danger');
     toastEl.classList.add(`bg-${type}`);
     toastMsg.innerText = msg;
     new bootstrap.Toast(toastEl).show();
@@ -409,7 +373,7 @@ function getCookie(n) {
     return v;
 }
 
-function debounce(f, t = 300) {
+function debounce(f, t) {
     let m;
     return (...a) => {
         clearTimeout(m);

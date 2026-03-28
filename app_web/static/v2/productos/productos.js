@@ -202,8 +202,8 @@ const setupPagination = (data) => {
     const nextBtn = document.getElementById('next-page');
     const prevBtn = document.getElementById('prev-page');
 
-    document.getElementById('total-count').innerText = data.count;
-    document.getElementById('current-count').innerText = data.results.length;
+    document.getElementById('total-count').innerText = data.count || 0;
+    document.getElementById('current-count').innerText = data.results?.length || 0;
 
     nextBtn.onclick = async () => {
         if (data.next) {
@@ -227,23 +227,47 @@ const setupPagination = (data) => {
    UTILIDADES
    ========================================== */
 const loadLookups = async () => {
-    const [catRes, brandRes] = await Promise.all([fetch('/api/categories/'), fetch('/api/brands/')]);
-    const categories = await catRes.json();
-    const brands = await brandRes.json();
+    try {
+        const [catRes, brandRes] = await Promise.all([
+            fetch('/api/categories/?limit=100'),
+            fetch('/api/brands/?limit=100')
+        ]);
 
-    const catSelectModal = document.getElementById('category');
-    const catSelectFilter = document.getElementById('filter-category');
-    let catOptions = '<option value="">Seleccione Categoría...</option>';
-    categories.forEach(c => catOptions += `<option value="${c.id}">${c.name}</option>`);
-    catSelectModal.innerHTML = catOptions;
-    catSelectFilter.innerHTML = '<option value="">Todas las Categorías</option>' + catOptions.replace('<option value="">Seleccione Categoría...</option>', '');
+        const catData = await catRes.json();
+        const brandData = await brandRes.json();
 
-    const brandSelectModal = document.getElementById('brand');
-    const brandSelectFilter = document.getElementById('filter-brand');
-    let brandOptions = '<option value="">Seleccione Marca...</option>';
-    brands.forEach(b => brandOptions += `<option value="${b.id}">${b.name}</option>`);
-    brandSelectModal.innerHTML = brandOptions;
-    brandSelectFilter.innerHTML = '<option value="">Todas las Marcas</option>' + brandOptions.replace('<option value="">Seleccione Marca...</option>', '');
+        // Extraemos los resultados de la paginación (.results)
+        // Usamos un fallback [] por si la API falla o viene vacía
+        const categories = catData.results || catData;
+        const brands = brandData.results || brandData;
+
+        // Llenar Categorías
+        const catSelectModal = document.getElementById('category');
+        const catSelectFilter = document.getElementById('filter-category');
+        let catOptions = '<option value="">Seleccione Categoría...</option>';
+
+        categories.forEach(c => {
+            catOptions += `<option value="${c.id}">${c.name}</option>`;
+        });
+
+        if (catSelectModal) catSelectModal.innerHTML = catOptions;
+        if (catSelectFilter) catSelectFilter.innerHTML = '<option value="">Todas las Categorías</option>' + catOptions.replace('<option value="">Seleccione Categoría...</option>', '');
+
+        // Llenar Marcas
+        const brandSelectModal = document.getElementById('brand');
+        const brandSelectFilter = document.getElementById('filter-brand');
+        let brandOptions = '<option value="">Seleccione Marca...</option>';
+
+        brands.forEach(b => {
+            brandOptions += `<option value="${b.id}">${b.name}</option>`;
+        });
+
+        if (brandSelectModal) brandSelectModal.innerHTML = brandOptions;
+        if (brandSelectFilter) brandSelectFilter.innerHTML = '<option value="">Todas las Marcas</option>' + brandOptions.replace('<option value="">Seleccione Marca...</option>', '');
+
+    } catch (err) {
+        console.error("Error cargando cat/marcas:", err);
+    }
 };
 
 const editProduct = async (id) => {

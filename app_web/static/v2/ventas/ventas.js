@@ -5,7 +5,9 @@ let saleModal, detailModal, confirmAnularModal;
 let idParaAnular = null;
 let selectedProducts = [];
 
-// --- 1. Loader Global (Bloqueo Total para acciones pesadas) ---
+// El rol viene desde el template de Django (base.html)
+const CURRENT_USER_ROL = typeof USER_ROL !== 'undefined' ? USER_ROL : 'GUEST';
+
 const showGlobalLoader = () => {
     const loader = document.getElementById('page-loader');
     if (loader) loader.classList.remove('loader-hidden');
@@ -13,18 +15,14 @@ const showGlobalLoader = () => {
 
 const hideGlobalLoader = () => {
     const loader = document.getElementById('page-loader');
-    if (loader) {
-        setTimeout(() => loader.classList.add('loader-hidden'), 300);
-    }
+    if (loader) setTimeout(() => loader.classList.add('loader-hidden'), 300);
 };
 
-// --- 2. Loader Local (Efecto de opacidad para Filtros y Paginación) ---
 const showTableLoading = () => {
     const tableContainer = document.querySelector('.table-responsive');
     if (tableContainer) {
         tableContainer.style.opacity = '0.5';
         tableContainer.style.pointerEvents = 'none';
-        tableContainer.style.cursor = 'wait';
     }
 };
 
@@ -33,19 +31,18 @@ const hideTableLoading = () => {
     if (tableContainer) {
         tableContainer.style.opacity = '1';
         tableContainer.style.pointerEvents = 'auto';
-        tableContainer.style.cursor = 'default';
     }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Inicializar Modales
     saleModal = new bootstrap.Modal(document.getElementById('modalSale'));
     detailModal = new bootstrap.Modal(document.getElementById('modalViewDetail'));
     confirmAnularModal = new bootstrap.Modal(document.getElementById('modalConfirmAnular'));
 
-    // Carga inicial: Loader Global
     initSales();
 
-    // Eventos de Filtros: Usan Loader Local
+    // Filtros
     document.getElementById('ballot-search').addEventListener('input', debounce(() => applyFilters(), 500));
     document.getElementById('patient-search-filter').addEventListener('input', debounce(() => applyFilters(), 500));
     document.getElementById('date-filter').addEventListener('change', () => applyFilters());
@@ -57,23 +54,18 @@ document.addEventListener('DOMContentLoaded', () => {
         applyFilters();
     });
 
+    // Acción de Anular (Solo Admin)
     document.getElementById('btn-execute-anular').addEventListener('click', () => {
         if (idParaAnular) anularBoleta(idParaAnular);
     });
 
-    // Resetear modal al abrir
+    // Resetear modal al abrir Nueva Venta
     document.querySelector('[data-bs-target="#modalSale"]')?.addEventListener('click', () => {
         document.getElementById('sale-form').reset();
         document.getElementById('sale-details-body').innerHTML = '';
         document.getElementById('sale-date').valueAsDate = new Date();
-        document.getElementById('sale-payer-name').value = '';
         selectedProducts = [];
         updateTotal();
-
-        if ($.fn.select2) {
-            if ($('#sale-patient').data('select2')) $('#sale-patient').select2('destroy');
-            if ($('#sale-product-search').data('select2')) $('#sale-product-search').select2('destroy');
-        }
         loadPatientsAndProducts();
     });
 
@@ -91,76 +83,58 @@ const initSales = async () => {
 };
 
 /* ==========================================
-   LÓGICA SELECT2
+   SELECT2: BUSCADORES DINÁMICOS
    ========================================== */
-const loadPatientsAndProducts = async () => {
-    try {
-        const [prodRes, patRes] = await Promise.all([
-            fetch('/api/products/?limit=5'),
-            fetch('/api/patients/?limit=5')
-        ]);
-        const dataProd = await prodRes.json();
-        const dataPat = await patRes.json();
+const loadPatientsAndProducts = () => {
+    $('#sale-product-search').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        dropdownParent: $('#modalSale'),
+        placeholder: 'Busca montura, luna o accesorio...',
+        ajax: {
+            url: '/api/products/',
+            dataType: 'json',
+            delay: 300,
+            data: (params) => ({search: params.term, page: params.page || 1}),
+            processResults: (data) => ({
+                results: data.results.map(p => ({
+                    id: p.id,
+                    text: `${p.name} - S/ ${parseFloat(p.unit_price).toFixed(2)}`,
+                    price: p.unit_price
+                })),
+                pagination: {more: !!data.next}
+            })
+        }
+    });
 
-        const initialProducts = (dataProd.results || dataProd).map(p => ({
-            id: p.id, text: `${p.name} - S/.${parseFloat(p.unit_price).toFixed(2)}`, price: p.unit_price
-        }));
-        const initialPatients = (dataPat.results || dataPat).map(p => ({
-            id: p.id, text: `${p.full_name} (${p.document_number})`
-        }));
-
-        setTimeout(() => {
-            $('#sale-product-search').select2({
-                theme: 'default', width: '100%', dropdownParent: $('#modalSale'),
-                placeholder: 'Seleccione producto...', data: initialProducts,
-                ajax: {
-                    url: '/api/products/', dataType: 'json', delay: 300,
-                    data: (params) => ({search: params.term, page: params.page || 1}),
-                    processResults: (data) => ({
-                        results: data.results.map(p => {
-                            const displayName = p.brand_name ? `${p.name} ${p.brand_name}` : p.name;
-
-                            return {
-                                id: p.id,
-                                text: `${displayName} - S/.${parseFloat(p.unit_price).toFixed(2)}`,
-                                price: p.unit_price
-                            };
-                        }),
-                        pagination: {more: !!data.next}
-                    })
-                }
-            });
-
-            $('#sale-patient').select2({
-                theme: 'default', width: '100%', dropdownParent: $('#modalSale'),
-                placeholder: 'Seleccione paciente o deje vacío...', data: initialPatients,
-                allowClear: true,
-                ajax: {
-                    url: '/api/patients/', dataType: 'json', delay: 300,
-                    data: (params) => ({search: params.term, page: params.page || 1}),
-                    processResults: (data) => ({
-                        results: data.results.map(p => ({
-                            id: p.id, text: `${p.full_name} (${p.document_number})`
-                        })),
-                        pagination: {more: !!data.next}
-                    })
-                }
-            });
-        }, 200);
-    } catch (err) {
-        console.error(err);
-    }
+    $('#sale-patient').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        dropdownParent: $('#modalSale'),
+        placeholder: 'Seleccione paciente o deje vacío...',
+        allowClear: true,
+        ajax: {
+            url: '/api/patients/',
+            dataType: 'json',
+            delay: 300,
+            data: (params) => ({search: params.term, page: params.page || 1}),
+            processResults: (data) => ({
+                results: data.results.map(p => ({
+                    id: p.id,
+                    text: `${p.full_name} (${p.document_number})`
+                })),
+                pagination: {more: !!data.next}
+            })
+        }
+    });
 };
 
 /* ==========================================
-   CARRITO
+   CARRITO DE PRODUCTOS
    ========================================== */
 function addProductRow() {
     const data = $('#sale-product-search').select2('data')[0];
-    if (!data?.id) {
-        showNotify("Seleccione un producto", "danger");
-        return;
-    }
+    if (!data?.id) return showNotify("Seleccione un producto", "danger");
 
     const existing = selectedProducts.find(p => p.product === data.id);
     if (existing) {
@@ -168,8 +142,11 @@ function addProductRow() {
         existing.amount = existing.quantity * existing.unit_price;
     } else {
         selectedProducts.push({
-            product: data.id, name: data.text.split(' - ')[0],
-            quantity: 1, unit_price: parseFloat(data.price), amount: parseFloat(data.price)
+            product: data.id,
+            name: data.text.split(' - ')[0],
+            quantity: 1,
+            unit_price: parseFloat(data.price),
+            amount: parseFloat(data.price)
         });
     }
     renderDetailTable();
@@ -177,67 +154,71 @@ function addProductRow() {
 }
 
 function renderDetailTable() {
-    document.getElementById('sale-details-body').innerHTML = selectedProducts.map((p, i) => `
+    const body = document.getElementById('sale-details-body');
+    body.innerHTML = selectedProducts.map((p, i) => `
         <tr>
-            <td class="align-middle">${p.name}</td>
-            <td style="width: 80px;"><input type="number" class="form-control form-control-sm text-center" value="${p.quantity}" min="1" onchange="updateQty(${i}, this.value)"></td>
-            <td style="width: 140px;"><div class="input-group input-group-sm"><span class="input-group-text">S/</span><input type="number" class="form-control text-end fw-bold" value="${p.unit_price.toFixed(2)}" step="0.5" onchange="updatePrice(${i}, this.value)"></div></td>
-            <td class="text-end align-middle fw-bold">S/. ${p.amount.toFixed(2)}</td>
-            <td class="text-center"><button type="button" class="btn btn-sm text-danger" onclick="removeRow(${i})"><i class="fas fa-trash"></i></button></td>
+            <td class="align-middle small">${p.name}</td>
+            <td style="width: 80px;">
+                <input type="number" class="form-control form-control-sm text-center" value="${p.quantity}" min="1" onchange="updateQty(${i}, this.value)">
+            </td>
+            <td style="width: 140px;">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text">S/</span>
+                    <input type="number" class="form-control text-end fw-bold" value="${p.unit_price.toFixed(2)}" step="0.10" onchange="updatePrice(${i}, this.value)">
+                </div>
+            </td>
+            <td class="text-end align-middle fw-bold">S/ ${p.amount.toFixed(2)}</td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm text-danger" onclick="removeRow(${i})"><i class="fas fa-trash"></i></button>
+            </td>
         </tr>`).join('');
     updateTotal();
 }
 
-function updatePrice(i, v) {
-    selectedProducts[i].unit_price = parseFloat(v);
+window.updatePrice = (i, v) => {
+    selectedProducts[i].unit_price = parseFloat(v) || 0;
     selectedProducts[i].amount = selectedProducts[i].quantity * selectedProducts[i].unit_price;
     renderDetailTable();
-}
+};
 
-function updateQty(i, v) {
-    selectedProducts[i].quantity = parseInt(v);
+window.updateQty = (i, v) => {
+    selectedProducts[i].quantity = parseInt(v) || 1;
     selectedProducts[i].amount = selectedProducts[i].quantity * selectedProducts[i].unit_price;
     renderDetailTable();
-}
+};
 
-function removeRow(i) {
+window.removeRow = (i) => {
     selectedProducts.splice(i, 1);
     renderDetailTable();
-}
+};
 
 function updateTotal() {
     const total = selectedProducts.reduce((sum, p) => sum + p.amount, 0);
-    document.getElementById('sale-total-display').innerText = `S/. ${total.toFixed(2)}`;
+    document.getElementById('sale-total-display').innerText = `S/ ${total.toFixed(2)}`;
 }
 
 /* ==========================================
-   GUARDADO (PACIENTE OPCIONAL) - USA GLOBAL LOADER
+   API: GUARDADO Y LISTADO
    ========================================== */
 async function saveSale(e) {
     e.preventDefault();
     const patientId = document.getElementById('sale-patient').value;
     const payerName = document.getElementById('sale-payer-name').value.trim();
 
-    if (!patientId && !payerName) {
-        showNotify('Escriba un nombre para la boleta o seleccione un paciente', 'danger');
-        return;
-    }
-    if (selectedProducts.length === 0) {
-        showNotify('Agregue al menos un producto', 'danger');
-        return;
-    }
+    if (!patientId && !payerName) return showNotify('Identifique al paciente o pagador', 'danger');
+    if (selectedProducts.length === 0) return showNotify('Carrito vacío', 'danger');
 
     showGlobalLoader();
-
     const saleData = {
         patient: patientId || null,
         payer_name: payerName || null,
         date_of_issue: document.getElementById('sale-date').value,
         observation: document.getElementById('sale-observation').value,
-        sales_total: selectedProducts.reduce((sum, p) => sum + p.amount, 0),
         lines: selectedProducts.map(p => ({
-            product: p.product, quantity: p.quantity,
-            unit_price: p.unit_price, amount: p.amount
+            product: p.product,
+            quantity: p.quantity,
+            unit_price: p.unit_price,
+            amount: p.amount
         }))
     };
 
@@ -247,23 +228,19 @@ async function saveSale(e) {
             headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
             body: JSON.stringify(saleData)
         });
+
         if (response.ok) {
             saleModal.hide();
             await fetchSales();
-            showNotify('¡Boleta generada!', 'success');
+            showNotify('¡Venta registrada con éxito!', 'success');
         } else {
             showNotify('Error al guardar la venta', 'danger');
         }
-    } catch (e) {
-        showNotify('Error de conexión', 'danger');
     } finally {
         hideGlobalLoader();
     }
 }
 
-/* ==========================================
-   LISTADO Y DETALLE
-   ========================================== */
 const fetchSales = async (url = '/api/sales-tickets/') => {
     try {
         const response = await fetch(url);
@@ -278,61 +255,87 @@ const fetchSales = async (url = '/api/sales-tickets/') => {
 const renderSalesTable = (tickets) => {
     const tableBody = document.getElementById('sales-table-body');
     if (!tickets?.length) {
-        tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No hay registros</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No hay ventas registradas</td></tr>`;
         return;
     }
+
     tableBody.innerHTML = tickets.map(t => {
-        const displayName = t.payer_name ?
-            `<b>${t.payer_name}</b> <br><small class="text-muted">P: ${t.name_patient || 'Genérico'}</small>` :
-            (t.name_patient || 'Cliente Genérico');
+        // SEGURIDAD: Solo el ADMIN puede anular
+        const isAllowedToAnular = (CURRENT_USER_ROL === 'ADMIN');
+        const canExecuteAnular = isAllowedToAnular && !t.is_disabled;
 
         return `
             <tr ${t.is_disabled ? 'style="opacity: 0.6;"' : ''}>
-                <td class="ps-4"><b>${t.ballot_number}</b></td>
+                <td class="ps-4 fw-bold text-danger">${t.ballot_number}</td>
                 <td>${t.date_of_issue}</td>
-                <td>${displayName}</td>
-                <td class="text-center text-danger fw-bold">${t.total_bill}</td>
-                <td class="text-center"><span class="badge ${t.is_disabled ? 'bg-secondary' : 'bg-success'} rounded-pill">${t.is_disabled ? 'Anulada' : 'Vigente'}</span></td>
+                <td>
+                    <div class="fw-bold small">${t.payer_name || t.name_patient || 'Genérico'}</div>
+                    <small class="text-muted italic">${t.payer_name ? `P: ${t.name_patient || '---'}` : ''}</small>
+                </td>
+                <td class="text-center fw-bold">S/ ${t.total_bill}</td>
+                <td class="text-center">
+                    <span class="badge ${t.is_disabled ? 'bg-secondary' : 'bg-success'} rounded-pill x-small">
+                        ${t.is_disabled ? 'Anulada' : 'Vigente'}
+                    </span>
+                </td>
                 <td class="text-end pe-4">
                     <div class="btn-group">
-                        <button class="btn btn-sm btn-outline-dark" onclick="viewSaleDetail(${t.id})"><i class="fa-solid fa-eye"></i></button>
-                        <button class="btn btn-sm btn-outline-secondary" onclick="${t.is_disabled ? '' : `confirmAnular(${t.id}, '${t.ballot_number}')`}"><i class="fa-solid fa-ban"></i></button>
+                        <button class="btn btn-sm btn-outline-dark" onclick="viewSaleDetail(${t.id})"><i class="fas fa-eye"></i></button>
+                        <button class="btn btn-sm ${canExecuteAnular ? 'btn-outline-danger' : 'btn-light text-muted opacity-50'}" 
+                                ${canExecuteAnular ? `onclick="confirmAnular(${t.id}, '${t.ballot_number}')"` : 'disabled'} 
+                                title="${isAllowedToAnular ? 'Anular boleta' : 'Solo Admin puede anular'}">
+                            <i class="fas fa-ban"></i>
+                        </button>
                     </div>
                 </td>
             </tr>`;
     }).join('');
 };
 
-const viewSaleDetail = async (id) => {
+/* ==========================================
+   ANULACIÓN Y DETALLE
+   ========================================== */
+window.viewSaleDetail = async (id) => {
     showGlobalLoader();
     try {
         const response = await fetch(`/api/sales-tickets/${id}/`);
         const sale = await response.json();
+
         document.getElementById('detail-ballot-number').innerText = sale.ballot_number;
-        document.getElementById('detail-patient-name').innerText = sale.name_patient || 'No registrado';
-        document.getElementById('detail-payer-name').innerText = sale.payer_name || sale.name_patient || 'Cliente Genérico';
+        document.getElementById('detail-patient-name').innerText = sale.name_patient || 'Sin registro';
+        document.getElementById('detail-payer-name').innerText = sale.payer_name || sale.name_patient || 'Genérico';
         document.getElementById('detail-date').innerText = sale.date_of_issue;
-        document.getElementById('detail-total').innerText = sale.total_bill;
-        document.getElementById('detail-observations').innerText = sale.observation || 'Sin observaciones.';
+        document.getElementById('detail-total').innerText = `S/ ${sale.total_bill}`;
+        document.getElementById('detail-observations').innerText = sale.observation || 'Sin notas adicionales.';
 
         const itemsBody = document.getElementById('detail-items-body');
         itemsBody.innerHTML = sale.lines.map(item => `
             <tr>
-                <td>${item.product_name}</td>
+                <td class="small">${item.product_name}</td>
                 <td class="text-center">${item.quantity}</td>
-                <td class="text-end">S/. ${item.unit_price.toFixed(2)}</td>
-                <td class="text-end fw-bold">S/. ${item.amount.toFixed(2)}</td>
+                <td class="text-end small">S/ ${parseFloat(item.unit_price).toFixed(2)}</td>
+                <td class="text-end fw-bold small">S/ ${parseFloat(item.amount).toFixed(2)}</td>
             </tr>
         `).join('');
         detailModal.show();
-    } catch (e) {
-        showNotify("Error al cargar detalle", "danger");
     } finally {
         hideGlobalLoader();
     }
 };
 
+window.confirmAnular = (id, number) => {
+    idParaAnular = id;
+    document.getElementById('text-ballot-number').innerText = number;
+    confirmAnularModal.show();
+};
+
 const anularBoleta = async (id) => {
+    if (CURRENT_USER_ROL !== 'ADMIN') {
+        showNotify("Acceso denegado: Solo el Administrador puede anular.", "danger");
+        confirmAnularModal.hide();
+        return;
+    }
+
     showGlobalLoader();
     try {
         const response = await fetch(`/api/sales-tickets/${id}/`, {
@@ -343,7 +346,7 @@ const anularBoleta = async (id) => {
         if (response.ok) {
             confirmAnularModal.hide();
             await fetchSales();
-            showNotify('Boleta anulada con éxito', 'success');
+            showNotify('Boleta anulada', 'success');
         }
     } finally {
         idParaAnular = null;
@@ -381,9 +384,7 @@ function debounce(func, timeout = 300) {
     let timer;
     return (...args) => {
         clearTimeout(timer);
-        timer = setTimeout(() => {
-            func.apply(this, args);
-        }, timeout);
+        timer = setTimeout(() => func.apply(this, args), timeout);
     };
 }
 
@@ -392,9 +393,10 @@ const applyFilters = async () => {
     const ballot = document.getElementById('ballot-search').value;
     const patient = document.getElementById('patient-search-filter').value;
     const date = document.getElementById('date-filter').value;
+
     let params = new URLSearchParams();
     if (ballot) params.append('search', ballot);
-    else if (patient) params.append('search', patient);
+    if (patient) params.append('search', patient);
     if (date) params.append('date_of_issue', date);
 
     await fetchSales(`/api/sales-tickets/?${params.toString()}`);
@@ -404,34 +406,15 @@ const applyFilters = async () => {
 const setupPagination = (data) => {
     const nextBtn = document.getElementById('next-page');
     const prevBtn = document.getElementById('prev-page');
-
-    document.getElementById('total-count').innerText = data.count;
+    document.getElementById('total-count').innerText = data.count || 0;
     document.getElementById('current-count').innerText = data.results?.length || 0;
 
     if (nextBtn) {
         nextBtn.disabled = !data.next;
-        nextBtn.onclick = async () => {
-            if (data.next) {
-                showTableLoading();
-                await fetchSales(data.next);
-                hideTableLoading();
-            }
-        };
+        nextBtn.onclick = () => data.next && fetchSales(data.next);
     }
     if (prevBtn) {
         prevBtn.disabled = !data.previous;
-        prevBtn.onclick = async () => {
-            if (data.previous) {
-                showTableLoading();
-                await fetchSales(data.previous);
-                hideTableLoading();
-            }
-        };
+        prevBtn.onclick = () => data.previous && fetchSales(data.previous);
     }
 };
-
-function confirmAnular(id, number) {
-    idParaAnular = id;
-    document.getElementById('text-ballot-number').innerText = number;
-    confirmAnularModal.show();
-}

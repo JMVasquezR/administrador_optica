@@ -1,9 +1,11 @@
+from django.conf import settings
 from django.db.models import (
     CharField, ForeignKey, FloatField, ManyToManyField, TextField, BooleanField, DateField, PROTECT, IntegerField,
-    CASCADE
+    CASCADE, SET_NULL
 )
 from model_utils.models import TimeStampedModel
 
+from app_backend.models.opticas import Optica
 from app_backend.models.patients import Patient
 from app_backend.models.products import Product
 
@@ -15,6 +17,7 @@ class SalesTicket(TimeStampedModel):
         ordering = ['-ballot_number']
         db_table = 'TB_BACKEND_SALES_TICKET'
 
+    optica = ForeignKey(Optica, on_delete=CASCADE, related_name='boletas_venta', default=1)
     ballot_number = CharField(max_length=10, unique=True, verbose_name='Número de boleta')
     date_of_issue = DateField(verbose_name='Fecha de emisión')
     patient = ForeignKey(Patient, on_delete=PROTECT, verbose_name='Paciente', null=True, blank=True)
@@ -26,6 +29,9 @@ class SalesTicket(TimeStampedModel):
     product = ManyToManyField(Product, related_name='product', through='saleslines')
     observation = TextField(null=True, blank=True)
     is_disabled = BooleanField(default=False, verbose_name='Anulado')
+    created_by = ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=SET_NULL, null=True, blank=True, verbose_name='Vendedor'
+    )
 
     def __str__(self):
         return f'{self.ballot_number}'

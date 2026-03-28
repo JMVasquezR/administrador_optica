@@ -1,5 +1,7 @@
 <div class="d-md-none bg-dark text-white p-3 d-flex justify-content-between align-items-center shadow-sm">
-    <div class="fw-bold"><i class="fa-solid fa-glasses me-2 text-danger"></i>Óptica KyM Lens</div>
+    <div class="fw-bold"><i class="fa-solid fa-glasses me-2 text-danger"></i>
+        {{ user.perfil.optica.nombre }}
+    </div>
     <button class="btn btn-outline-light border-0" type="button" data-bs-toggle="collapse"
             data-bs-target="#sidebarMenu">
         <i class="fas fa-bars fa-lg"></i>
@@ -8,17 +10,25 @@
 
 <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block sidebar collapse bg-black">
     <div class="text-center mb-4 d-none d-md-block">
-        <i class="fa-solid fa-glasses fa-2x text-white"></i>
-        <h6 class="mt-2 fw-bold text-white">Óptica KyM Lens</h6>
+        {% if user.perfil.optica.logo %}
+            <img src="{{ user.perfil.optica.logo.url }}" alt="Logo" class="img-fluid px-4 mt-3">
+        {% else %}
+            <i class="fa-solid fa-glasses fa-2x text-white mt-3"></i>
+        {% endif %}
+        <h6 class="mt-2 fw-bold text-white">{{ user.perfil.optica.nombre }}</h6>
+        <span class="badge bg-danger p-1" style="font-size: 0.6rem;">{{ user.perfil.rol }}</span>
     </div>
 
     <ul class="nav flex-column px-3">
-        <li class="nav-item">
-            <a href="{% url 'app_web:home' %}"
-               class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
-                <i class="fas fa-home me-2"></i> Dashboard
-            </a>
-        </li>
+
+        {% if user.perfil.rol == 'ADMIN' %}
+            <li class="nav-item">
+                <a href="{% url 'app_web:home' %}"
+                   class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                    <i class="fas fa-home me-2"></i> Dashboard
+                </a>
+            </li>
+        {% endif %}
 
         <li class="nav-item">
             <a href="{% url 'app_web:patient_list' %}"
@@ -33,41 +43,60 @@
                 <i class="fas fa-calendar-alt me-2"></i> Agenda / Citas
             </a>
         </li>
-        <li class="nav-item">
-            <a href="{% url 'app_web:recipe_list' %}"
-               class="nav-link {% if request.resolver_match.url_name == 'recipe_list' %}active{% endif %}">
-                <i class="fas fa-file-medical me-2"></i> Recetario
-            </a>
-        </li>
 
-        <li class="nav-item">
-            <a href="{% url 'app_web:sales_ticket_list' %}"
-               class="nav-link {% if request.resolver_match.url_name == 'sales_ticket_list' %}active{% endif %}">
-                <i class="fas fa-file-invoice-dollar me-2"></i> Boletas
-            </a>
-        </li>
+        {% if user.perfil.rol == 'ADMIN' or user.perfil.rol == 'OPTOMETRISTA' %}
+            <li class="nav-item">
+                <a href="{% url 'app_web:recipe_list' %}"
+                   class="nav-link {% if request.resolver_match.url_name == 'recipe_list' %}active{% endif %}">
+                    <i class="fas fa-file-medical me-2"></i> Recetario
+                </a>
+            </li>
+        {% endif %}
 
-        <li class="nav-item mt-2">
-            <small class="text-muted text-uppercase fw-bold px-3" style="font-size: 0.65rem; letter-spacing: 1px;">Marketing</small>
-        </li>
+        {% if user.perfil.rol == 'ADMIN' or user.perfil.rol == 'VENTAS' %}
+            <li class="nav-item">
+                <a href="{% url 'app_web:sales_ticket_list' %}"
+                   class="nav-link {% if request.resolver_match.url_name == 'sales_ticket_list' %}active{% endif %}">
+                    <i class="fas fa-file-invoice-dollar me-2"></i> Boletas
+                </a>
+            </li>
+        {% endif %}
 
-        <li class="nav-item">
-            <a href="{% url 'app_web:marketing_re_examenes' %}"
-               class="nav-link {% if request.resolver_match.url_name == 'marketing_re_examenes' %}active{% endif %}">
-                <i class="fas fa-bullhorn me-2"></i> Campañas / Re-examen
-            </a>
-        </li>
+        {% if user.perfil.rol == 'ADMIN' %}
+            <li class="nav-item mt-2">
+                <small class="text-muted text-uppercase fw-bold px-3" style="font-size: 0.65rem; letter-spacing: 1px;">Marketing</small>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'app_web:marketing_re_examenes' %}"
+                   class="nav-link {% if request.resolver_match.url_name == 'marketing_re_examenes' %}active{% endif %}">
+                    <i class="fas fa-bullhorn me-2"></i> Campañas / Re-examen
+                </a>
+            </li>
+        {% endif %}
 
-        <li class="nav-item mt-2">
-            <small class="text-muted text-uppercase fw-bold px-3" style="font-size: 0.65rem; letter-spacing: 1px;">Almacén</small>
-        </li>
-
-        <li class="nav-item">
-            <a href="{% url 'app_web:product_list' %}"
-               class="nav-link {% if request.resolver_match.url_name == 'product_list' %}active{% endif %}">
-                <i class="fas fa-box me-2"></i> Productos
-            </a>
-        </li>
+        {% if user.perfil.rol == 'ADMIN' or user.perfil.rol == 'VENTAS' %}
+            <li class="nav-item mt-2">
+                <small class="text-muted text-uppercase fw-bold px-3" style="font-size: 0.65rem; letter-spacing: 1px;">Almacén</small>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'app_web:product_list' %}"
+                   class="nav-link {% if request.resolver_match.url_name == 'product_list' %}active{% endif %}">
+                    <i class="fas fa-box me-2"></i> Productos
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'app_web:category_list' %}"
+                   class="nav-link {% if request.resolver_match.url_name == 'category_list' %}active{% endif %}">
+                    <i class="fas fa-tags me-2"></i> Categorías
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'app_web:brand_list' %}"
+                   class="nav-link {% if request.resolver_match.url_name == 'brand_list' %}active{% endif %}">
+                    <i class="fas fa-copyright me-2"></i> Marcas
+                </a>
+            </li>
+        {% endif %}
 
         <hr class="text-white">
 

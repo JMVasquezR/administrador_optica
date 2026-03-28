@@ -9,16 +9,16 @@ from .views import (
 app_name = 'api'
 
 router = DefaultRouter()
-router.register(r'products', ProductViewSet)
-router.register(r'categories', CategoryViewSet)
-router.register(r'brands', BrandViewSet)
+router.register(r'products', ProductViewSet, basename='products')
+router.register(r'categories', CategoryViewSet, basename='category')
+router.register(r'brands', BrandViewSet, basename='brands')
 
-router.register(r'patients', PatientViewSet)
+router.register(r'patients', PatientViewSet, basename='patient')
 router.register(r'type-documents', TypeDocumentViewSet)
 
-router.register(r'sales-tickets', SalesTicketViewSet)
+router.register(r'sales-tickets', SalesTicketViewSet, basename='sales-tickets')
 
-router.register(r'recipes', RecipeViewSet)
+router.register(r'recipes', RecipeViewSet, basename='recipes')
 
 router.register(r'appointments', AppointmentViewSet, basename='appointments')
 

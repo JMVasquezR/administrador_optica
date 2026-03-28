@@ -3,8 +3,11 @@ import uuid
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
-from django.db.models import (CharField, DateField, ForeignKey, TimeField, TextField, UUIDField)
+from django.db.models import (
+    CharField, DateField, ForeignKey, TimeField, TextField, UUIDField, CASCADE, DateTimeField, BooleanField
+)
 
+from app_backend.models.opticas import Optica
 from app_backend.models.patients import Patient
 
 
@@ -23,6 +26,7 @@ class Appointment(models.Model):
         ('otro', 'Otro'),
     ]
 
+    optica = ForeignKey(Optica, on_delete=models.CASCADE, related_name='citas', default=1)
     patient = ForeignKey(Patient, on_delete=models.CASCADE, related_name='appointments', verbose_name="Paciente")
     created_by = ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Registrado por"
@@ -46,20 +50,22 @@ class Appointment(models.Model):
 
 
 class CampaignContact(models.Model):
+    optica = ForeignKey(Optica, on_delete=models.CASCADE, related_name='contactos_campana', default=1)
+
     id = UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    patient = models.ForeignKey(
-        Patient, on_delete=models.CASCADE, related_name='campaign_contacts', verbose_name="Paciente"
+    patient = ForeignKey(
+        Patient, on_delete=CASCADE, related_name='campaign_contacts', verbose_name="Paciente"
     )
-    user = models.ForeignKey(
+    user = ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True, related_name='contacts_performed',
         verbose_name="Personal que contactó"
     )
-    created = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de contacto")
-    medium = models.CharField(max_length=20, default='whatsapp', verbose_name="Medio")
-    recipe = models.ForeignKey(
+    created = DateTimeField(auto_now_add=True, verbose_name="Fecha de contacto")
+    medium = CharField(max_length=20, default='whatsapp', verbose_name="Medio")
+    recipe = ForeignKey(
         'Recipe', on_delete=models.SET_NULL, null=True, blank=True, related_name='campaign_conversions'
     )
-    is_converted = models.BooleanField(default=False, verbose_name="¿Generó venta?")
+    is_converted = BooleanField(default=False, verbose_name="¿Generó venta?")
 
     class Meta:
         verbose_name = "Contacto de Campaña"

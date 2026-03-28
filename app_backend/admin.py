@@ -1,9 +1,21 @@
 from django.contrib import admin
 
 from app_backend.models.appointment import CampaignContact
+from app_backend.models.opticas import Optica
 from app_backend.models.patients import Patient
 from app_backend.models.products import Brand, Category
 from app_backend.models.sales_ticket import SalesTicket
+from app_backend.models.usuarios import PerfilUsuario
+
+
+@admin.register(PerfilUsuario)
+class PerfilUsuarioAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'optica', 'rol')
+
+
+@admin.register(Optica)
+class OpticaAdmin(admin.ModelAdmin):
+    list_display = ('id', 'nombre', 'ruc', 'telefono', 'plan', 'fecha_vencimiento', 'created')
 
 
 @admin.register(CampaignContact)

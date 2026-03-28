@@ -4,16 +4,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Óptica KyM Lens | Panel Principal</title>
+    <title>Dashboard | {{ nombre_optica }}</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="{% static 'v2/base.css' %}" rel="stylesheet">
     <style>
-        /* Estilos específicos para métricas de marketing */
-        .bg-success-subtle { background-color: #e1f7ec !important; }
-        .bg-danger-subtle { background-color: #fbe9e9 !important; }
-        .x-small { font-size: 0.75rem; }
+        .bg-success-subtle {
+            background-color: #e1f7ec !important;
+        }
+
+        .bg-danger-subtle {
+            background-color: #fbe9e9 !important;
+        }
+
+        .bg-primary-subtle {
+            background-color: #e7f0ff !important;
+        }
+
+        .x-small {
+            font-size: 0.75rem;
+        }
+
+        .border-left-danger {
+            border-left: 4px solid #dc3545 !important;
+        }
     </style>
 </head>
 <body>
@@ -23,7 +38,7 @@
         <div class="spinner-border text-danger" style="width: 3rem; height: 3rem;" role="status">
             <span class="visually-hidden">Cargando...</span>
         </div>
-        <h6 class="mt-3 fw-bold text-dark">Óptica KyM Lens</h6>
+        <h6 class="mt-3 fw-bold text-dark">{{ nombre_optica }}</h6>
     </div>
 </div>
 
@@ -35,154 +50,236 @@
 
             <div class="header-status mb-4 d-flex justify-content-between align-items-center">
                 <div>
-                    <h4 class="m-0 fw-bold">Buen día, Jose</h4>
-                    <p class="text-muted m-0 small">Óptica KyM Lens - Sucursal Principal</p>
+                    <h4 class="m-0 fw-bold">Buen día, {{ nombre_usuario }}</h4>
+                    <p class="text-muted m-0 small">{{ nombre_optica }} - Panel de {{ rol_usuario|title }}</p>
                 </div>
                 <div class="text-end">
-                    <span class="badge bg-dark px-3 py-2">{{ fecha_actual|date:"d M Y"|default:"15 Mar 2026" }}</span>
+                    <span class="badge bg-dark px-3 py-2">{{ fecha_actual|date:"d M Y" }}</span>
                 </div>
             </div>
 
-            {% include 'v2/cards_home.html' %}
-
-            <div class="row g-4 mb-4">
-                <div class="col-12 col-md-4">
-                    <div class="card border-0 shadow-sm rounded-4 h-100">
-                        <div class="card-body d-flex align-items-center p-4">
-                            <div class="flex-shrink-0 bg-success-subtle text-success p-3 rounded-circle me-3">
-                                <i class="fab fa-whatsapp fa-xl"></i>
+            {% if rol_usuario == 'OPTOMETRISTA' %}
+                <div class="row g-4 mb-4">
+                    <div class="col-12 col-md-4">
+                        <div class="card border-0 shadow-sm rounded-4 h-100 border-left-danger">
+                            <div class="card-body d-flex align-items-center p-4">
+                                <div class="flex-shrink-0 bg-danger-subtle text-danger p-3 rounded-circle me-3">
+                                    <i class="fas fa-file-medical fa-xl"></i>
+                                </div>
+                                <div>
+                                    <h6 class="text-muted small mb-1">Medidas Hoy</h6>
+                                    <h4 class="fw-bold mb-0">{{ recetas_hoy }}</h4>
+                                </div>
                             </div>
-                            <div>
-                                <h6 class="text-muted small mb-1">Contactados hoy</h6>
-                                <h4 class="fw-bold mb-0" id="dash-contacted-today">{{ contactos_hoy|default:"0" }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="card border-0 shadow-sm rounded-4 h-100">
+                            <div class="card-body d-flex align-items-center p-4">
+                                <div class="flex-shrink-0 bg-primary-subtle text-primary p-3 rounded-circle me-3">
+                                    <i class="fas fa-calendar-check fa-xl"></i>
+                                </div>
+                                <div>
+                                    <h6 class="text-muted small mb-1">Citas Pendientes</h6>
+                                    <h4 class="fw-bold mb-0">{{ citas_pendientes }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="card border-0 shadow-sm rounded-4 h-100">
+                            <div class="card-body d-flex align-items-center p-4">
+                                <div class="flex-shrink-0 bg-success-subtle text-success p-3 rounded-circle me-3">
+                                    <i class="fas fa-user-plus fa-xl"></i>
+                                </div>
+                                <div>
+                                    <h6 class="text-muted small mb-1">Nuevos Pacientes</h6>
+                                    <h4 class="fw-bold mb-0">{{ pacientes_nuevos }}</h4>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-12 col-md-4">
-                    <div class="card border-0 shadow-sm rounded-4 h-100 border-start border-danger border-4">
-                        <div class="card-body d-flex align-items-center p-4">
-                            <div class="flex-shrink-0 bg-danger-subtle text-danger p-3 rounded-circle me-3">
-                                <i class="fas fa-user-check fa-xl"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted small mb-1">Retorno (Ventas)</h6>
-                                <h4 class="fw-bold mb-0" id="dash-conversions">{{ regresos_mes|default:"0" }}</h4>
-                                <span class="text-muted x-small">Pacientes recuperados (30d)</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-md-4">
-                    <div class="card border-0 shadow-sm rounded-4 h-100 bg-dark text-white">
-                        <div class="card-body d-flex align-items-center p-4">
-                            <div class="flex-shrink-0 bg-white text-dark p-3 rounded-circle me-3">
-                                <i class="fas fa-percentage fa-xl"></i>
-                            </div>
-                            <div>
-                                <h6 class="small mb-1 opacity-75">Efectividad</h6>
-                                <h4 class="fw-bold mb-0" id="dash-efficiency">{{ efectividad|default:"0" }}%</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="row g-4">
-                <div class="col-12 col-xl-8">
-                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-                        <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
-                            <h6 class="m-0 fw-bold"><i class="fas fa-chart-line me-2 text-danger"></i>Rendimiento Semanal</h6>
-                            <span class="badge bg-light text-dark border small">Soles (S/)</span>
-                        </div>
-                        <div class="card-body">
-                            <canvas id="salesChart" style="max-height: 300px;"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                        <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
-                            <h6 class="m-0 fw-bold"><i class="fas fa-history me-2 text-danger"></i>Últimas Boletas</h6>
-                            <a href="{% url 'app_web:sales_ticket_list' %}" class="small text-danger text-decoration-none fw-bold">Ver todo</a>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table align-middle mb-0 table-hover">
-                                <thead class="table-light">
-                                <tr>
-                                    <th class="ps-4">Nro Boleta</th>
-                                    <th>Paciente</th>
-                                    <th>Total</th>
-                                    <th class="text-end pe-4">Estado</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                    {% for boleta in ultimas_boletas %}
+                <div class="row g-4">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                            <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                                <h6 class="m-0 fw-bold"><i class="fas fa-notes-medical me-2 text-danger"></i>Mi Agenda
+                                    de Hoy</h6>
+                                <a href="{% url 'app_web:agenda_citas_list' %}"
+                                   class="small text-danger text-decoration-none fw-bold">Ver todo</a>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table align-middle mb-0 table-hover">
+                                    <thead class="table-light">
                                     <tr>
-                                        <td class="ps-4 fw-bold text-danger">{{ boleta.ballot_number }}</td>
-                                        <td>{{ boleta.patient }}</td>
-                                        <td class="fw-bold">S/ {{ boleta.sales_total }}</td>
-                                        <td class="text-end pe-4"><span class="badge bg-success">Pagado</span></td>
+                                        <th class="ps-4">Hora</th>
+                                        <th>Paciente</th>
+                                        <th>Motivo</th>
+                                        <th class="text-end pe-4">Estado</th>
                                     </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for cita in proximas_citas %}
+                                        <tr>
+                                            <td class="ps-4 fw-bold text-dark">{{ cita.time|time:"H:i" }}</td>
+                                            <td>{{ cita.patient_name }}</td>
+                                            <td><span class="small text-muted">{{ cita.reason }}</span></td>
+                                            <td class="text-end pe-4">
+                                                <span class="badge {% if cita.status == 'pending' %}bg-warning text-dark{% else %}bg-success{% endif %} rounded-pill x-small">
+                                                    {{ cita.get_status_display }}
+                                                </span>
+                                            </td>
+                                        </tr>
                                     {% empty %}
-                                    <tr>
-                                        <td colspan="4" class="text-center py-4 text-muted small italic">
-                                            No hay ventas registradas en las últimas horas.
-                                        </td>
-                                    </tr>
+                                        <tr>
+                                            <td colspan="4" class="text-center py-5 text-muted small italic">No tienes
+                                                citas registradas para hoy.
+                                            </td>
+                                        </tr>
                                     {% endfor %}
-                                </tbody>
-                            </table>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-12 col-xl-4">
-                    <div class="card border-0 shadow-sm rounded-4 bg-danger text-white mb-4">
-                        <div class="card-body p-4 text-center">
-                            <h6 class="small text-uppercase opacity-75">Ventas de Hoy</h6>
-                            <h2 class="fw-bold mb-0" style="font-size: 2.5rem;">S/ {{ ventas_hoy|default:"0.00" }}</h2>
-                            <p class="small mb-0 mt-2"><i class="fas fa-calendar-check me-1"></i> Actualizado al instante</p>
-                        </div>
-                    </div>
-
-                    <div class="card border-0 shadow-sm rounded-4 mb-4">
-                        <div class="card-body p-4">
-                            <h6 class="fw-bold mb-3 small text-uppercase text-muted">Metas de Ventas (Mensual)</h6>
-                            <div class="progress mb-2" style="height: 12px; border-radius: 10px;">
-                                <div class="progress-bar bg-danger" role="progressbar" style="width: {{ meta_porcentaje|default:'0' }}%"></div>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <span class="small text-muted">{{ meta_porcentaje|default:"0" }}% alcanzado</span>
-                                <span class="small fw-bold">S/ {{ meta_total|default:"10,000" }}</span>
+            {% else %}
+                <div class="row g-4 mb-4">
+                    <div class="col-12 col-md-4">
+                        <div class="card border-0 shadow-sm rounded-4 h-100">
+                            <div class="card-body d-flex align-items-center p-4">
+                                <div class="flex-shrink-0 bg-success-subtle text-success p-3 rounded-circle me-3">
+                                    <i class="fab fa-whatsapp fa-xl"></i>
+                                </div>
+                                <div>
+                                    <h6 class="text-muted small mb-1">Contactados hoy</h6>
+                                    <h4 class="fw-bold mb-0">{{ contactos_hoy }}</h4>
+                                </div>
                             </div>
                         </div>
                     </div>
-
-                    <div class="card border-0 shadow-sm rounded-4">
-                        <div class="card-header bg-white py-3 border-0 border-bottom border-light">
-                            <h6 class="m-0 fw-bold"><i class="fas fa-exclamation-triangle me-2 text-warning"></i>Reponer Stock</h6>
+                    <div class="col-12 col-md-4">
+                        <div class="card border-0 shadow-sm rounded-4 h-100 border-left-danger">
+                            <div class="card-body d-flex align-items-center p-4">
+                                <div class="flex-shrink-0 bg-danger-subtle text-danger p-3 rounded-circle me-3">
+                                    <i class="fas fa-user-check fa-xl"></i>
+                                </div>
+                                <div>
+                                    <h6 class="text-muted small mb-1">Retorno (Ventas)</h6>
+                                    <h4 class="fw-bold mb-0">{{ regresos_mes }}</h4>
+                                </div>
+                            </div>
                         </div>
-                        <div class="card-body p-0">
-                            <ul class="list-group list-group-flush">
-                                {% for item in stock_critico %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-4 py-3">
-                                    <div>
-                                        <p class="m-0 fw-bold small text-dark">{{ item.nombre }}</p>
-                                        <small class="text-danger">Quedan: {{ item.cantidad }} uds.</small>
-                                    </div>
-                                    <span class="badge bg-light text-dark border">Urgente</span>
-                                </li>
-                                {% empty %}
-                                <li class="list-group-item text-center py-4 text-muted small italic">
-                                    <i class="fas fa-check-circle text-success d-block mb-2 fa-lg"></i>
-                                    Stock actualizado
-                                </li>
-                                {% endfor %}
-                            </ul>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="card border-0 shadow-sm rounded-4 h-100 bg-dark text-white">
+                            <div class="card-body d-flex align-items-center p-4">
+                                <div class="flex-shrink-0 bg-white text-dark p-3 rounded-circle me-3">
+                                    <i class="fas fa-percentage fa-xl"></i>
+                                </div>
+                                <div>
+                                    <h6 class="small mb-1 opacity-75">Efectividad</h6>
+                                    <h4 class="fw-bold mb-0">{{ efectividad }}%</h4>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+
+                <div class="row g-4">
+                    <div class="col-12 col-xl-8">
+                        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                            <div class="card-header bg-white py-3 border-0">
+                                <h6 class="m-0 fw-bold"><i class="fas fa-chart-line me-2 text-danger"></i>Rendimiento
+                                    Semanal</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="salesChart" style="max-height: 250px;"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                            <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                                <h6 class="m-0 fw-bold"><i class="fas fa-history me-2 text-danger"></i>Últimas Boletas
+                                </h6>
+                                <a href="{% url 'app_web:sales_ticket_list' %}"
+                                   class="small text-danger text-decoration-none fw-bold">Ver todo</a>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table align-middle mb-0 table-hover">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4">Nro Boleta</th>
+                                        <th>Paciente</th>
+                                        <th class="text-end pe-4">Total</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for boleta in ultimas_boletas %}
+                                        <tr>
+                                            <td class="ps-4 fw-bold text-danger">{{ boleta.ballot_number }}</td>
+                                            <td>{{ boleta.patient }}</td>
+                                            <td class="text-end pe-4 fw-bold">S/ {{ boleta.sales_total }}</td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="3" class="text-center py-4 text-muted small">Sin ventas
+                                                recientes.
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-xl-4">
+                        <div class="card border-0 shadow-sm rounded-4 bg-danger text-white mb-4">
+                            <div class="card-body p-4 text-center">
+                                <h6 class="small text-uppercase opacity-75">Ventas de Hoy</h6>
+                                <h2 class="fw-bold mb-0">S/ {{ ventas_hoy }}</h2>
+                            </div>
+                        </div>
+
+                        <div class="card border-0 shadow-sm rounded-4 mb-4">
+                            <div class="card-body p-4">
+                                <h6 class="fw-bold mb-3 small text-uppercase text-muted">Meta Mensual</h6>
+                                <div class="progress mb-2" style="height: 10px; border-radius: 10px;">
+                                    <div class="progress-bar bg-danger" style="width: {{ meta_porcentaje }}%"></div>
+                                </div>
+                                <div class="d-flex justify-content-between x-small fw-bold">
+                                    <span>{{ meta_porcentaje }}%</span>
+                                    <span>Meta: S/ {{ meta_total }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card border-0 shadow-sm rounded-4">
+                            <div class="card-header bg-white py-3 border-0 border-bottom border-light">
+                                <h6 class="m-0 fw-bold"><i class="fas fa-box-open me-2 text-warning"></i>Stock Bajo</h6>
+                            </div>
+                            <div class="card-body p-0">
+                                <ul class="list-group list-group-flush">
+                                    {% for item in stock_critico %}
+                                        <li class="list-group-item d-flex justify-content-between x-small">
+                                            <span>{{ item.nombre }}</span>
+                                            <span class="text-danger fw-bold">{{ item.cantidad }}</span>
+                                        </li>
+                                    {% empty %}
+                                        <li class="list-group-item text-center py-3 text-muted small italic">Stock
+                                            actualizado.
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
 
         </main>
     </div>
@@ -193,18 +290,14 @@
 <script src="{% static 'v2/home.js' %}"></script>
 
 <script>
-    // 1. OCULTAR LOADER AL CARGAR
+    // Manejo de Loader
     window.addEventListener('load', () => {
-        const loader = document.getElementById('page-loader');
-        setTimeout(() => {
-            loader.classList.add('loader-hidden');
-        }, 300);
+        setTimeout(() => document.getElementById('page-loader').classList.add('loader-hidden'), 300);
     });
 
-    // 2. MOSTRAR LOADER AL NAVEGAR ENTRE PÁGINAS DEL MENÚ
     document.addEventListener('click', (e) => {
-        const link = e.target.closest('a.nav-link, .card-menu');
-        if (link && link.href && !link.href.includes('#') && link.target !== '_blank') {
+        const link = e.target.closest('a.nav-link');
+        if (link && link.href && !link.href.includes('#')) {
             document.getElementById('page-loader').classList.remove('loader-hidden');
         }
     });

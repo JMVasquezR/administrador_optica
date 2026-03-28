@@ -1,7 +1,11 @@
 from django.db import models
-from django.db.models import (CharField, FloatField, ForeignKey, PROTECT, TextField, IntegerField, BooleanField)
+from django.db.models import (
+    CharField, FloatField, ForeignKey, PROTECT, TextField, IntegerField, BooleanField, CASCADE
+)
 from django.db.models.functions import Length
 from model_utils.models import TimeStampedModel
+
+from app_backend.models.opticas import Optica
 
 
 class Category(TimeStampedModel):
@@ -10,7 +14,8 @@ class Category(TimeStampedModel):
         verbose_name_plural = 'Categorias'
         db_table = 'TB_BACKEND_CATEGORY'
 
-    name = CharField(max_length=250, verbose_name='Nombre')
+    optica = ForeignKey(Optica, on_delete=CASCADE, related_name='categorias', default=1, db_index=True)
+    name = CharField(max_length=250, verbose_name='Nombre', db_index=True)
     description = TextField(null=True, blank=True, verbose_name='Descripción')
 
     def __str__(self):
@@ -22,13 +27,14 @@ class Category(TimeStampedModel):
 
 
 class Brand(TimeStampedModel):
+    optica = ForeignKey(Optica, on_delete=CASCADE, related_name='marcas', default=1, db_index=True)
+    name = CharField(max_length=250, verbose_name='Nombre')
+    description = TextField(null=True, blank=True, verbose_name='Descripción')
+
     class Meta:
         verbose_name = 'Marca'
         verbose_name_plural = 'Marcas'
         db_table = 'TB_BACKEND_BRAND'
-
-    name = CharField(max_length=250, verbose_name='Nombre')
-    description = TextField(null=True, blank=True, verbose_name='Descripción')
 
     def __str__(self):
         return f'{self.name}'
@@ -57,6 +63,7 @@ class Product(TimeStampedModel):
         db_table = 'TB_BACKEND_PRODUCT'
 
     objects = ProductManager()
+    optica = ForeignKey(Optica, on_delete=CASCADE, related_name='productos', default=1, db_index=True)
     name = CharField(max_length=250, verbose_name='Nombre del Producto')
     code = CharField(max_length=150, null=True, blank=True, verbose_name='Código del Producto')
     description = TextField(null=True, blank=True, verbose_name='Descripción')
