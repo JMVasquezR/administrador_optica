@@ -188,11 +188,19 @@ const applyRecipeFilters = async () => {
 
 const saveRecipe = async (e) => {
     e.preventDefault();
-    if (USER_ROL === 'VENDEDOR') return; // Bloqueo extra por JS
+    if (USER_ROL === 'VENDEDOR') return;
+
+    const patientId = $('#rec-patient').val();
+
+    if (!patientId) {
+        showNotify('Debe seleccionar un paciente', 'danger');
+        return;
+    }
 
     showGlobalLoader();
+
     const data = {
-        patient: document.getElementById('rec-patient').value,
+        patient: patientId,
         date_of_issue: document.getElementById('rec-date').value,
         right_eye_spherical_distance_far: document.getElementById('od_sph_far').value || null,
         right_eye_cylinder_distance_far: document.getElementById('od_cyl_far').value || null,

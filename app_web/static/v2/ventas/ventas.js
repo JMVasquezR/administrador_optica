@@ -87,7 +87,7 @@ const initSales = async () => {
    ========================================== */
 const loadPatientsAndProducts = () => {
     $('#sale-product-search').select2({
-        theme: 'bootstrap-5',
+        theme: 'default',
         width: '100%',
         dropdownParent: $('#modalSale'),
         placeholder: 'Busca montura, luna o accesorio...',
@@ -108,7 +108,7 @@ const loadPatientsAndProducts = () => {
     });
 
     $('#sale-patient').select2({
-        theme: 'bootstrap-5',
+        theme: 'default',
         width: '100%',
         dropdownParent: $('#modalSale'),
         placeholder: 'Seleccione paciente o deje vacío...',
@@ -272,7 +272,7 @@ const renderSalesTable = (tickets) => {
                     <div class="fw-bold small">${t.payer_name || t.name_patient || 'Genérico'}</div>
                     <small class="text-muted italic">${t.payer_name ? `P: ${t.name_patient || '---'}` : ''}</small>
                 </td>
-                <td class="text-center fw-bold">S/ ${t.total_bill}</td>
+                <td class="text-center fw-bold">${t.total_bill}</td>
                 <td class="text-center">
                     <span class="badge ${t.is_disabled ? 'bg-secondary' : 'bg-success'} rounded-pill x-small">
                         ${t.is_disabled ? 'Anulada' : 'Vigente'}
