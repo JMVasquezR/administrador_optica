@@ -51,30 +51,6 @@ class SalesTicket(TimeStampedModel):
     def name_patient(self):
         return self.patient.full_name
 
-    def save(self, *args, **kwargs):
-        if not self.ballot_number:
-            # Obtenemos el último ticket por ID para evitar confusiones de formato
-            last_ticket = SalesTicket.objects.all().order_by('id').last()
-
-            prefix = "001"
-            if last_ticket:
-                try:
-                    # Intentamos sacar el número de la última boleta
-                    # Ejemplo: "001-000005" -> parts[1] es "000005"
-                    last_number_str = last_ticket.ballot_number.split('-')[-1]
-                    new_number_int = int(last_number_str) + 1
-                except (ValueError, IndexError, AttributeError):
-                    # Si la última boleta tiene un formato basura (ej: "error", "1", ""),
-                    # contamos cuántos registros hay para no repetir el correlativo
-                    new_number_int = SalesTicket.objects.count() + 1
-
-                self.ballot_number = f"{prefix}-{str(new_number_int).zfill(6)}"
-            else:
-                # Si la tabla está vacía
-                self.ballot_number = f"{prefix}-000001"
-
-        super(SalesTicket, self).save(*args, **kwargs)
-
 
 class SalesLines(TimeStampedModel):
     class Meta:

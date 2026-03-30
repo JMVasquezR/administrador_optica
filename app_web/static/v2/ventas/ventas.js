@@ -219,6 +219,7 @@ async function saveSale(e) {
         payer_name: payerName || null,
         date_of_issue: document.getElementById('sale-date').value,
         observation: document.getElementById('sale-observation').value,
+        sales_total: selectedProducts.reduce((sum, p) => sum + p.amount, 0),
         lines: selectedProducts.map(p => ({
             product: p.product,
             quantity: p.quantity,

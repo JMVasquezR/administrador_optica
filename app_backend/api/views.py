@@ -88,19 +88,33 @@ class SalesTicketViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def perform_create(self, serializer):
         user_optica = self.request.user.perfil.optica
+        serie = "001"  # Puedes hacer esto dinámico si luego tienes más series
 
-        # 1. Generar correlativo automático si no viene uno
-        # Esto evita que el vendedor duplique números manualmente
-        ultimo_ticket = SalesTicket.objects.filter(optica=user_optica).order_by('id').last()
-        if ultimo_ticket and ultimo_ticket.ballot_number.isdigit():
-            nuevo_nro = str(int(ultimo_ticket.ballot_number) + 1).zfill(6)
+        # 1. Buscar la última boleta de esta óptica
+        ultimo_ticket = SalesTicket.objects.filter(
+            optica=user_optica,
+            ballot_number__startswith=f"{serie}-"
+        ).order_by('id').last()
+
+        if ultimo_ticket:
+            try:
+                # Extraemos la parte numérica después del '-' (ej: de '001-000005' toma '000005')
+                ultimo_nro_str = ultimo_ticket.ballot_number.split('-')[1]
+                nuevo_nro_int = int(ultimo_nro_str) + 1
+                correlativo = str(nuevo_nro_int).zfill(6)
+            except (IndexError, ValueError):
+                # Si el formato guardado era inválido, reseteamos a 1
+                correlativo = "000001"
         else:
-            nuevo_nro = "000001"
+            # Si es la primera boleta de la óptica
+            correlativo = "000001"
 
-        # 2. Guardar con datos automáticos de auditoría
+        nuevo_ballot_number = f"{serie}-{correlativo}"
+
+        # 2. Guardar con el nuevo formato y auditoría
         serializer.save(
             optica=user_optica,
-            ballot_number=nuevo_nro,
+            ballot_number=nuevo_ballot_number,
             created_by=self.request.user,
             date_of_issue=timezone.localtime(timezone.now()).date()
         )
