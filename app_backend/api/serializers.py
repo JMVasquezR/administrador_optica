@@ -83,7 +83,6 @@ class BrandSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     category_name = serializers.ReadOnlyField(source='category.name')
     brand_name = serializers.ReadOnlyField(source='brand.name')
-    # Usamos default=None para que DRF no se queje si no viene la marca
     brand = serializers.PrimaryKeyRelatedField(
         queryset=Brand.objects.all(),
         required=False,

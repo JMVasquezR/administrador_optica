@@ -97,11 +97,16 @@ const loadPatientsAndProducts = () => {
             delay: 300,
             data: (params) => ({search: params.term, page: params.page || 1}),
             processResults: (data) => ({
-                results: data.results.map(p => ({
-                    id: p.id,
-                    text: `${p.name} - S/ ${parseFloat(p.unit_price).toFixed(2)}`,
-                    price: p.unit_price
-                })),
+                results: data.results.map(p => {
+                            // Martí: Si brand_name existe, lo concatena, si no, usa solo el nombre
+                            const displayName = p.brand_name ? `${p.brand_name} ${p.name}` : p.name;
+
+                            return {
+                                id: p.id,
+                                text: `${displayName} - S/.${parseFloat(p.unit_price).toFixed(2)}`,
+                                price: p.unit_price
+                            };
+                        }),
                 pagination: {more: !!data.next}
             })
         }
